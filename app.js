@@ -9,6 +9,12 @@ function generateId() {
   return `layer-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function parseRatio(ratioString) {
+  const [w, h] = ratioString.split(':').map(Number);
+  if (!w || !h) return { w: 9, h: 16 };
+  return { w, h };
+}
+
 function mountApp() {
   const canvas = getEl('preview');
   const errorBox = getEl('appError');
@@ -41,7 +47,6 @@ function mountApp() {
     addText: getEl('addText'),
     deleteLayer: getEl('deleteLayer'),
     layerSelect: getEl('layerSelect'),
-    duration: getEl('duration'),
     startX: getEl('startX'),
     startY: getEl('startY'),
     startScale: getEl('startScale'),
@@ -53,7 +58,12 @@ function mountApp() {
     endRotation: getEl('endRotation'),
     endOpacity: getEl('endOpacity'),
     easing: getEl('easing'),
-    applyBtn: getEl('applyBtn')
+    applyBtn: getEl('applyBtn'),
+    screenRatio: getEl('screenRatio'),
+    fps: getEl('fps'),
+    screenColor: getEl('screenColor'),
+    editDuration: getEl('editDuration'),
+    applySettingsBtn: getEl('applySettingsBtn')
   };
 
   const missingControl = Object.entries(controls).find(([, v]) => !v);
@@ -76,6 +86,9 @@ function mountApp() {
 
   const state = {
     duration: 2,
+    fps: 30,
+    ratio: { w: 9, h: 16 },
+    screenColor: '#0b0f17',
     time: 0,
     playing: false,
     startTimeRef: 0,
@@ -83,10 +96,18 @@ function mountApp() {
     selectedLayerId: null
   };
 
+  function updateCanvasSize() {
+    const baseWidth = 360;
+    const nextHeight = Math.round((baseWidth * state.ratio.h) / state.ratio.w);
+    canvas.width = baseWidth;
+    canvas.height = nextHeight;
+    canvas.style.aspectRatio = `${state.ratio.w}/${state.ratio.h}`;
+  }
+
   function makeDefaultAnim() {
     return {
-      start: { x: 180, y: 320, scale: 1, rotation: 0, opacity: 1 },
-      end: { x: 180, y: 180, scale: 1.4, rotation: 360, opacity: 1 },
+      start: { x: canvas.width / 2, y: canvas.height / 2, scale: 1, rotation: 0, opacity: 1 },
+      end: { x: canvas.width / 2, y: canvas.height / 2 - 120, scale: 1.4, rotation: 360, opacity: 1 },
       easing: 'easeInOut'
     };
   }
@@ -144,13 +165,13 @@ function mountApp() {
 
   function syncControlsFromLayer(layer) {
     const { start, end, easing } = layer.anim;
-    controls.startX.value = start.x;
-    controls.startY.value = start.y;
+    controls.startX.value = Math.round(start.x);
+    controls.startY.value = Math.round(start.y);
     controls.startScale.value = start.scale;
     controls.startRotation.value = start.rotation;
     controls.startOpacity.value = start.opacity;
-    controls.endX.value = end.x;
-    controls.endY.value = end.y;
+    controls.endX.value = Math.round(end.x);
+    controls.endY.value = Math.round(end.y);
     controls.endScale.value = end.scale;
     controls.endRotation.value = end.rotation;
     controls.endOpacity.value = end.opacity;
@@ -177,6 +198,31 @@ function mountApp() {
       },
       easing: controls.easing.value
     };
+    draw();
+  }
+
+  function applySettings() {
+    state.ratio = parseRatio(controls.screenRatio.value);
+    state.fps = Math.min(120, Math.max(12, Number(controls.fps.value) || 30));
+    state.duration = Math.max(0.2, Number(controls.editDuration.value) || 2);
+    state.screenColor = controls.screenColor.value || '#0b0f17';
+
+    controls.fps.value = String(state.fps);
+    controls.editDuration.value = String(state.duration);
+
+    updateCanvasSize();
+
+    state.layers.forEach((layer) => {
+      layer.anim.start.x = Math.min(layer.anim.start.x, canvas.width);
+      layer.anim.end.x = Math.min(layer.anim.end.x, canvas.width);
+      layer.anim.start.y = Math.min(layer.anim.start.y, canvas.height);
+      layer.anim.end.y = Math.min(layer.anim.end.y, canvas.height);
+    });
+
+    if (state.time > state.duration) {
+      state.time = state.duration;
+    }
+
     draw();
   }
 
@@ -247,12 +293,13 @@ function mountApp() {
     ctx.save();
     ctx.fillStyle = 'rgba(231,236,248,0.4)';
     ctx.font = '14px Inter, sans-serif';
-    ctx.fillText('Alight Motion Web Lite Demo', 12, canvas.height - 16);
+    ctx.fillText(`Alight Motion Web Lite • ${state.fps} FPS • ${state.ratio.w}:${state.ratio.h}`, 12, canvas.height - 16);
     ctx.restore();
   }
 
   function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = state.screenColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawGrid();
     state.layers.forEach(drawLayer);
     drawWatermark();
@@ -270,7 +317,8 @@ function mountApp() {
     }
 
     const elapsed = (ts - state.startTimeRef) / 1000;
-    state.time = Math.min(elapsed, state.duration);
+    const frameDuration = 1 / state.fps;
+    state.time = Math.min(Math.floor(elapsed / frameDuration) * frameDuration, state.duration);
 
     if (state.time >= state.duration) {
       state.playing = false;
@@ -303,19 +351,12 @@ function mountApp() {
   controls.addText.addEventListener('click', () => addLayer('text'));
   controls.deleteLayer.addEventListener('click', removeSelectedLayer);
   controls.applyBtn.addEventListener('click', applyControlsToLayer);
+  controls.applySettingsBtn.addEventListener('click', applySettings);
 
   controls.layerSelect.addEventListener('change', (event) => {
     state.selectedLayerId = event.target.value;
     const selected = getSelectedLayer();
     if (selected) syncControlsFromLayer(selected);
-  });
-
-  controls.duration.addEventListener('change', () => {
-    state.duration = Math.max(Number(controls.duration.value) || 0.2, 0.2);
-    if (state.time > state.duration) {
-      state.time = state.duration;
-    }
-    draw();
   });
 
   controls.scrubber.addEventListener('input', () => {
@@ -328,8 +369,10 @@ function mountApp() {
   controls.pauseBtn.addEventListener('click', pause);
   controls.resetBtn.addEventListener('click', reset);
 
+  updateCanvasSize();
   addLayer('rect');
   addLayer('text');
+  applySettings();
   reset();
 }
 

@@ -8,12 +8,15 @@ Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần, tối �
 - Chỉnh keyframe đầu/cuối cho vị trí, scale, rotation, opacity.
 - Chọn easing (linear, ease in/out).
 - Play / pause / reset + thanh tua timeline.
+- Settings: tỉ lệ màn hình, FPS, màu màn hình, thời gian chỉnh sửa.
 
 ## Chạy local
 ```bash
 python3 -m http.server 4173
 ```
-Sau đó mở: `http://localhost:4173`
+Sau đó mở: `http://localhost:4173/index.html`
+
+Có thể chỉnh ở panel Settings để thay đổi tỉ lệ, FPS, màu nền và thời lượng dự án.
 
 ## Khắc phục lỗi `Cannot set properties of null (setting 'valueAsNumber')`
 Nếu console báo lỗi kiểu:
