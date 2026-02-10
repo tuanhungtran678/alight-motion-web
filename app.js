@@ -125,7 +125,6 @@ function createApp() {
       'layerType.rect': 'Hình chữ nhật',
       'layerType.circle': 'Hình tròn',
       'layerType.text': 'Text',
-      'watermark': 'Alight Motion Web Lite'
     },
     en: {
       'app.title': 'Alight Motion Web Lite',
@@ -166,7 +165,6 @@ function createApp() {
       'layerType.rect': 'Rectangle',
       'layerType.circle': 'Circle',
       'layerType.text': 'Text',
-      'watermark': 'Alight Motion Web Lite'
     }
   };
 
@@ -459,21 +457,12 @@ function createApp() {
     ctx.restore();
   }
 
-  function drawWatermark() {
-    ctx.save();
-    ctx.fillStyle = 'rgba(231,236,248,0.4)';
-    ctx.font = '14px Inter, sans-serif';
-    ctx.fillText(`${t('watermark')} • ${state.fps} FPS • ${state.ratio.w}:${state.ratio.h}`, 12, canvas.height - 16);
-    ctx.restore();
-  }
-
   function draw() {
     ctx.fillStyle = state.screenColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     drawGrid();
     state.layers.forEach(drawLayer);
-    drawWatermark();
 
     const progress = state.duration ? state.time / state.duration : 0;
     controls.scrubber.value = String(Math.floor(progress * 100));
