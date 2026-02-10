@@ -1,0 +1,144 @@
+:root {
+  color-scheme: dark;
+  --bg: #0f1117;
+  --card: #171b25;
+  --border: #2a3245;
+  --text: #e7ecf8;
+  --accent: #55d4ff;
+  --danger: #ff5f6d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #1a2238, var(--bg) 45%);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.app {
+  width: min(950px, 100%);
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.topbar p {
+  margin: 6px 0 16px;
+  opacity: 0.85;
+}
+
+.preview-card,
+.panel {
+  background: color-mix(in srgb, var(--card), transparent 5%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+#preview {
+  width: 100%;
+  max-height: 70vh;
+  aspect-ratio: 9/16;
+  background: #0b0f17;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.transport {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+}
+
+.transport label,
+#timeLabel {
+  grid-column: 1 / -1;
+}
+
+#scrubber {
+  width: 100%;
+}
+
+.panel-grid {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.panel h2,
+.panel h3 {
+  margin: 6px 0 10px;
+}
+
+label {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 8px;
+}
+
+input,
+select,
+button {
+  width: 100%;
+  margin-top: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #111827;
+  color: var(--text);
+  padding: 10px;
+}
+
+.button-grid,
+.field-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.field-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.btn {
+  cursor: pointer;
+}
+
+.primary {
+  background: linear-gradient(125deg, #28a2ff, var(--accent));
+  color: #04192e;
+  font-weight: 600;
+}
+
+.danger {
+  background: linear-gradient(125deg, #ff6a78, var(--danger));
+  color: #2a0d12;
+  font-weight: 600;
+}
+
+@media (min-width: 820px) {
+  .panel-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .transport {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .transport label {
+    grid-column: span 2;
+  }
+
+  #timeLabel {
+    grid-column: span 1;
+    text-align: right;
+  }
+}
