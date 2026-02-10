@@ -27,3 +27,13 @@ thì lỗi này đến từ **extension của trình duyệt** (không phải t�
 - Tắt extension đang inject script vào trang rồi tải lại trang.
 - Hoặc mở bằng cửa sổ ẩn danh (không bật extension).
 - Hoặc test bằng profile Chrome/Edge mới, không cài extension.
+
+
+## Nếu bạn chỉ thấy README/tiêu đề repo
+Nếu bạn mở link repo (GitHub/GitLab UI), bạn sẽ chỉ thấy file README chứ không phải ứng dụng.
+
+Hãy mở ứng dụng đúng cách:
+- Chạy local server: `python3 -m http.server 4173`
+- Mở: `http://localhost:4173/index.html`
+
+Hoặc deploy static site và đảm bảo file `index.html` nằm ở thư mục public root.

@@ -49,6 +49,16 @@ body {
   padding: 1px 6px;
 }
 
+.error {
+  margin-bottom: 12px;
+  border: 1px solid #6f2d37;
+  background: rgba(255, 95, 109, 0.13);
+  color: #ffd9de;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
 .preview-card,
 .panel {
   background: color-mix(in srgb, var(--card), transparent 5%);
