@@ -9,6 +9,7 @@ Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần, tối �
 - Chọn easing (linear, ease in/out).
 - Play / pause / reset + thanh tua timeline.
 - Settings: tỉ lệ màn hình, FPS, màu màn hình, tổng thời gian chỉnh sửa.
+- Language: Tiếng Việt / English.
 
 ## Chạy local
 ```bash

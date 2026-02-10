@@ -45,21 +45,16 @@ function createApp() {
   }
 
   const controls = {
-    // transport
     playBtn: getEl('playBtn'),
     pauseBtn: getEl('pauseBtn'),
     resetBtn: getEl('resetBtn'),
     scrubber: getEl('scrubber'),
     timeLabel: getEl('timeLabel'),
-
-    // layer
     addRect: getEl('addRect'),
     addCircle: getEl('addCircle'),
     addText: getEl('addText'),
     deleteLayer: getEl('deleteLayer'),
     layerSelect: getEl('layerSelect'),
-
-    // animation form
     startX: getEl('startX'),
     startY: getEl('startY'),
     startScale: getEl('startScale'),
@@ -72,8 +67,7 @@ function createApp() {
     endOpacity: getEl('endOpacity'),
     easing: getEl('easing'),
     applyBtn: getEl('applyBtn'),
-
-    // settings
+    language: getEl('language'),
     screenRatio: getEl('screenRatio'),
     fps: getEl('fps'),
     screenColor: getEl('screenColor'),
@@ -91,6 +85,91 @@ function createApp() {
 
   const palette = ['#55d4ff', '#ffd166', '#ff7aa2', '#8cffb7', '#c5a8ff'];
 
+  const i18n = {
+    vi: {
+      'app.title': 'Alight Motion Web Lite',
+      'app.subtitle': 'Bản web đơn giản để dựng chuyển động nhanh trên điện thoại.',
+      'app.hint.extension': 'Nếu thấy lỗi <code>chrome-extension://...popup.js</code> thì hãy tắt extension trình duyệt rồi tải lại.',
+      'app.hint.url': 'Mở đúng URL: <code>.../index.html</code> (hoặc chạy local server) để thấy giao diện app.',
+      'transport.play': '▶ Phát',
+      'transport.pause': '⏸ Dừng',
+      'transport.reset': '↺ Reset',
+      'transport.scrub': 'Tua',
+      'layer.title': 'Tạo layer',
+      'layer.addRect': '+ Hình chữ nhật',
+      'layer.addCircle': '+ Hình tròn',
+      'layer.addText': '+ Text',
+      'layer.current': 'Layer hiện tại',
+      'layer.delete': 'Xóa layer',
+      'anim.title': 'Thiết lập chuyển động',
+      'anim.startTitle': 'Giá trị bắt đầu',
+      'anim.endTitle': 'Giá trị kết thúc',
+      'field.x': 'X',
+      'field.y': 'Y',
+      'field.scale': 'Scale',
+      'field.rotate': 'Rotate°',
+      'field.opacity': 'Opacity',
+      'anim.ease': 'Ease',
+      'anim.apply': 'Áp dụng vào layer',
+      'settings.title': 'Settings',
+      'settings.language': 'Ngôn ngữ',
+      'settings.ratio': 'Tỉ lệ màn hình',
+      'settings.ratio.9x16': '9:16 (Dọc)',
+      'settings.ratio.1x1': '1:1 (Vuông)',
+      'settings.ratio.16x9': '16:9 (Ngang)',
+      'settings.ratio.4x5': '4:5',
+      'settings.fps': 'FPS',
+      'settings.screenColor': 'Màu màn hình',
+      'settings.duration': 'Tổng thời gian chỉnh sửa (giây)',
+      'settings.apply': 'Áp dụng settings',
+      'layerType.rect': 'Hình chữ nhật',
+      'layerType.circle': 'Hình tròn',
+      'layerType.text': 'Text',
+      'watermark': 'Alight Motion Web Lite'
+    },
+    en: {
+      'app.title': 'Alight Motion Web Lite',
+      'app.subtitle': 'A simple web version for quick motion editing on mobile.',
+      'app.hint.extension': 'If you see <code>chrome-extension://...popup.js</code> errors, disable the browser extension and reload.',
+      'app.hint.url': 'Open the correct URL: <code>.../index.html</code> (or run a local server) to view the app.',
+      'transport.play': '▶ Play',
+      'transport.pause': '⏸ Pause',
+      'transport.reset': '↺ Reset',
+      'transport.scrub': 'Scrub',
+      'layer.title': 'Create layers',
+      'layer.addRect': '+ Rectangle',
+      'layer.addCircle': '+ Circle',
+      'layer.addText': '+ Text',
+      'layer.current': 'Current layer',
+      'layer.delete': 'Delete layer',
+      'anim.title': 'Animation setup',
+      'anim.startTitle': 'Start values',
+      'anim.endTitle': 'End values',
+      'field.x': 'X',
+      'field.y': 'Y',
+      'field.scale': 'Scale',
+      'field.rotate': 'Rotate°',
+      'field.opacity': 'Opacity',
+      'anim.ease': 'Ease',
+      'anim.apply': 'Apply to layer',
+      'settings.title': 'Settings',
+      'settings.language': 'Language',
+      'settings.ratio': 'Screen ratio',
+      'settings.ratio.9x16': '9:16 (Portrait)',
+      'settings.ratio.1x1': '1:1 (Square)',
+      'settings.ratio.16x9': '16:9 (Landscape)',
+      'settings.ratio.4x5': '4:5',
+      'settings.fps': 'FPS',
+      'settings.screenColor': 'Screen color',
+      'settings.duration': 'Total edit duration (seconds)',
+      'settings.apply': 'Apply settings',
+      'layerType.rect': 'Rectangle',
+      'layerType.circle': 'Circle',
+      'layerType.text': 'Text',
+      'watermark': 'Alight Motion Web Lite'
+    }
+  };
+
   const easingMap = {
     linear: (t) => t,
     easeIn: (t) => t * t,
@@ -103,12 +182,40 @@ function createApp() {
     fps: 30,
     ratio: { w: 9, h: 16 },
     screenColor: '#0b0f17',
+    language: 'vi',
     time: 0,
     playing: false,
     startTimeRef: 0,
     layers: [],
     selectedLayerId: null
   };
+
+  function t(key) {
+    return i18n[state.language]?.[key] || i18n.vi[key] || key;
+  }
+
+  function applyLanguage(lang) {
+    state.language = i18n[lang] ? lang : 'vi';
+    document.documentElement.lang = state.language;
+
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      const key = el.dataset.i18n;
+      const text = t(key);
+      if (text.includes('<')) {
+        el.innerHTML = text;
+      } else {
+        el.textContent = text;
+      }
+    });
+
+    document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+      const key = el.dataset.i18nTitle;
+      el.textContent = t(key);
+    });
+
+    refreshLayerSelect();
+    draw();
+  }
 
   // ===== Domain =====
   function createDefaultAnimation() {
@@ -197,7 +304,7 @@ function createApp() {
     state.layers.forEach((layer) => {
       const option = document.createElement('option');
       option.value = layer.id;
-      option.textContent = layer.name;
+      option.textContent = `${t(`layerType.${layer.type}`)} ${state.layers.indexOf(layer) + 1}`;
       controls.layerSelect.append(option);
     });
 
@@ -356,7 +463,7 @@ function createApp() {
     ctx.save();
     ctx.fillStyle = 'rgba(231,236,248,0.4)';
     ctx.font = '14px Inter, sans-serif';
-    ctx.fillText(`Alight Motion Web Lite • ${state.fps} FPS • ${state.ratio.w}:${state.ratio.h}`, 12, canvas.height - 16);
+    ctx.fillText(`${t('watermark')} • ${state.fps} FPS • ${state.ratio.w}:${state.ratio.h}`, 12, canvas.height - 16);
     ctx.restore();
   }
 
@@ -383,6 +490,10 @@ function createApp() {
     controls.applyBtn.addEventListener('click', applyAnimationControlsToLayer);
     controls.applySettingsBtn.addEventListener('click', applySettingsFromControls);
 
+    controls.language.addEventListener('change', () => {
+      applyLanguage(controls.language.value);
+    });
+
     controls.layerSelect.addEventListener('change', (event) => {
       state.selectedLayerId = event.target.value;
       const selected = getSelectedLayer();
@@ -407,6 +518,8 @@ function createApp() {
     addLayer('rect');
     addLayer('text');
 
+    controls.language.value = state.language;
+    applyLanguage(state.language);
     applySettingsFromControls();
     reset();
   }
