@@ -77,7 +77,7 @@ function createApp() {
     screenRatio: getEl('screenRatio'),
     fps: getEl('fps'),
     screenColor: getEl('screenColor'),
-    editDuration: getEl('editDuration'),
+    totalEditDuration: getEl('totalEditDuration'),
     applySettingsBtn: getEl('applySettingsBtn')
   };
 
@@ -177,11 +177,11 @@ function createApp() {
   function applySettingsFromControls() {
     state.ratio = parseRatio(controls.screenRatio.value);
     state.fps = clamp(Number(controls.fps.value) || 30, 12, 120);
-    state.duration = Math.max(0.2, Number(controls.editDuration.value) || 2);
+    state.duration = Math.max(0.2, Number(controls.totalEditDuration.value) || 2);
     state.screenColor = controls.screenColor.value || '#0b0f17';
 
     controls.fps.value = String(state.fps);
-    controls.editDuration.value = String(state.duration);
+    controls.totalEditDuration.value = String(state.duration);
 
     updateCanvasSize();
     state.layers.forEach(clampLayerToCanvas);
