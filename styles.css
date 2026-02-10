@@ -35,6 +35,20 @@ body {
   opacity: 0.85;
 }
 
+.hint {
+  margin-top: -6px !important;
+  font-size: 0.82rem;
+  color: #ffda96;
+  opacity: 0.95 !important;
+}
+
+.hint code {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
 .preview-card,
 .panel {
   background: color-mix(in srgb, var(--card), transparent 5%);

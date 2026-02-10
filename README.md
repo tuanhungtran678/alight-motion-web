@@ -14,3 +14,16 @@ Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần, tối �
 python3 -m http.server 4173
 ```
 Sau đó mở: `http://localhost:4173`
+
+## Khắc phục lỗi `Cannot set properties of null (setting 'valueAsNumber')`
+Nếu console báo lỗi kiểu:
+
+```text
+Error handling response: TypeError: Cannot set properties of null (setting 'valueAsNumber')
+at chrome-extension://.../popup.js
+```
+
+thì lỗi này đến từ **extension của trình duyệt** (không phải từ code của project). Cách xử lý:
+- Tắt extension đang inject script vào trang rồi tải lại trang.
+- Hoặc mở bằng cửa sổ ẩn danh (không bật extension).
+- Hoặc test bằng profile Chrome/Edge mới, không cài extension.
