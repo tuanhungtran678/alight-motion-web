@@ -5,11 +5,13 @@ Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần, tối �
 ## Tính năng chính
 - Canvas preview tỉ lệ 9:16.
 - Tạo layer hình chữ nhật, hình tròn, text.
+- **Chèn hình ảnh** từ máy vào project (image layer).
 - Chỉnh keyframe đầu/cuối cho vị trí, scale, rotation, opacity.
-- Chọn easing (linear, ease in/out).
+- Chọn easing (linear, ease in/out) + **Graph custom Ease** (đồ thị tốc độ chuyển động).
+- **Hiệu ứng layer**: blur, brightness, contrast, saturate, shadow.
 - Play / pause / reset + thanh tua timeline.
-- Settings: tỉ lệ màn hình, FPS, màu màn hình, tổng thời gian chỉnh sửa.
-- Language: Tiếng Việt / English.
+- Settings: ngôn ngữ, tỉ lệ màn hình, FPS, màu màn hình.
+- **Tổng thời gian chỉnh sửa dự án** (tính từ lúc bắt đầu dự án đến hiện tại, lưu local).
 
 ## Chạy local
 ```bash
@@ -17,27 +19,6 @@ python3 -m http.server 4173
 ```
 Sau đó mở: `http://localhost:4173/index.html`
 
-Có thể chỉnh ở panel Settings để thay đổi tỉ lệ, FPS, màu nền và thời lượng dự án.
-
-## Khắc phục lỗi `Cannot set properties of null (setting 'valueAsNumber')`
-Nếu console báo lỗi kiểu:
-
-```text
-Error handling response: TypeError: Cannot set properties of null (setting 'valueAsNumber')
-at chrome-extension://.../popup.js
-```
-
-thì lỗi này đến từ **extension của trình duyệt** (không phải từ code của project). Cách xử lý:
-- Tắt extension đang inject script vào trang rồi tải lại trang.
-- Hoặc mở bằng cửa sổ ẩn danh (không bật extension).
-- Hoặc test bằng profile Chrome/Edge mới, không cài extension.
-
-
-## Nếu bạn chỉ thấy README/tiêu đề repo
-Nếu bạn mở link repo (GitHub/GitLab UI), bạn sẽ chỉ thấy file README chứ không phải ứng dụng.
-
-Hãy mở ứng dụng đúng cách:
-- Chạy local server: `python3 -m http.server 4173`
-- Mở: `http://localhost:4173/index.html`
-
-Hoặc deploy static site và đảm bảo file `index.html` nằm ở thư mục public root.
+## Ghi chú
+- Nếu console báo lỗi từ `chrome-extension://.../popup.js` thì đó là do extension trình duyệt, không phải code app.
+- Nếu bạn chỉ thấy README/tiêu đề repo thì là bạn đang mở trang repo, chưa mở app. Hãy dùng URL `index.html` như trên.

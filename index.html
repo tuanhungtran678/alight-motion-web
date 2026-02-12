@@ -11,8 +11,6 @@
       <header class="topbar">
         <h1 data-i18n="app.title">Alight Motion Web Lite</h1>
         <p data-i18n="app.subtitle">Bản web đơn giản để dựng chuyển động nhanh trên điện thoại.</p>
-        <p class="hint" data-i18n="app.hint.extension">Nếu thấy lỗi <code>chrome-extension://...popup.js</code> thì hãy tắt extension trình duyệt rồi tải lại.</p>
-        <p class="hint" data-i18n="app.hint.url">Mở đúng URL: <code>.../index.html</code> (hoặc chạy local server) để thấy giao diện app.</p>
       </header>
 
       <div id="appError" class="error" hidden></div>
@@ -39,6 +37,13 @@
             <button id="addCircle" class="btn" data-i18n="layer.addCircle">+ Hình tròn</button>
             <button id="addText" class="btn" data-i18n="layer.addText">+ Text</button>
           </div>
+
+          <label>
+            <span data-i18n="layer.addImage">Chèn hình ảnh</span>
+            <input id="imageInput" type="file" accept="image/*" />
+          </label>
+          <button id="addImageBtn" class="btn" data-i18n="layer.addImageBtn">+ Thêm ảnh</button>
+
           <label>
             <span data-i18n="layer.current">Layer hiện tại</span>
             <select id="layerSelect"></select>
@@ -48,6 +53,10 @@
 
         <article class="panel">
           <h2 data-i18n="anim.title">Thiết lập chuyển động</h2>
+          <label>
+            <span data-i18n="anim.duration">Thời lượng animation (giây)</span>
+            <input id="timelineDuration" type="number" min="0.2" step="0.1" value="2" />
+          </label>
 
           <h3 data-i18n="anim.startTitle">Giá trị bắt đầu</h3>
           <div class="field-grid">
@@ -74,8 +83,28 @@
               <option value="easeIn">Ease In</option>
               <option value="easeOut">Ease Out</option>
               <option value="easeInOut" selected>Ease In Out</option>
+              <option value="custom" data-i18n="anim.customEase">Custom Graph</option>
             </select>
           </label>
+
+          <h3 data-i18n="effect.title">Hiệu ứng</h3>
+          <div class="field-grid">
+            <label><span data-i18n="effect.blur">Blur</span> <input id="fxBlur" type="range" min="0" max="20" step="0.5" value="0" /></label>
+            <label><span data-i18n="effect.brightness">Brightness</span> <input id="fxBrightness" type="range" min="0.2" max="2" step="0.1" value="1" /></label>
+            <label><span data-i18n="effect.contrast">Contrast</span> <input id="fxContrast" type="range" min="0.2" max="2" step="0.1" value="1" /></label>
+            <label><span data-i18n="effect.saturate">Saturate</span> <input id="fxSaturate" type="range" min="0" max="3" step="0.1" value="1" /></label>
+            <label><span data-i18n="effect.shadow">Shadow</span> <input id="fxShadow" type="range" min="0" max="40" step="1" value="0" /></label>
+          </div>
+
+          <h3 data-i18n="anim.graph">Graph custom ease</h3>
+          <canvas id="easeGraph" width="320" height="180" aria-label="Ease graph"></canvas>
+          <div class="field-grid">
+            <label>P1 X <input id="cp1x" type="range" min="0" max="1" step="0.01" value="0.25" /></label>
+            <label>P1 Y <input id="cp1y" type="range" min="0" max="1" step="0.01" value="0.1" /></label>
+            <label>P2 X <input id="cp2x" type="range" min="0" max="1" step="0.01" value="0.25" /></label>
+            <label>P2 Y <input id="cp2y" type="range" min="0" max="1" step="0.01" value="1" /></label>
+          </div>
+
           <button id="applyBtn" class="btn primary" data-i18n="anim.apply">Áp dụng vào layer</button>
         </article>
 
@@ -106,10 +135,14 @@
               <span data-i18n="settings.screenColor">Màu màn hình</span>
               <input id="screenColor" type="color" value="#0b0f17" />
             </label>
-            <label>
-              <span data-i18n="settings.duration">Tổng thời gian chỉnh sửa (giây)</span>
-              <input id="totalEditDuration" type="number" min="0.2" step="0.1" value="2" />
-            </label>
+            <div class="meta-box">
+              <strong data-i18n="settings.projectStart">Bắt đầu dự án:</strong>
+              <span id="projectStartLabel">-</span>
+            </div>
+            <div class="meta-box">
+              <strong data-i18n="settings.editElapsed">Tổng thời gian chỉnh sửa:</strong>
+              <span id="editElapsedLabel">0s</span>
+            </div>
           </div>
           <button id="applySettingsBtn" class="btn primary" data-i18n="settings.apply">Áp dụng settings</button>
         </article>
