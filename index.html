@@ -13,10 +13,24 @@
         <p data-i18n="app.subtitle">Bản web đơn giản để dựng chuyển động nhanh trên điện thoại.</p>
       </header>
 
+      <section class="hero">
+        <div>
+          <h2 data-i18n="home.title">Màn hình chính</h2>
+          <p data-i18n="home.subtitle">Giao diện gọn đẹp, preview nằm trong khung điện thoại để không bị méo.</p>
+        </div>
+        <div class="chip-row">
+          <span class="chip" data-i18n="home.chip.mobile">Mobile-first</span>
+          <span class="chip" data-i18n="home.chip.preview">Preview chuẩn tỉ lệ</span>
+          <span class="chip" data-i18n="home.chip.editor">Editor trực quan</span>
+        </div>
+      </section>
+
       <div id="appError" class="error" hidden></div>
 
       <section class="preview-card">
-        <canvas id="preview" width="360" height="640" aria-label="Khung preview"></canvas>
+        <div class="phone-stage">
+          <canvas id="preview" width="360" height="640" aria-label="Khung preview"></canvas>
+        </div>
         <div class="transport">
           <button id="playBtn" class="btn primary" data-i18n="transport.play">▶ Phát</button>
           <button id="pauseBtn" class="btn" data-i18n="transport.pause">⏸ Dừng</button>

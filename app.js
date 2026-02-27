@@ -93,6 +93,8 @@ function createApp() {
   const i18n = {
     vi: {
       'app.title': 'Alight Motion Web Lite', 'app.subtitle': 'Bản web đơn giản để dựng chuyển động nhanh trên điện thoại.',
+      'home.title': 'Màn hình chính', 'home.subtitle': 'Giao diện gọn đẹp, preview nằm trong khung điện thoại để không bị méo.',
+      'home.chip.mobile': 'Mobile-first', 'home.chip.preview': 'Preview chuẩn tỉ lệ', 'home.chip.editor': 'Editor trực quan',
       'transport.play': '▶ Phát', 'transport.pause': '⏸ Dừng', 'transport.reset': '↺ Reset', 'transport.scrub': 'Tua',
       'layer.title': 'Tạo layer', 'layer.addRect': '+ Hình chữ nhật', 'layer.addCircle': '+ Hình tròn', 'layer.addText': '+ Text',
       'layer.addImage': 'Chèn hình ảnh', 'layer.addImageBtn': '+ Thêm ảnh', 'layer.current': 'Layer hiện tại', 'layer.delete': 'Xóa layer',
@@ -109,6 +111,8 @@ function createApp() {
     },
     en: {
       'app.title': 'Alight Motion Web Lite', 'app.subtitle': 'A simple web version for quick motion editing on mobile.',
+      'home.title': 'Home screen', 'home.subtitle': 'Clean layout with phone-frame preview to avoid distortion.',
+      'home.chip.mobile': 'Mobile-first', 'home.chip.preview': 'Correct-ratio preview', 'home.chip.editor': 'Visual editor',
       'transport.play': '▶ Play', 'transport.pause': '⏸ Pause', 'transport.reset': '↺ Reset', 'transport.scrub': 'Scrub',
       'layer.title': 'Create layers', 'layer.addRect': '+ Rectangle', 'layer.addCircle': '+ Circle', 'layer.addText': '+ Text',
       'layer.addImage': 'Insert image', 'layer.addImageBtn': '+ Add image', 'layer.current': 'Current layer', 'layer.delete': 'Delete layer',

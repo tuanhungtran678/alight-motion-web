@@ -3,6 +3,7 @@
 Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần, tối ưu giao diện cho điện thoại.
 
 ## Tính năng chính
+- Màn hình chính đẹp với khung preview kiểu điện thoại, hiển thị không méo.
 - Canvas preview tỉ lệ 9:16.
 - Tạo layer hình chữ nhật, hình tròn, text.
 - **Chèn hình ảnh** từ máy vào project (image layer).

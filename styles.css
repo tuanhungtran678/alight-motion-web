@@ -59,6 +59,48 @@ body {
   font-size: 0.9rem;
 }
 
+.hero {
+  margin: 8px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: linear-gradient(140deg, rgba(85, 212, 255, 0.15), rgba(19, 28, 45, 0.6));
+}
+
+.hero h2 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.hero p {
+  margin: 0;
+  opacity: 0.88;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  background: rgba(11, 15, 23, 0.55);
+}
+
+.phone-stage {
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: radial-gradient(circle at top, rgba(34, 53, 87, 0.35), rgba(7, 12, 20, 0.75));
+}
+
 .preview-card,
 .panel {
   background: color-mix(in srgb, var(--card), transparent 5%);
@@ -68,12 +110,12 @@ body {
 }
 
 #preview {
-  width: 100%;
-  max-height: 70vh;
-  aspect-ratio: 9/16;
+  width: min(100%, 420px);
+  height: auto;
   background: #0b0f17;
   border-radius: 12px;
   border: 1px solid var(--border);
+  display: block;
 }
 
 .transport {
