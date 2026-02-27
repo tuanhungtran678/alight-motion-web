@@ -3,163 +3,104 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title data-i18n-title="app.title">Alight Motion Web Lite</title>
+    <title>Alight Motion Web Lite</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="app">
-      <header class="topbar">
-        <h1 data-i18n="app.title">Alight Motion Web Lite</h1>
-        <p data-i18n="app.subtitle">Bản web đơn giản để dựng chuyển động nhanh trên điện thoại.</p>
-      </header>
+      <section id="homeScreen" class="screen active">
+        <header class="topbar">
+          <h1>Alight Motion Web Lite</h1>
+          <p>Màn hình chính quản lý dự án.</p>
+        </header>
 
-      <section class="hero">
-        <div>
-          <h2 data-i18n="home.title">Màn hình chính</h2>
-          <p data-i18n="home.subtitle">Giao diện gọn đẹp, preview nằm trong khung điện thoại để không bị méo.</p>
-        </div>
-        <div class="chip-row">
-          <span class="chip" data-i18n="home.chip.mobile">Mobile-first</span>
-          <span class="chip" data-i18n="home.chip.preview">Preview chuẩn tỉ lệ</span>
-          <span class="chip" data-i18n="home.chip.editor">Editor trực quan</span>
-        </div>
+        <article class="panel">
+          <h2>Tạo dự án mới</h2>
+          <label>Tên dự án <input id="newProjectName" type="text" placeholder="Ví dụ: Intro TikTok" /></label>
+          <button id="createProjectBtn" class="btn primary">+ Tạo dự án</button>
+        </article>
+
+        <article class="panel">
+          <h2>Danh sách dự án</h2>
+          <div id="projectList" class="project-list"></div>
+        </article>
       </section>
 
-      <div id="appError" class="error" hidden></div>
-
-      <section class="preview-card">
-        <div class="phone-stage">
-          <canvas id="preview" width="360" height="640" aria-label="Khung preview"></canvas>
-        </div>
-        <div class="transport">
-          <button id="playBtn" class="btn primary" data-i18n="transport.play">▶ Phát</button>
-          <button id="pauseBtn" class="btn" data-i18n="transport.pause">⏸ Dừng</button>
-          <button id="resetBtn" class="btn" data-i18n="transport.reset">↺ Reset</button>
-          <label>
-            <span data-i18n="transport.scrub">Tua</span>
-            <input id="scrubber" type="range" min="0" max="100" value="0" />
-          </label>
-          <span id="timeLabel">0.00s / 2.00s</span>
-        </div>
-      </section>
-
-      <section class="panel-grid">
-        <article class="panel">
-          <h2 data-i18n="layer.title">Tạo layer</h2>
-          <div class="button-grid">
-            <button id="addRect" class="btn" data-i18n="layer.addRect">+ Hình chữ nhật</button>
-            <button id="addCircle" class="btn" data-i18n="layer.addCircle">+ Hình tròn</button>
-            <button id="addText" class="btn" data-i18n="layer.addText">+ Text</button>
+      <section id="editorScreen" class="screen">
+        <header class="topbar row-between">
+          <div>
+            <h1 id="projectTitle">Editor</h1>
+            <p id="projectMeta">-</p>
           </div>
+          <button id="backHomeBtn" class="btn">← Về màn hình chính</button>
+        </header>
 
-          <label>
-            <span data-i18n="layer.addImage">Chèn hình ảnh</span>
-            <input id="imageInput" type="file" accept="image/*" />
-          </label>
-          <button id="addImageBtn" class="btn" data-i18n="layer.addImageBtn">+ Thêm ảnh</button>
-
-          <label>
-            <span data-i18n="layer.current">Layer hiện tại</span>
-            <select id="layerSelect"></select>
-          </label>
-          <button id="deleteLayer" class="btn danger" data-i18n="layer.delete">Xóa layer</button>
-        </article>
-
-        <article class="panel">
-          <h2 data-i18n="anim.title">Thiết lập chuyển động</h2>
-          <label>
-            <span data-i18n="anim.duration">Thời lượng animation (giây)</span>
-            <input id="timelineDuration" type="number" min="0.2" step="0.1" value="2" />
-          </label>
-
-          <h3 data-i18n="anim.startTitle">Giá trị bắt đầu</h3>
-          <div class="field-grid">
-            <label><span data-i18n="field.x">X</span> <input id="startX" type="number" value="180" /></label>
-            <label><span data-i18n="field.y">Y</span> <input id="startY" type="number" value="320" /></label>
-            <label><span data-i18n="field.scale">Scale</span> <input id="startScale" type="number" step="0.1" value="1" /></label>
-            <label><span data-i18n="field.rotate">Rotate°</span> <input id="startRotation" type="number" value="0" /></label>
-            <label><span data-i18n="field.opacity">Opacity</span> <input id="startOpacity" type="number" step="0.05" min="0" max="1" value="1" /></label>
+        <section class="preview-card">
+          <div class="phone-stage">
+            <canvas id="preview" width="360" height="640" aria-label="Khung preview"></canvas>
           </div>
-
-          <h3 data-i18n="anim.endTitle">Giá trị kết thúc</h3>
-          <div class="field-grid">
-            <label><span data-i18n="field.x">X</span> <input id="endX" type="number" value="180" /></label>
-            <label><span data-i18n="field.y">Y</span> <input id="endY" type="number" value="180" /></label>
-            <label><span data-i18n="field.scale">Scale</span> <input id="endScale" type="number" step="0.1" value="1.5" /></label>
-            <label><span data-i18n="field.rotate">Rotate°</span> <input id="endRotation" type="number" value="360" /></label>
-            <label><span data-i18n="field.opacity">Opacity</span> <input id="endOpacity" type="number" step="0.05" min="0" max="1" value="1" /></label>
-          </div>
-
-          <label>
-            <span data-i18n="anim.ease">Ease</span>
-            <select id="easing">
-              <option value="linear">Linear</option>
-              <option value="easeIn">Ease In</option>
-              <option value="easeOut">Ease Out</option>
-              <option value="easeInOut" selected>Ease In Out</option>
-              <option value="custom" data-i18n="anim.customEase">Custom Graph</option>
-            </select>
-          </label>
-
-          <h3 data-i18n="effect.title">Hiệu ứng</h3>
-          <div class="field-grid">
-            <label><span data-i18n="effect.blur">Blur</span> <input id="fxBlur" type="range" min="0" max="20" step="0.5" value="0" /></label>
-            <label><span data-i18n="effect.brightness">Brightness</span> <input id="fxBrightness" type="range" min="0.2" max="2" step="0.1" value="1" /></label>
-            <label><span data-i18n="effect.contrast">Contrast</span> <input id="fxContrast" type="range" min="0.2" max="2" step="0.1" value="1" /></label>
-            <label><span data-i18n="effect.saturate">Saturate</span> <input id="fxSaturate" type="range" min="0" max="3" step="0.1" value="1" /></label>
-            <label><span data-i18n="effect.shadow">Shadow</span> <input id="fxShadow" type="range" min="0" max="40" step="1" value="0" /></label>
-          </div>
-
-          <h3 data-i18n="anim.graph">Graph custom ease</h3>
-          <canvas id="easeGraph" width="320" height="180" aria-label="Ease graph"></canvas>
-          <div class="field-grid">
-            <label>P1 X <input id="cp1x" type="range" min="0" max="1" step="0.01" value="0.25" /></label>
-            <label>P1 Y <input id="cp1y" type="range" min="0" max="1" step="0.01" value="0.1" /></label>
-            <label>P2 X <input id="cp2x" type="range" min="0" max="1" step="0.01" value="0.25" /></label>
-            <label>P2 Y <input id="cp2y" type="range" min="0" max="1" step="0.01" value="1" /></label>
-          </div>
-
-          <button id="applyBtn" class="btn primary" data-i18n="anim.apply">Áp dụng vào layer</button>
-        </article>
-
-        <article class="panel">
-          <h2 data-i18n="settings.title">Settings</h2>
-          <div class="field-grid single-column">
+          <div class="transport">
+            <button id="playBtn" class="btn primary">▶ Phát</button>
+            <button id="pauseBtn" class="btn">⏸ Dừng</button>
+            <button id="resetBtn" class="btn">↺ Reset</button>
             <label>
-              <span data-i18n="settings.language">Ngôn ngữ</span>
-              <select id="language">
-                <option value="vi">Tiếng Việt</option>
-                <option value="en">English</option>
+              Tua
+              <input id="scrubber" type="range" min="0" max="100" value="0" />
+            </label>
+            <span id="timeLabel">0.00s / 2.00s</span>
+          </div>
+        </section>
+
+        <section class="panel-grid">
+          <article class="panel">
+            <h2>Tạo layer</h2>
+            <div class="button-grid">
+              <button id="addRect" class="btn">+ Hình chữ nhật</button>
+              <button id="addCircle" class="btn">+ Hình tròn</button>
+              <button id="addText" class="btn">+ Text</button>
+            </div>
+            <label>Chèn hình ảnh <input id="imageInput" type="file" accept="image/*" /></label>
+            <button id="addImageBtn" class="btn">+ Thêm ảnh</button>
+            <label>Layer hiện tại <select id="layerSelect"></select></label>
+            <button id="deleteLayer" class="btn danger">Xóa layer</button>
+          </article>
+
+          <article class="panel">
+            <h2>Thiết lập chuyển động</h2>
+            <label>Thời lượng animation (giây) <input id="timelineDuration" type="number" min="0.2" step="0.1" value="2" /></label>
+            <div class="field-grid">
+              <label>X <input id="startX" type="number" value="180" /></label>
+              <label>Y <input id="startY" type="number" value="320" /></label>
+              <label>Scale <input id="startScale" type="number" step="0.1" value="1" /></label>
+              <label>Rotate° <input id="startRotation" type="number" value="0" /></label>
+              <label>Opacity <input id="startOpacity" type="number" step="0.05" min="0" max="1" value="1" /></label>
+            </div>
+            <div class="field-grid">
+              <label>X <input id="endX" type="number" value="180" /></label>
+              <label>Y <input id="endY" type="number" value="180" /></label>
+              <label>Scale <input id="endScale" type="number" step="0.1" value="1.5" /></label>
+              <label>Rotate° <input id="endRotation" type="number" value="360" /></label>
+              <label>Opacity <input id="endOpacity" type="number" step="0.05" min="0" max="1" value="1" /></label>
+            </div>
+            <label>Ease
+              <select id="easing">
+                <option value="linear">Linear</option>
+                <option value="easeIn">Ease In</option>
+                <option value="easeOut">Ease Out</option>
+                <option value="easeInOut" selected>Ease In Out</option>
+                <option value="custom">Custom Graph</option>
               </select>
             </label>
-            <label>
-              <span data-i18n="settings.ratio">Tỉ lệ màn hình</span>
-              <select id="screenRatio">
-                <option value="9:16" selected data-i18n="settings.ratio.9x16">9:16 (Dọc)</option>
-                <option value="1:1" data-i18n="settings.ratio.1x1">1:1 (Vuông)</option>
-                <option value="16:9" data-i18n="settings.ratio.16x9">16:9 (Ngang)</option>
-                <option value="4:5" data-i18n="settings.ratio.4x5">4:5</option>
-              </select>
-            </label>
-            <label>
-              <span data-i18n="settings.fps">FPS</span>
-              <input id="fps" type="number" min="12" max="120" step="1" value="30" />
-            </label>
-            <label>
-              <span data-i18n="settings.screenColor">Màu màn hình</span>
-              <input id="screenColor" type="color" value="#0b0f17" />
-            </label>
-            <div class="meta-box">
-              <strong data-i18n="settings.projectStart">Bắt đầu dự án:</strong>
-              <span id="projectStartLabel">-</span>
+            <canvas id="easeGraph" width="320" height="180"></canvas>
+            <div class="field-grid">
+              <label>P1 X <input id="cp1x" type="range" min="0" max="1" step="0.01" value="0.25" /></label>
+              <label>P1 Y <input id="cp1y" type="range" min="0" max="1" step="0.01" value="0.1" /></label>
+              <label>P2 X <input id="cp2x" type="range" min="0" max="1" step="0.01" value="0.25" /></label>
+              <label>P2 Y <input id="cp2y" type="range" min="0" max="1" step="0.01" value="1" /></label>
             </div>
-            <div class="meta-box">
-              <strong data-i18n="settings.editElapsed">Tổng thời gian chỉnh sửa:</strong>
-              <span id="editElapsedLabel">0s</span>
-            </div>
-          </div>
-          <button id="applySettingsBtn" class="btn primary" data-i18n="settings.apply">Áp dụng settings</button>
-        </article>
+            <button id="applyBtn" class="btn primary">Áp dụng vào layer</button>
+          </article>
+        </section>
       </section>
     </main>
 
