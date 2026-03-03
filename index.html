@@ -46,7 +46,7 @@
             <button id="playBtn" class="btn primary">▶ Phát</button>
             <button id="pauseBtn" class="btn">⏸ Dừng</button>
             <button id="resetBtn" class="btn">↺ Reset</button>
-            <button id="exportVideoBtn" class="btn">⤓ Xuất Video</button>
+            <button id="exportVideoBtn" class="btn">⤓ Xuất Video MP4</button>
             <label>Tua <input id="scrubber" type="range" min="0" max="100" value="0" /></label>
             <span id="timeLabel">0.00s / 2.00s</span>
           </div>
@@ -63,14 +63,14 @@
             <label>Chèn hình ảnh <input id="imageInput" type="file" accept="image/*" /></label>
             <button id="addImageBtn" class="btn">+ Thêm ảnh</button>
             <label>Layer hiện tại <select id="layerSelect"></select></label>
-            <label>Màu layer <input id="layerColor" type="color" value="#55d4ff" /></label>
+            <label>Màu layer <input id="layerColor" type="color" value="#21b8ff" /></label>
             <button id="deleteLayer" class="btn danger">Xóa layer</button>
           </article>
 
           <article class="panel">
             <h2>Timeline + Keyframes</h2>
             <label>Thời lượng (giây) <input id="timelineDuration" type="number" min="0.2" step="0.1" value="2" /></label>
-            <div id="timelineBar" class="timeline-bar"></div>
+            <div id="timelineTracks" class="timeline-tracks"></div>
             <div class="button-grid">
               <button id="addKeyBtn" class="btn">+ Keyframe tại thời điểm hiện tại</button>
               <button id="removeKeyBtn" class="btn danger">Xóa keyframe gần nhất</button>
@@ -113,11 +113,7 @@
         <label>Tên dự án <input id="menuProjectName" type="text" /></label>
         <label>Tỉ lệ
           <select id="menuRatio">
-            <option value="9:16">9:16</option>
-            <option value="16:9">16:9</option>
-            <option value="1:1">1:1</option>
-            <option value="3:4">3:4</option>
-            <option value="4:3">4:3</option>
+            <option value="9:16">9:16</option><option value="16:9">16:9</option><option value="1:1">1:1</option><option value="3:4">3:4</option><option value="4:3">4:3</option>
           </select>
         </label>
         <label>FPS <input id="menuFps" type="number" min="12" max="120" value="30" /></label>
