@@ -122,17 +122,29 @@ input, select, button {
 .key-dot {
   position: absolute;
   top: 50%;
-  width: 13px;
-  height: 11px;
-  transform: translate(-50%, -50%) rotate(45deg) scaleY(0.78);
+  width: 18px;
+  height: 30px;
+  transform: translate(-50%, -50%);
+  background: #000;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+.key-dot::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
   background: #fff;
-  border: 1.6px solid #000;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 }
 .key-dot.active {
-  transform: translate(-50%, -50%) rotate(45deg) scale(1.1) scaleY(0.78);
-  box-shadow:
-    0 0 0 1.6px #000,
-    0 0 0 4px #45d14f;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+.key-dot.active::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: #45f26a;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  z-index: -1;
 }
 .eye-btn { position: relative; min-width: 38px; }
 .eye-btn.is-hidden::after {
