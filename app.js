@@ -203,27 +203,75 @@ function draw() {
   ui.timeLabel.textContent = `${state.time.toFixed(2)}s / ${p.settings.duration.toFixed(2)}s`;
 }
 
+function moveLayer(fromIdx, toIdx) {
+  const p = currentProject();
+  if (!p) return;
+  if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= p.layers.length || toIdx >= p.layers.length) return;
+  const [item] = p.layers.splice(fromIdx, 1);
+  const adjustedToIdx = fromIdx < toIdx ? toIdx - 1 : toIdx;
+  p.layers.splice(adjustedToIdx, 0, item);
+  p.updatedAt = Date.now();
+  saveProjects();
+}
+
 function drawTimelineTracks() {
   const p = currentProject(); if (!p) return;
   ui.timelineTracks.innerHTML = '';
+  const activeLayerId = ui.layerSelect.value;
+
   p.layers.forEach((l, idx) => {
-    const row = document.createElement('div'); row.className = 'timeline-row';
+    const row = document.createElement('div');
+    row.className = 'timeline-row';
+    row.dataset.index = String(idx);
+
     const left = document.createElement('div'); left.className = 'timeline-left';
-    const lockBtn = document.createElement('button'); lockBtn.className = 'btn'; lockBtn.textContent = l.locked ? '🔒' : '🔓'; lockBtn.onclick = () => { l.locked = !l.locked; saveProjects(); drawTimelineTracks(); };
-    const eyeBtn = document.createElement('button'); eyeBtn.className = 'btn'; eyeBtn.textContent = l.visible === false ? '🙈' : '👁'; eyeBtn.onclick = () => { l.visible = l.visible === false ? true : false; saveProjects(); drawTimelineTracks(); draw(); };
+    const dragHandle = document.createElement('button');
+    dragHandle.className = 'btn drag-handle';
+    dragHandle.draggable = true;
+    dragHandle.textContent = '☰';
+    dragHandle.title = 'Kéo để đổi vị trí frame';
+
+    const lockBtn = document.createElement('button'); lockBtn.className = 'btn'; lockBtn.textContent = l.locked ? '🔒' : '🔓'; lockBtn.onclick = (e) => { e.stopPropagation(); l.locked = !l.locked; saveProjects(); drawTimelineTracks(); };
+    const eyeBtn = document.createElement('button'); eyeBtn.className = 'btn'; eyeBtn.textContent = l.visible === false ? '🙈' : '👁'; eyeBtn.onclick = (e) => { e.stopPropagation(); l.visible = l.visible === false ? true : false; saveProjects(); drawTimelineTracks(); draw(); };
     const chip = document.createElement('span'); chip.className = 'track-chip'; chip.style.background = l.color;
     const name = document.createElement('strong'); name.textContent = `${l.type} ${idx + 1}`;
-    left.append(lockBtn, eyeBtn, chip, name);
+    left.append(dragHandle, lockBtn, eyeBtn, chip, name);
 
     const strip = document.createElement('div'); strip.className = `timeline-strip ${idx === 0 ? 'main' : ''}`;
     const playhead = document.createElement('div'); playhead.className = 'playhead'; playhead.style.left = `${(state.time / Math.max(p.settings.duration, 0.001)) * 100}%`;
     strip.append(playhead);
+
     sortKf(l);
     l.keyframes.forEach((k) => {
-      const d = document.createElement('div'); d.className = 'key-dot'; d.style.left = `${(k.time / Math.max(p.settings.duration, 0.001)) * 100}%`; strip.append(d);
+      const d = document.createElement('div');
+      d.className = 'key-dot';
+      d.style.left = `${(k.time / Math.max(p.settings.duration, 0.001)) * 100}%`;
+      if (Math.abs(k.time - state.time) <= 0.04) d.classList.add('active');
+      strip.append(d);
     });
 
-    row.onclick = () => { ui.layerSelect.value = l.id; syncControlsFromNearest(); };
+    row.onclick = () => { ui.layerSelect.value = l.id; syncControlsFromNearest(); drawTimelineTracks(); };
+    if (activeLayerId === l.id) row.classList.add('selected');
+
+    dragHandle.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', row.dataset.index);
+      e.dataTransfer.effectAllowed = 'move';
+      row.classList.add('dragging-row');
+    });
+    dragHandle.addEventListener('dragend', () => row.classList.remove('dragging-row'));
+    row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag-over'); });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      const fromIdx = Number(e.dataTransfer.getData('text/plain'));
+      const toIdx = Number(row.dataset.index);
+      moveLayer(fromIdx, toIdx);
+      ui.layerSelect.value = activeLayerId;
+      hydrateEditor();
+      drawTimelineTracks();
+    });
+
     row.append(left, strip);
     ui.timelineTracks.append(row);
   });

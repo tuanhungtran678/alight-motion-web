@@ -84,13 +84,26 @@ input, select, button {
   grid-template-columns: 140px 1fr;
   gap: 8px;
   align-items: center;
+  border-radius: 8px;
+  padding: 4px;
+  border: 1px solid transparent;
 }
+.timeline-row.selected { border-color: color-mix(in srgb, var(--accent), white 20%); background: color-mix(in srgb, var(--card), var(--accent) 10%); }
+.timeline-row.drag-over { border-color: #4fb5ff; background: color-mix(in srgb, #4fb5ff 18%, var(--track-bg)); }
+.timeline-row.dragging-row { opacity: .55; }
 .timeline-left {
   display: flex;
   align-items: center;
   gap: 8px;
   color: #21b8ff;
 }
+.drag-handle {
+  min-width: 28px;
+  padding: 6px 8px;
+  line-height: 1;
+  cursor: grab;
+}
+.drag-handle:active { cursor: grabbing; }
 .track-chip {
   width: 18px;
   height: 18px;
@@ -109,12 +122,17 @@ input, select, button {
 .key-dot {
   position: absolute;
   top: 50%;
-  width: 10px;
-  height: 10px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%) rotate(45deg);
   background: #ffd34a;
-  border: 1px solid #000;
+  border: 1.5px solid #000;
+}
+.key-dot.active {
+  transform: translate(-50%, -50%) rotate(45deg) scale(1.1);
+  box-shadow:
+    0 0 0 1.5px #000,
+    0 0 0 4px #38a6ff;
 }
 .playhead {
   position: absolute;
