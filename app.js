@@ -3,6 +3,19 @@ function clamp(v, mi, ma) { return Math.min(ma, Math.max(mi, v)); }
 function lerp(a, b, t) { return a + (b - a) * t; }
 function uid() { return crypto.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 function bezier(t, p0, p1, p2, p3) { const nt = 1 - t; return nt ** 3 * p0 + 3 * nt ** 2 * t * p1 + 3 * nt * t ** 2 * p2 + t ** 3 * p3; }
+function cubicBezierAt(t, p1, p2) { return 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t ** 2 * p2 + t ** 3; }
+function cubicBezierSlope(t, p1, p2) { return 3 * (1 - t) ** 2 * p1 + 6 * (1 - t) * t * (p2 - p1) + 3 * t ** 2 * (1 - p2); }
+function cubicBezierEase(x, p1x, p1y, p2x, p2y) {
+  let t = x;
+  for (let i = 0; i < 7; i += 1) {
+    const xEst = cubicBezierAt(t, p1x, p2x) - x;
+    const slope = cubicBezierSlope(t, p1x, p2x);
+    if (Math.abs(xEst) < 1e-4 || Math.abs(slope) < 1e-5) break;
+    t -= xEst / slope;
+    t = clamp(t, 0, 1);
+  }
+  return cubicBezierAt(t, p1y, p2y);
+}
 
 const STORAGE_KEY = 'alightProjectsV3';
 const ui = {
@@ -15,12 +28,12 @@ const ui = {
   addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerColor: getEl('layerColor'),
   timelineDuration: getEl('timelineDuration'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
-  easing: getEl('easing'), cp1x: getEl('cp1x'), cp1y: getEl('cp1y'), cp2x: getEl('cp2x'), cp2y: getEl('cp2y'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph')
+  easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph')
 };
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, theme: localStorage.getItem('uiTheme') || 'dark' };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, theme: localStorage.getItem('uiTheme') || 'dark' };
 
 function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w || 9, h: h || 16 }; }
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
@@ -45,11 +58,11 @@ function sortKf(layer) { layer.keyframes.sort((a, b) => a.time - b.time); }
 function nearestKey(layer, t) { if (!layer.keyframes.length) return null; return layer.keyframes.reduce((best, k) => Math.abs(k.time - t) < Math.abs(best.time - t) ? k : best, layer.keyframes[0]); }
 
 function easeValue(t, mode) {
-  const p = currentProject(); const c = p?.settings.customEase || { p1y: 0.1, p2y: 1 };
+  const p = currentProject(); const c = p?.settings.customEase || { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 };
   if (mode === 'easeIn') return t * t;
   if (mode === 'easeOut') return 1 - (1 - t) ** 2;
   if (mode === 'easeInOut') return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
-  if (mode === 'custom') return bezier(t, 0, c.p1y, c.p2y, 1);
+  if (mode === 'custom') return cubicBezierEase(t, c.p1x, c.p1y, c.p2x, c.p2y);
   return t;
 }
 
@@ -102,8 +115,6 @@ function hydrateEditor() {
   ui.projectTitle.textContent = p.name;
   ui.projectMeta.textContent = `${p.settings.ratio} • ${p.settings.fps} FPS • ${p.settings.bgColor}`;
   ui.timelineDuration.value = String(p.settings.duration);
-  ui.cp1x.value = p.settings.customEase.p1x; ui.cp1y.value = p.settings.customEase.p1y; ui.cp2x.value = p.settings.customEase.p2x; ui.cp2y.value = p.settings.customEase.p2y;
-
   ui.layerSelect.innerHTML = '';
   p.layers.forEach((l, i) => { const opt = document.createElement('option'); opt.value = l.id; opt.textContent = `${l.type} ${i + 1}`; ui.layerSelect.append(opt); });
   if (p.layers.length) ui.layerSelect.value = p.layers[0].id;
@@ -159,7 +170,6 @@ function applyCurrentValues() {
   l.easing = ui.easing.value;
   l.color = ui.layerColor.value;
   p.settings.duration = Math.max(0.2, +ui.timelineDuration.value || 2);
-  p.settings.customEase = { p1x: +ui.cp1x.value, p1y: +ui.cp1y.value, p2x: +ui.cp2x.value, p2y: +ui.cp2y.value };
   p.updatedAt = Date.now(); saveProjects();
   drawEaseGraph(); drawTimelineTracks(); syncControlsFromNearest(); draw();
 }
@@ -232,7 +242,7 @@ function drawTimelineTracks() {
     dragHandle.title = 'Kéo để đổi vị trí frame';
 
     const lockBtn = document.createElement('button'); lockBtn.className = 'btn'; lockBtn.textContent = l.locked ? '🔒' : '🔓'; lockBtn.onclick = (e) => { e.stopPropagation(); l.locked = !l.locked; saveProjects(); drawTimelineTracks(); };
-    const eyeBtn = document.createElement('button'); eyeBtn.className = 'btn'; eyeBtn.textContent = l.visible === false ? '🙈' : '👁'; eyeBtn.onclick = (e) => { e.stopPropagation(); l.visible = l.visible === false ? true : false; saveProjects(); drawTimelineTracks(); draw(); };
+    const eyeBtn = document.createElement('button'); eyeBtn.className = 'btn eye-btn'; eyeBtn.textContent = '👁'; if (l.visible === false) eyeBtn.classList.add('is-hidden'); eyeBtn.onclick = (e) => { e.stopPropagation(); l.visible = l.visible === false ? true : false; saveProjects(); drawTimelineTracks(); draw(); };
     const chip = document.createElement('span'); chip.className = 'track-chip'; chip.style.background = l.color;
     const name = document.createElement('strong'); name.textContent = `${l.type} ${idx + 1}`;
     left.append(dragHandle, lockBtn, eyeBtn, chip, name);
@@ -280,15 +290,106 @@ function drawTimelineTracks() {
 function drawEaseGraph() {
   const p = currentProject(); if (!p) return;
   const cm = p.settings.customEase;
+  const { x: bx, y: by, w, h } = getEaseBounds();
   gctx.fillStyle = '#0b0f17'; gctx.fillRect(0, 0, ui.easeGraph.width, ui.easeGraph.height);
-  gctx.strokeStyle = 'rgba(255,255,255,.25)'; gctx.strokeRect(10, 10, ui.easeGraph.width - 20, ui.easeGraph.height - 20);
+  gctx.strokeStyle = 'rgba(255,255,255,.25)'; gctx.strokeRect(bx, by, w, h);
+
+  const start = graphToCanvas(0, 0);
+  const end = graphToCanvas(1, 1);
+  const cp1 = graphToCanvas(cm.p1x, cm.p1y);
+  const cp2 = graphToCanvas(cm.p2x, cm.p2y);
+
+  gctx.strokeStyle = 'rgba(255,255,255,.35)';
+  gctx.lineWidth = 1;
+  gctx.beginPath(); gctx.moveTo(start.x, start.y); gctx.lineTo(cp1.x, cp1.y); gctx.stroke();
+  gctx.beginPath(); gctx.moveTo(end.x, end.y); gctx.lineTo(cp2.x, cp2.y); gctx.stroke();
+
   gctx.beginPath(); gctx.strokeStyle = '#55d4ff';
   for (let i = 0; i <= 100; i += 1) {
-    const t = i / 100; const y = bezier(t, 0, cm.p1y, cm.p2y, 1);
-    const px = 10 + t * (ui.easeGraph.width - 20); const py = (ui.easeGraph.height - 10) - y * (ui.easeGraph.height - 20);
+    const t = i / 100;
+    const xVal = cubicBezierAt(t, cm.p1x, cm.p2x);
+    const yVal = cubicBezierAt(t, cm.p1y, cm.p2y);
+    const px = bx + xVal * w;
+    const py = (by + h) - yVal * h;
     if (i === 0) gctx.moveTo(px, py); else gctx.lineTo(px, py);
   }
   gctx.stroke();
+
+  drawEaseHandle(cp1.x, cp1.y);
+  drawEaseHandle(cp2.x, cp2.y);
+}
+
+function getEaseBounds() {
+  return { x: 10, y: 10, w: ui.easeGraph.width - 20, h: ui.easeGraph.height - 20 };
+}
+
+function graphToCanvas(nx, ny) {
+  const { x, y, w, h } = getEaseBounds();
+  return { x: x + nx * w, y: (y + h) - ny * h };
+}
+
+function canvasToGraph(cx, cy) {
+  const { x, y, w, h } = getEaseBounds();
+  return { nx: clamp((cx - x) / w, 0, 1), ny: clamp(((y + h) - cy) / h, 0, 1) };
+}
+
+function drawEaseHandle(x, y) {
+  gctx.beginPath();
+  gctx.fillStyle = '#d9d9d9';
+  gctx.strokeStyle = '#ffffff';
+  gctx.lineWidth = 3;
+  gctx.arc(x, y, 11, 0, Math.PI * 2);
+  gctx.fill();
+  gctx.stroke();
+}
+
+function pickEaseHandle(x, y) {
+  const p = currentProject();
+  if (!p) return null;
+  const cm = p.settings.customEase;
+  const cp1 = graphToCanvas(cm.p1x, cm.p1y);
+  const cp2 = graphToCanvas(cm.p2x, cm.p2y);
+  const d1 = Math.hypot(x - cp1.x, y - cp1.y);
+  const d2 = Math.hypot(x - cp2.x, y - cp2.y);
+  if (Math.min(d1, d2) > 18) return null;
+  return d1 <= d2 ? 'p1' : 'p2';
+}
+
+function bindEaseGraphDrag() {
+  ui.easeGraph.addEventListener('pointerdown', (e) => {
+    const rect = ui.easeGraph.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (ui.easeGraph.width / rect.width);
+    const y = (e.clientY - rect.top) * (ui.easeGraph.height / rect.height);
+    const handle = pickEaseHandle(x, y);
+    if (!handle) return;
+    state.easeDrag = handle;
+    ui.easeGraph.setPointerCapture(e.pointerId);
+  });
+
+  ui.easeGraph.addEventListener('pointermove', (e) => {
+    if (!state.easeDrag) return;
+    const p = currentProject();
+    if (!p) return;
+    const rect = ui.easeGraph.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (ui.easeGraph.width / rect.width);
+    const y = (e.clientY - rect.top) * (ui.easeGraph.height / rect.height);
+    const { nx, ny } = canvasToGraph(x, y);
+    if (state.easeDrag === 'p1') {
+      p.settings.customEase.p1x = nx;
+      p.settings.customEase.p1y = ny;
+    } else {
+      p.settings.customEase.p2x = nx;
+      p.settings.customEase.p2y = ny;
+    }
+    p.updatedAt = Date.now();
+    saveProjects();
+    drawEaseGraph();
+    draw();
+  });
+
+  const endDrag = () => { state.easeDrag = null; };
+  ui.easeGraph.addEventListener('pointerup', endDrag);
+  ui.easeGraph.addEventListener('pointercancel', endDrag);
 }
 
 function tick(ts) {
@@ -419,7 +520,7 @@ function bind() {
   ui.addKeyBtn.onclick = addKeyframeAtCurrent;
   ui.removeKeyBtn.onclick = removeNearestKeyframe;
   ui.applyBtn.onclick = applyCurrentValues;
-  ['timelineDuration', 'easing', 'cp1x', 'cp1y', 'cp2x', 'cp2y', 'startX', 'startY', 'startScale', 'startRotation', 'startOpacity'].forEach((k) => ui[k].addEventListener('input', applyCurrentValues));
+  ['timelineDuration', 'easing', 'startX', 'startY', 'startScale', 'startRotation', 'startOpacity'].forEach((k) => ui[k].addEventListener('input', applyCurrentValues));
 
   ui.playBtn.onclick = () => { state.playing = true; state.startRef = 0; requestAnimationFrame(tick); };
   ui.pauseBtn.onclick = () => { state.playing = false; state.startRef = 0; };
@@ -428,6 +529,7 @@ function bind() {
   ui.scrubber.oninput = () => { const p = currentProject(); if (!p) return; state.playing = false; state.time = (+ui.scrubber.value / 100) * p.settings.duration; draw(); drawTimelineTracks(); syncControlsFromNearest(); };
 
   bindDrag();
+  bindEaseGraphDrag();
 }
 
 function preloadImages() {
