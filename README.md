@@ -2,16 +2,10 @@
 
 Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần.
 
-## Điểm mới quan trọng
-- Có **màn hình chính riêng** để quản lý nhiều dự án.
-- Tạo dự án mới, mở dự án, xóa dự án, chuyển qua lại giữa các dự án.
-- Mỗi dự án có editor riêng với layers, keyframe, ease graph, timeline.
-
-## Tính năng editor
-- Layer: rectangle, circle, text, image.
-- Chỉnh keyframe đầu/cuối: vị trí, scale, rotation, opacity.
-- Easing presets + custom ease graph.
-- Play / pause / reset + scrubber timeline.
+## Điểm mới
+- Khi bấm **Tạo dự án mới**, app mở **cửa sổ Create Project** giống mock: chọn tỉ lệ, FPS, tên dự án, màu nền.
+- Màn hình chính tách riêng để quản lý nhiều dự án (tạo / mở / xóa / chuyển dự án).
+- Mỗi dự án có editor riêng với layer, keyframe, custom ease graph và timeline.
 
 ## Chạy local
 ```bash

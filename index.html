@@ -16,8 +16,7 @@
 
         <article class="panel">
           <h2>Tạo dự án mới</h2>
-          <label>Tên dự án <input id="newProjectName" type="text" placeholder="Ví dụ: Intro TikTok" /></label>
-          <button id="createProjectBtn" class="btn primary">+ Tạo dự án</button>
+          <button id="createProjectBtn" class="btn primary">+ Tạo dự án mới</button>
         </article>
 
         <article class="panel">
@@ -103,6 +102,43 @@
         </section>
       </section>
     </main>
+
+    <div id="createProjectModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Create Project">
+      <div class="modal-card">
+        <button id="closeModalBtn" class="icon-close" aria-label="Close">✕</button>
+        <h2>Create Project</h2>
+        <hr />
+
+        <div class="ratio-row" id="ratioRow">
+          <button class="ratio-btn selected" data-ratio="9:16">9:16</button>
+          <button class="ratio-btn" data-ratio="16:9">16:9</button>
+          <button class="ratio-btn" data-ratio="1:1">1:1</button>
+          <button class="ratio-btn" data-ratio="3:4">3:4</button>
+          <button class="ratio-btn" data-ratio="4:3">4:3</button>
+        </div>
+
+        <label>FPS
+          <select id="modalFps">
+            <option>24</option>
+            <option selected>30</option>
+            <option>60</option>
+          </select>
+        </label>
+
+        <label>Name
+          <input id="modalProjectName" type="text" placeholder="Enter project name here..." />
+        </label>
+
+        <label>BG color
+          <div class="bg-row">
+            <input id="modalBgColor" type="color" value="#000000" />
+            <input id="modalBgHex" type="text" value="#000000" readonly />
+          </div>
+        </label>
+
+        <button id="confirmCreateBtn" class="btn primary">Create</button>
+      </div>
+    </div>
 
     <script src="app.js"></script>
   </body>
