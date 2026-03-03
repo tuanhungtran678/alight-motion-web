@@ -86,6 +86,14 @@
               <label>Opacity <input id="startOpacity" type="number" step="0.05" min="0" max="1" value="1" /></label>
             </div>
             <label>Ease
+              <select id="easeTarget">
+                <option value="position" selected>Áp dụng cho: Di chuyển (X/Y)</option>
+                <option value="scale">Áp dụng cho: Scale</option>
+                <option value="rotation">Áp dụng cho: Xoay</option>
+                <option value="opacity">Áp dụng cho: Opacity</option>
+              </select>
+            </label>
+            <label>Kiểu Ease
               <select id="easing">
                 <option value="linear">Linear</option>
                 <option value="easeIn">Ease In</option>
@@ -97,6 +105,15 @@
             <canvas id="easeGraph" width="320" height="160"></canvas>
             <small>Kéo 2 điểm tròn trên đồ thị để chỉnh custom ease.</small>
             <button id="applyBtn" class="btn primary">Áp dụng vào keyframe hiện tại</button>
+
+            <h3>Camera</h3>
+            <div class="field-grid">
+              <label>Cam X <input id="camX" type="number" value="0" /></label>
+              <label>Cam Y <input id="camY" type="number" value="0" /></label>
+              <label>Cam Zoom <input id="camZoom" type="number" min="0.1" step="0.1" value="1" /></label>
+              <label>Cam Rotate° <input id="camRotation" type="number" value="0" /></label>
+            </div>
+            <button id="applyCameraBtn" class="btn">Áp dụng Camera</button>
           </article>
         </section>
       </section>

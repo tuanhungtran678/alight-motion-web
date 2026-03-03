@@ -28,7 +28,8 @@ const ui = {
   addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerColor: getEl('layerColor'),
   timelineDuration: getEl('timelineDuration'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
-  easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph')
+  easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'),
+  camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn')
 };
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
@@ -37,15 +38,54 @@ const state = { projects: [], currentProjectId: null, time: 0, playing: false, s
 
 function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w || 9, h: h || 16 }; }
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
-function newLayer(type, extra = {}) { return { id: uid(), type, color: '#21b8ff', text: 'TEXT', size: 90, imageSrc: null, imageObj: null, easing: 'easeInOut', visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
+function newLayer(type, extra = {}) { return { id: uid(), type, color: '#21b8ff', text: 'TEXT', size: 90, imageSrc: null, imageObj: null, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
 function newProject({ name, ratio, fps, bgColor }) {
-  return { id: uid(), name: name || `Project ${state.projects.length + 1}`, createdAt: Date.now(), updatedAt: Date.now(), settings: { ratio: ratio || '9:16', fps: Number(fps) || 30, bgColor: bgColor || '#000000', duration: 2, customEase: { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 } }, layers: [] };
+  return { id: uid(), name: name || `Project ${state.projects.length + 1}`, createdAt: Date.now(), updatedAt: Date.now(), settings: { ratio: ratio || '9:16', fps: Number(fps) || 30, bgColor: bgColor || '#000000', duration: 2, customEase: { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 }, camera: { x: 0, y: 0, zoom: 1, rotation: 0 } }, layers: [] };
 }
 
 function saveProjects() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.projects)); }
+
+function normalizeLayerEasing(layer) {
+  if (!layer.easing) {
+    layer.easing = { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' };
+    return;
+  }
+  if (typeof layer.easing === 'string') {
+    const e = layer.easing;
+    layer.easing = { position: e, scale: e, rotation: e, opacity: e };
+    return;
+  }
+  layer.easing.position = layer.easing.position || 'easeInOut';
+  layer.easing.scale = layer.easing.scale || 'easeInOut';
+  layer.easing.rotation = layer.easing.rotation || 'easeInOut';
+  layer.easing.opacity = layer.easing.opacity || 'easeInOut';
+}
+
+function normalizeProject(p) {
+  p.settings = p.settings || {};
+  p.settings.customEase = p.settings.customEase || { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 };
+  p.settings.camera = p.settings.camera || { x: 0, y: 0, zoom: 1, rotation: 0 };
+  p.settings.camera.x = Number.isFinite(+p.settings.camera.x) ? +p.settings.camera.x : 0;
+  p.settings.camera.y = Number.isFinite(+p.settings.camera.y) ? +p.settings.camera.y : 0;
+  p.settings.camera.zoom = Number.isFinite(+p.settings.camera.zoom) ? Math.max(0.1, +p.settings.camera.zoom) : 1;
+  p.settings.camera.rotation = Number.isFinite(+p.settings.camera.rotation) ? +p.settings.camera.rotation : 0;
+  p.layers = Array.isArray(p.layers) ? p.layers : [];
+  p.layers.forEach(normalizeLayerEasing);
+  return p;
+}
+
+function getLayerEasing(layer, target) {
+  normalizeLayerEasing(layer);
+  return layer.easing[target] || 'easeInOut';
+}
+
+function setLayerEasing(layer, target, mode) {
+  normalizeLayerEasing(layer);
+  layer.easing[target] = mode;
+}
 function loadProjects() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  state.projects = raw ? JSON.parse(raw) : [];
+  state.projects = raw ? JSON.parse(raw).map(normalizeProject) : [];
   if (!state.projects.length) {
     state.projects.push(newProject({ name: 'Dự án trống', ratio: '9:16', fps: 30, bgColor: '#000000' }));
     saveProjects();
@@ -76,8 +116,11 @@ function getTransform(layer, t) {
     if (t >= layer.keyframes[i].time && t <= layer.keyframes[i + 1].time) { a = layer.keyframes[i]; b = layer.keyframes[i + 1]; break; }
   }
   const u = (t - a.time) / Math.max(0.0001, b.time - a.time);
-  const e = easeValue(u, layer.easing);
-  return { x: lerp(a.x, b.x, e), y: lerp(a.y, b.y, e), scale: lerp(a.scale, b.scale, e), rotation: lerp(a.rotation, b.rotation, e), opacity: lerp(a.opacity, b.opacity, e) };
+  const ePos = easeValue(u, getLayerEasing(layer, 'position'));
+  const eScale = easeValue(u, getLayerEasing(layer, 'scale'));
+  const eRotation = easeValue(u, getLayerEasing(layer, 'rotation'));
+  const eOpacity = easeValue(u, getLayerEasing(layer, 'opacity'));
+  return { x: lerp(a.x, b.x, ePos), y: lerp(a.y, b.y, ePos), scale: lerp(a.scale, b.scale, eScale), rotation: lerp(a.rotation, b.rotation, eRotation), opacity: lerp(a.opacity, b.opacity, eOpacity) };
 }
 
 function setCanvasRatio(r) { const rr = parseRatio(r); const base = 360; ui.preview.width = base; ui.preview.height = Math.round((base * rr.h) / rr.w); }
@@ -115,6 +158,10 @@ function hydrateEditor() {
   ui.projectTitle.textContent = p.name;
   ui.projectMeta.textContent = `${p.settings.ratio} • ${p.settings.fps} FPS • ${p.settings.bgColor}`;
   ui.timelineDuration.value = String(p.settings.duration);
+  ui.camX.value = String(p.settings.camera?.x || 0);
+  ui.camY.value = String(p.settings.camera?.y || 0);
+  ui.camZoom.value = String(p.settings.camera?.zoom || 1);
+  ui.camRotation.value = String(p.settings.camera?.rotation || 0);
   ui.layerSelect.innerHTML = '';
   p.layers.forEach((l, i) => { const opt = document.createElement('option'); opt.value = l.id; opt.textContent = `${l.type} ${i + 1}`; ui.layerSelect.append(opt); });
   if (p.layers.length) ui.layerSelect.value = p.layers[0].id;
@@ -129,7 +176,7 @@ function syncControlsFromNearest() {
   if (!l) { ui.keyframeInfo.textContent = 'Keyframes: (chưa có layer)'; return; }
   const k = nearestKey(l, state.time);
   ui.startX.value = k.x; ui.startY.value = k.y; ui.startScale.value = k.scale; ui.startRotation.value = k.rotation; ui.startOpacity.value = k.opacity;
-  ui.easing.value = l.easing;
+  ui.easing.value = getLayerEasing(l, ui.easeTarget.value || 'position');
   ui.layerColor.value = l.color || '#21b8ff';
   ui.keyframeInfo.textContent = `Keyframes: ${l.keyframes.map((x) => x.time.toFixed(2)).join(', ')}`;
 }
@@ -167,7 +214,7 @@ function applyCurrentValues() {
   const p = currentProject(); const l = currentLayer(); if (!p || !l) return;
   const k = ensureKeyAtCurrent(l);
   k.x = +ui.startX.value; k.y = +ui.startY.value; k.scale = +ui.startScale.value; k.rotation = +ui.startRotation.value; k.opacity = +ui.startOpacity.value;
-  l.easing = ui.easing.value;
+  setLayerEasing(l, ui.easeTarget.value || 'position', ui.easing.value);
   l.color = ui.layerColor.value;
   p.settings.duration = Math.max(0.2, +ui.timelineDuration.value || 2);
   p.updatedAt = Date.now(); saveProjects();
@@ -207,7 +254,14 @@ function draw() {
   ctx.fillRect(0, 0, ui.preview.width, ui.preview.height);
   for (let x = 0; x <= ui.preview.width; x += 60) { ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.moveTo(x, 0); ctx.lineTo(x, ui.preview.height); ctx.stroke(); }
   for (let y = 0; y <= ui.preview.height; y += 60) { ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.moveTo(0, y); ctx.lineTo(ui.preview.width, y); ctx.stroke(); }
+  const cam = p.settings.camera || { x: 0, y: 0, zoom: 1, rotation: 0 };
+  ctx.save();
+  ctx.translate(ui.preview.width / 2, ui.preview.height / 2);
+  ctx.scale(Math.max(0.1, cam.zoom || 1), Math.max(0.1, cam.zoom || 1));
+  ctx.rotate(((cam.rotation || 0) * Math.PI) / 180);
+  ctx.translate(-ui.preview.width / 2 - (cam.x || 0), -ui.preview.height / 2 - (cam.y || 0));
   p.layers.forEach(drawLayer);
+  ctx.restore();
   const ratio = p.settings.duration ? state.time / p.settings.duration : 0;
   ui.scrubber.value = String(Math.floor(ratio * 100));
   ui.timeLabel.textContent = `${state.time.toFixed(2)}s / ${p.settings.duration.toFixed(2)}s`;
@@ -304,19 +358,26 @@ function drawEaseGraph() {
   gctx.beginPath(); gctx.moveTo(start.x, start.y); gctx.lineTo(cp1.x, cp1.y); gctx.stroke();
   gctx.beginPath(); gctx.moveTo(end.x, end.y); gctx.lineTo(cp2.x, cp2.y); gctx.stroke();
 
+  const mode = ui.easing.value || 'easeInOut';
   gctx.beginPath(); gctx.strokeStyle = '#55d4ff';
   for (let i = 0; i <= 100; i += 1) {
     const t = i / 100;
-    const xVal = cubicBezierAt(t, cm.p1x, cm.p2x);
-    const yVal = cubicBezierAt(t, cm.p1y, cm.p2y);
+    let xVal = t;
+    let yVal = easeValue(t, mode);
+    if (mode === 'custom') {
+      xVal = cubicBezierAt(t, cm.p1x, cm.p2x);
+      yVal = cubicBezierAt(t, cm.p1y, cm.p2y);
+    }
     const px = bx + xVal * w;
     const py = (by + h) - yVal * h;
     if (i === 0) gctx.moveTo(px, py); else gctx.lineTo(px, py);
   }
   gctx.stroke();
 
-  drawEaseHandle(cp1.x, cp1.y);
-  drawEaseHandle(cp2.x, cp2.y);
+  if (mode === 'custom') {
+    drawEaseHandle(cp1.x, cp1.y);
+    drawEaseHandle(cp2.x, cp2.y);
+  }
 }
 
 function getEaseBounds() {
@@ -357,6 +418,7 @@ function pickEaseHandle(x, y) {
 
 function bindEaseGraphDrag() {
   ui.easeGraph.addEventListener('pointerdown', (e) => {
+    if (ui.easing.value !== 'custom') return;
     const rect = ui.easeGraph.getBoundingClientRect();
     const x = (e.clientX - rect.left) * (ui.easeGraph.width / rect.width);
     const y = (e.clientY - rect.top) * (ui.easeGraph.height / rect.height);
@@ -367,7 +429,7 @@ function bindEaseGraphDrag() {
   });
 
   ui.easeGraph.addEventListener('pointermove', (e) => {
-    if (!state.easeDrag) return;
+    if (!state.easeDrag || ui.easing.value !== 'custom') return;
     const p = currentProject();
     if (!p) return;
     const rect = ui.easeGraph.getBoundingClientRect();
@@ -516,11 +578,25 @@ function bind() {
   };
 
   ui.layerSelect.onchange = syncControlsFromNearest;
+  ui.easeTarget.onchange = () => { const l = currentLayer(); if (!l) return; ui.easing.value = getLayerEasing(l, ui.easeTarget.value); drawEaseGraph(); };
   ui.layerColor.oninput = applyCurrentValues;
   ui.addKeyBtn.onclick = addKeyframeAtCurrent;
   ui.removeKeyBtn.onclick = removeNearestKeyframe;
   ui.applyBtn.onclick = applyCurrentValues;
   ['timelineDuration', 'easing', 'startX', 'startY', 'startScale', 'startRotation', 'startOpacity'].forEach((k) => ui[k].addEventListener('input', applyCurrentValues));
+  ui.applyCameraBtn.onclick = () => {
+    const p = currentProject();
+    if (!p) return;
+    p.settings.camera = {
+      x: +ui.camX.value || 0,
+      y: +ui.camY.value || 0,
+      zoom: Math.max(0.1, +ui.camZoom.value || 1),
+      rotation: +ui.camRotation.value || 0
+    };
+    p.updatedAt = Date.now();
+    saveProjects();
+    draw();
+  };
 
   ui.playBtn.onclick = () => { state.playing = true; state.startRef = 0; requestAnimationFrame(tick); };
   ui.pauseBtn.onclick = () => { state.playing = false; state.startRef = 0; };
