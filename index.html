@@ -70,6 +70,16 @@
           <article class="panel">
             <h2>Timeline + Keyframes</h2>
             <label>Thời lượng (giây) <input id="timelineDuration" type="number" min="0.2" step="0.1" value="2" /></label>
+            <div class="field-grid">
+              <label>Track frame
+                <select id="frameTarget">
+                  <option value="layer" selected>Layer</option>
+                  <option value="camera">Camera</option>
+                  <option value="audio">Audio</option>
+                </select>
+              </label>
+              <label>Thời gian frame (s) <input id="frameTime" type="number" min="0" step="0.01" value="0" /></label>
+            </div>
             <div id="timelineTracks" class="timeline-tracks"></div>
             <div class="button-grid">
               <button id="addKeyBtn" class="btn">+ Keyframe tại thời điểm hiện tại</button>

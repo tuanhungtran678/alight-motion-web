@@ -26,7 +26,7 @@ const ui = {
   modal: getEl('createProjectModal'), closeModalBtn: getEl('closeModalBtn'), ratioRow: getEl('ratioRow'), modalFps: getEl('modalFps'), modalResolution: getEl('modalResolution'), modalProjectName: getEl('modalProjectName'), modalBgColor: getEl('modalBgColor'), modalBgHex: getEl('modalBgHex'), confirmCreateBtn: getEl('confirmCreateBtn'),
   preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), exportVideoBtn: getEl('exportVideoBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
   addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerColor: getEl('layerColor'),
-  timelineDuration: getEl('timelineDuration'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
+  timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'),
   camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn'),
@@ -43,7 +43,25 @@ function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w 
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
 function newLayer(type, extra = {}) { return { id: uid(), type, color: '#21b8ff', text: 'TEXT', size: 90, imageSrc: null, imageObj: null, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
 function newProject({ name, ratio, fps, resolution, bgColor }) {
-  return { id: uid(), name: name || `Project ${state.projects.length + 1}`, createdAt: Date.now(), updatedAt: Date.now(), settings: { ratio: ratio || '9:16', fps: Number(fps) || 30, resolution: Number(resolution) || 1080, bgColor: bgColor || '#000000', duration: 2, customEase: { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 }, camera: { x: 0, y: 0, zoom: 1, rotation: 0 }, audio: { src: null, name: '', volume: 1, offset: 0 } }, layers: [] };
+  return {
+    id: uid(),
+    name: name || `Project ${state.projects.length + 1}`,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    settings: {
+      ratio: ratio || '9:16',
+      fps: Number(fps) || 30,
+      resolution: Number(resolution) || 1080,
+      bgColor: bgColor || '#000000',
+      duration: 2,
+      customEase: { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 },
+      camera: { x: 0, y: 0, zoom: 1, rotation: 0 },
+      audio: { src: null, name: '', volume: 1, offset: 0 },
+      cameraKeyframes: [{ id: uid(), time: 0, x: 0, y: 0, zoom: 1, rotation: 0 }],
+      audioKeyframes: [{ id: uid(), time: 0, volume: 1, offset: 0 }]
+    },
+    layers: []
+  };
 }
 
 function saveProjects() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.projects)); }
@@ -78,6 +96,12 @@ function normalizeProject(p) {
   p.settings.audio.name = p.settings.audio.name || '';
   p.settings.audio.volume = Number.isFinite(+p.settings.audio.volume) ? clamp(+p.settings.audio.volume, 0, 2) : 1;
   p.settings.audio.offset = Number.isFinite(+p.settings.audio.offset) ? Math.max(0, +p.settings.audio.offset) : 0;
+  p.settings.cameraKeyframes = Array.isArray(p.settings.cameraKeyframes) && p.settings.cameraKeyframes.length
+    ? p.settings.cameraKeyframes
+    : [{ id: uid(), time: 0, x: p.settings.camera.x, y: p.settings.camera.y, zoom: p.settings.camera.zoom, rotation: p.settings.camera.rotation }];
+  p.settings.audioKeyframes = Array.isArray(p.settings.audioKeyframes) && p.settings.audioKeyframes.length
+    ? p.settings.audioKeyframes
+    : [{ id: uid(), time: 0, volume: p.settings.audio.volume, offset: p.settings.audio.offset }];
   p.layers = Array.isArray(p.layers) ? p.layers : [];
   p.layers.forEach(normalizeLayerEasing);
   return p;
@@ -91,6 +115,35 @@ function getLayerEasing(layer, target) {
 function setLayerEasing(layer, target, mode) {
   normalizeLayerEasing(layer);
   layer.easing[target] = mode;
+}
+
+function nearestTimeKey(list, t) { if (!list?.length) return null; return list.reduce((best, k) => Math.abs(k.time - t) < Math.abs(best.time - t) ? k : best, list[0]); }
+function sortTimeKeys(list) { list.sort((a, b) => a.time - b.time); }
+
+function sampleTimelineValue(list, t, numericKeys) {
+  sortTimeKeys(list);
+  if (!list.length) return null;
+  if (t <= list[0].time) return { ...list[0] };
+  if (t >= list[list.length - 1].time) return { ...list[list.length - 1] };
+  let a = list[0], b = list[1];
+  for (let i = 0; i < list.length - 1; i += 1) {
+    if (t >= list[i].time && t <= list[i + 1].time) { a = list[i]; b = list[i + 1]; break; }
+  }
+  const u = (t - a.time) / Math.max(0.0001, b.time - a.time);
+  const out = { time: t };
+  numericKeys.forEach((k) => { out[k] = lerp(a[k], b[k], u); });
+  return out;
+}
+
+function getCameraAt(t) {
+  const p = currentProject(); if (!p) return { x: 0, y: 0, zoom: 1, rotation: 0 };
+  return sampleTimelineValue(p.settings.cameraKeyframes || [], t, ['x', 'y', 'zoom', 'rotation']) || p.settings.camera;
+}
+
+function getAudioAt(t) {
+  const p = currentProject(); if (!p) return { volume: 1, offset: 0, src: null };
+  const keyVal = sampleTimelineValue(p.settings.audioKeyframes || [], t, ['volume', 'offset']) || p.settings.audio;
+  return { ...keyVal, src: p.settings.audio.src };
 }
 
 function syncAudioControls() {
@@ -113,7 +166,7 @@ function syncAudioControls() {
 function syncAudioPlayback() {
   const p = currentProject();
   if (!p) return;
-  const a = p.settings.audio;
+  const a = getAudioAt(state.time);
   if (!a?.src) return;
   const target = Math.max(0, state.time - (a.offset || 0));
   if (Math.abs((audioPlayer.currentTime || 0) - target) > 0.12) audioPlayer.currentTime = target;
@@ -219,6 +272,21 @@ function hydrateEditor() {
 }
 
 function syncControlsFromNearest() {
+  ui.frameTime.value = state.time.toFixed(2);
+  if (ui.frameTarget.value === 'camera') {
+    const p = currentProject(); if (!p) return;
+    const k = nearestTimeKey(p.settings.cameraKeyframes || [], state.time);
+    if (k) ui.frameTime.value = k.time.toFixed(2);
+    ui.keyframeInfo.textContent = `Camera frames: ${(p.settings.cameraKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
+    return;
+  }
+  if (ui.frameTarget.value === 'audio') {
+    const p = currentProject(); if (!p) return;
+    const k = nearestTimeKey(p.settings.audioKeyframes || [], state.time);
+    if (k) ui.frameTime.value = k.time.toFixed(2);
+    ui.keyframeInfo.textContent = `Audio frames: ${(p.settings.audioKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
+    return;
+  }
   const l = currentLayer();
   if (!l) { ui.keyframeInfo.textContent = 'Keyframes: (chưa có layer)'; return; }
   const k = nearestKey(l, state.time);
@@ -226,6 +294,7 @@ function syncControlsFromNearest() {
   ui.easing.value = getLayerEasing(l, ui.easeTarget.value || 'position');
   ui.layerColor.value = l.color || '#21b8ff';
   ui.keyframeInfo.textContent = `Keyframes: ${l.keyframes.map((x) => x.time.toFixed(2)).join(', ')}`;
+  if (k) ui.frameTime.value = k.time.toFixed(2);
 }
 
 function ensureKeyAtCurrent(layer) {
@@ -240,7 +309,24 @@ function ensureKeyAtCurrent(layer) {
 }
 
 function addKeyframeAtCurrent() {
-  const p = currentProject(); const l = currentLayer(); if (!p || !l) return;
+  const p = currentProject(); if (!p) return;
+  if (ui.frameTarget.value === 'camera') {
+    const c = getCameraAt(state.time);
+    p.settings.cameraKeyframes.push({ id: uid(), time: state.time, x: c.x, y: c.y, zoom: c.zoom, rotation: c.rotation });
+    sortTimeKeys(p.settings.cameraKeyframes);
+    p.updatedAt = Date.now(); saveProjects();
+    drawTimelineTracks(); syncControlsFromNearest();
+    return;
+  }
+  if (ui.frameTarget.value === 'audio') {
+    const a = getAudioAt(state.time);
+    p.settings.audioKeyframes.push({ id: uid(), time: state.time, volume: a.volume, offset: a.offset });
+    sortTimeKeys(p.settings.audioKeyframes);
+    p.updatedAt = Date.now(); saveProjects();
+    drawTimelineTracks(); syncControlsFromNearest();
+    return;
+  }
+  const l = currentLayer(); if (!l) return;
   if (!nearestKey(l, state.time) || Math.abs(nearestKey(l, state.time).time - state.time) > 0.03) {
     const tf = getTransform(l, state.time);
     l.keyframes.push(newKeyframe(state.time, tf.x, tf.y, tf.scale, tf.rotation, tf.opacity));
@@ -250,7 +336,22 @@ function addKeyframeAtCurrent() {
 }
 
 function removeNearestKeyframe() {
-  const p = currentProject(); const l = currentLayer(); if (!p || !l || l.keyframes.length <= 1) return;
+  const p = currentProject(); if (!p) return;
+  if (ui.frameTarget.value === 'camera') {
+    if ((p.settings.cameraKeyframes || []).length <= 1) return;
+    const k = nearestTimeKey(p.settings.cameraKeyframes, state.time);
+    p.settings.cameraKeyframes = p.settings.cameraKeyframes.filter((x) => x.id !== k.id);
+    p.updatedAt = Date.now(); saveProjects(); drawTimelineTracks(); syncControlsFromNearest(); draw();
+    return;
+  }
+  if (ui.frameTarget.value === 'audio') {
+    if ((p.settings.audioKeyframes || []).length <= 1) return;
+    const k = nearestTimeKey(p.settings.audioKeyframes, state.time);
+    p.settings.audioKeyframes = p.settings.audioKeyframes.filter((x) => x.id !== k.id);
+    p.updatedAt = Date.now(); saveProjects(); drawTimelineTracks(); syncControlsFromNearest(); draw();
+    return;
+  }
+  const l = currentLayer(); if (!l || l.keyframes.length <= 1) return;
   const k = nearestKey(l, state.time);
   l.keyframes = l.keyframes.filter((x) => x.id !== k.id);
   p.updatedAt = Date.now(); saveProjects();
@@ -301,7 +402,7 @@ function draw() {
   ctx.fillRect(0, 0, ui.preview.width, ui.preview.height);
   for (let x = 0; x <= ui.preview.width; x += 60) { ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.moveTo(x, 0); ctx.lineTo(x, ui.preview.height); ctx.stroke(); }
   for (let y = 0; y <= ui.preview.height; y += 60) { ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.moveTo(0, y); ctx.lineTo(ui.preview.width, y); ctx.stroke(); }
-  const cam = p.settings.camera || { x: 0, y: 0, zoom: 1, rotation: 0 };
+  const cam = getCameraAt(state.time);
   ctx.save();
   ctx.translate(ui.preview.width / 2, ui.preview.height / 2);
   ctx.scale(Math.max(0.1, cam.zoom || 1), Math.max(0.1, cam.zoom || 1));
@@ -386,6 +487,32 @@ function drawTimelineTracks() {
     row.append(left, strip);
     ui.timelineTracks.append(row);
   });
+
+  const appendSystemRow = (label, keys, icon) => {
+    const row = document.createElement('div');
+    row.className = 'timeline-row system-row';
+    const left = document.createElement('div'); left.className = 'timeline-left';
+    const name = document.createElement('strong'); name.textContent = `${icon} ${label}`;
+    left.append(name);
+
+    const strip = document.createElement('div'); strip.className = 'timeline-strip';
+    const playhead = document.createElement('div'); playhead.className = 'playhead'; playhead.style.left = `${(state.time / Math.max(p.settings.duration, 0.001)) * 100}%`;
+    strip.append(playhead);
+
+    (keys || []).forEach((k) => {
+      const d = document.createElement('div');
+      d.className = 'key-dot';
+      d.style.left = `${(k.time / Math.max(p.settings.duration, 0.001)) * 100}%`;
+      if (Math.abs(k.time - state.time) <= 0.04) d.classList.add('active');
+      strip.append(d);
+    });
+
+    row.append(left, strip);
+    ui.timelineTracks.append(row);
+  };
+
+  appendSystemRow('Camera', p.settings.cameraKeyframes, '📷');
+  appendSystemRow('Audio', p.settings.audioKeyframes, '🔊');
 }
 
 function drawEaseGraph() {
@@ -637,6 +764,28 @@ function bind() {
   };
 
   ui.layerSelect.onchange = syncControlsFromNearest;
+  ui.frameTarget.onchange = syncControlsFromNearest;
+  ui.frameTime.oninput = () => {
+    const p = currentProject(); if (!p) return;
+    const t = clamp(+ui.frameTime.value || 0, 0, p.settings.duration);
+    if (ui.frameTarget.value === 'camera') {
+      const k = nearestTimeKey(p.settings.cameraKeyframes || [], state.time); if (!k) return;
+      k.time = t; sortTimeKeys(p.settings.cameraKeyframes);
+    } else if (ui.frameTarget.value === 'audio') {
+      const k = nearestTimeKey(p.settings.audioKeyframes || [], state.time); if (!k) return;
+      k.time = t; sortTimeKeys(p.settings.audioKeyframes);
+    } else {
+      const l = currentLayer(); if (!l) return;
+      const k = nearestKey(l, state.time); if (!k) return;
+      k.time = t; sortKf(l);
+    }
+    p.updatedAt = Date.now();
+    state.time = t;
+    saveProjects();
+    drawTimelineTracks();
+    syncControlsFromNearest();
+    draw();
+  };
   ui.easeTarget.onchange = () => { const l = currentLayer(); if (!l) return; ui.easing.value = getLayerEasing(l, ui.easeTarget.value); drawEaseGraph(); };
   ui.layerColor.oninput = applyCurrentValues;
   ui.addKeyBtn.onclick = addKeyframeAtCurrent;
@@ -652,6 +801,13 @@ function bind() {
       zoom: Math.max(0.1, +ui.camZoom.value || 1),
       rotation: +ui.camRotation.value || 0
     };
+    const ck = nearestTimeKey(p.settings.cameraKeyframes || [], state.time);
+    if (ck) {
+      ck.x = p.settings.camera.x;
+      ck.y = p.settings.camera.y;
+      ck.zoom = p.settings.camera.zoom;
+      ck.rotation = p.settings.camera.rotation;
+    }
     p.updatedAt = Date.now();
     saveProjects();
     draw();
@@ -672,6 +828,8 @@ function bind() {
       p.settings.audio.name = file.name;
       p.settings.audio.volume = clamp(+ui.audioVolume.value || 1, 0, 2);
       p.settings.audio.offset = Math.max(0, +ui.audioOffset.value || 0);
+      const ak = nearestTimeKey(p.settings.audioKeyframes || [], state.time);
+      if (ak) { ak.volume = p.settings.audio.volume; ak.offset = p.settings.audio.offset; }
       p.updatedAt = Date.now();
       saveProjects();
       syncAudioControls();
@@ -690,6 +848,7 @@ function bind() {
     const p = currentProject();
     if (!p) return;
     p.settings.audio.volume = clamp(+ui.audioVolume.value || 1, 0, 2);
+    const ak = nearestTimeKey(p.settings.audioKeyframes || [], state.time); if (ak) ak.volume = p.settings.audio.volume;
     p.updatedAt = Date.now();
     saveProjects();
     syncAudioControls();
@@ -698,6 +857,7 @@ function bind() {
     const p = currentProject();
     if (!p) return;
     p.settings.audio.offset = Math.max(0, +ui.audioOffset.value || 0);
+    const ak = nearestTimeKey(p.settings.audioKeyframes || [], state.time); if (ak) ak.offset = p.settings.audio.offset;
     p.updatedAt = Date.now();
     saveProjects();
     syncAudioControls();
