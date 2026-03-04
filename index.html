@@ -129,6 +129,19 @@
           </select>
         </label>
         <label>FPS <input id="menuFps" type="number" min="12" max="120" value="30" /></label>
+        <label>Độ phân giải
+          <select id="menuResolution">
+            <option value="4320">8K (4320p)</option>
+            <option value="2160">4K (2160p)</option>
+            <option value="1440">2K (1440p)</option>
+            <option value="1080" selected>Full HD (1080p)</option>
+            <option value="720">HD (720p)</option>
+            <option value="480">480p</option>
+            <option value="360">360p</option>
+            <option value="240">240p</option>
+            <option value="144">144p</option>
+          </select>
+        </label>
         <label>Màu nền <input id="menuBgColor" type="color" value="#000000" /></label>
         <div class="button-grid">
           <button id="saveMenuBtn" class="btn primary">Lưu project</button>
@@ -150,6 +163,19 @@
           <button class="ratio-btn" data-ratio="4:3">4:3</button>
         </div>
         <label>FPS <select id="modalFps"><option>24</option><option selected>30</option><option>60</option></select></label>
+        <label>Resolution
+          <select id="modalResolution">
+            <option value="4320">8K (4320p)</option>
+            <option value="2160">4K (2160p)</option>
+            <option value="1440">2K (1440p)</option>
+            <option value="1080" selected>Full HD (1080p)</option>
+            <option value="720">HD (720p)</option>
+            <option value="480">480p</option>
+            <option value="360">360p</option>
+            <option value="240">240p</option>
+            <option value="144">144p</option>
+          </select>
+        </label>
         <label>Name <input id="modalProjectName" type="text" placeholder="Enter project name here..." /></label>
         <label>BG color
           <div class="bg-row">

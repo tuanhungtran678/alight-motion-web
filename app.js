@@ -22,8 +22,8 @@ const ui = {
   home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
-  menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
-  modal: getEl('createProjectModal'), closeModalBtn: getEl('closeModalBtn'), ratioRow: getEl('ratioRow'), modalFps: getEl('modalFps'), modalProjectName: getEl('modalProjectName'), modalBgColor: getEl('modalBgColor'), modalBgHex: getEl('modalBgHex'), confirmCreateBtn: getEl('confirmCreateBtn'),
+  menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
+  modal: getEl('createProjectModal'), closeModalBtn: getEl('closeModalBtn'), ratioRow: getEl('ratioRow'), modalFps: getEl('modalFps'), modalResolution: getEl('modalResolution'), modalProjectName: getEl('modalProjectName'), modalBgColor: getEl('modalBgColor'), modalBgHex: getEl('modalBgHex'), confirmCreateBtn: getEl('confirmCreateBtn'),
   preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), exportVideoBtn: getEl('exportVideoBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
   addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerColor: getEl('layerColor'),
   timelineDuration: getEl('timelineDuration'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
@@ -39,8 +39,8 @@ const state = { projects: [], currentProjectId: null, time: 0, playing: false, s
 function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w || 9, h: h || 16 }; }
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
 function newLayer(type, extra = {}) { return { id: uid(), type, color: '#21b8ff', text: 'TEXT', size: 90, imageSrc: null, imageObj: null, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
-function newProject({ name, ratio, fps, bgColor }) {
-  return { id: uid(), name: name || `Project ${state.projects.length + 1}`, createdAt: Date.now(), updatedAt: Date.now(), settings: { ratio: ratio || '9:16', fps: Number(fps) || 30, bgColor: bgColor || '#000000', duration: 2, customEase: { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 }, camera: { x: 0, y: 0, zoom: 1, rotation: 0 } }, layers: [] };
+function newProject({ name, ratio, fps, resolution, bgColor }) {
+  return { id: uid(), name: name || `Project ${state.projects.length + 1}`, createdAt: Date.now(), updatedAt: Date.now(), settings: { ratio: ratio || '9:16', fps: Number(fps) || 30, resolution: Number(resolution) || 1080, bgColor: bgColor || '#000000', duration: 2, customEase: { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 }, camera: { x: 0, y: 0, zoom: 1, rotation: 0 } }, layers: [] };
 }
 
 function saveProjects() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.projects)); }
@@ -64,6 +64,7 @@ function normalizeLayerEasing(layer) {
 function normalizeProject(p) {
   p.settings = p.settings || {};
   p.settings.customEase = p.settings.customEase || { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 };
+  p.settings.resolution = Number(p.settings.resolution) || 1080;
   p.settings.camera = p.settings.camera || { x: 0, y: 0, zoom: 1, rotation: 0 };
   p.settings.camera.x = Number.isFinite(+p.settings.camera.x) ? +p.settings.camera.x : 0;
   p.settings.camera.y = Number.isFinite(+p.settings.camera.y) ? +p.settings.camera.y : 0;
@@ -123,18 +124,23 @@ function getTransform(layer, t) {
   return { x: lerp(a.x, b.x, ePos), y: lerp(a.y, b.y, ePos), scale: lerp(a.scale, b.scale, eScale), rotation: lerp(a.rotation, b.rotation, eRotation), opacity: lerp(a.opacity, b.opacity, eOpacity) };
 }
 
-function setCanvasRatio(r) { const rr = parseRatio(r); const base = 360; ui.preview.width = base; ui.preview.height = Math.round((base * rr.h) / rr.w); }
+function setCanvasRatio(r, resolution = 1080) {
+  const rr = parseRatio(r);
+  const previewHeight = Math.max(144, Math.min(1080, Number(resolution) || 1080));
+  ui.preview.height = previewHeight;
+  ui.preview.width = Math.round((previewHeight * rr.w) / rr.h);
+}
 function applyTheme(theme) { state.theme = theme === 'light' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', state.theme); localStorage.setItem('uiTheme', state.theme); }
 
 function openCreateModal() {
   ui.modal.classList.remove('hidden');
-  ui.modalProjectName.value = ''; ui.modalFps.value = '30'; ui.modalBgColor.value = '#000000'; ui.modalBgHex.value = '#000000';
+  ui.modalProjectName.value = ''; ui.modalFps.value = '30'; ui.modalResolution.value = '1080'; ui.modalBgColor.value = '#000000'; ui.modalBgHex.value = '#000000';
   state.modalRatio = '9:16';
   ui.ratioRow.querySelectorAll('.ratio-btn').forEach((b) => b.classList.toggle('selected', b.dataset.ratio === '9:16'));
 }
 function closeCreateModal() { ui.modal.classList.add('hidden'); }
 
-function openMenu() { const p = currentProject(); if (!p) return; ui.menuProjectName.value = p.name; ui.menuRatio.value = p.settings.ratio; ui.menuFps.value = String(p.settings.fps); ui.menuBgColor.value = p.settings.bgColor; ui.settingsMenu.classList.remove('hidden'); }
+function openMenu() { const p = currentProject(); if (!p) return; ui.menuProjectName.value = p.name; ui.menuRatio.value = p.settings.ratio; ui.menuFps.value = String(p.settings.fps); ui.menuResolution.value = String(p.settings.resolution || 1080); ui.menuBgColor.value = p.settings.bgColor; ui.settingsMenu.classList.remove('hidden'); }
 function closeMenu() { ui.settingsMenu.classList.add('hidden'); }
 
 function showHome() { state.playing = false; ui.home.classList.add('active'); ui.editor.classList.remove('active'); renderProjectList(); }
@@ -144,7 +150,7 @@ function renderProjectList() {
   ui.projectList.innerHTML = '';
   state.projects.forEach((p) => {
     const item = document.createElement('div'); item.className = 'project-item';
-    item.innerHTML = `<div><strong>${p.name}</strong><br><small>${p.settings.ratio} • ${p.settings.fps} FPS • ${p.settings.bgColor}</small></div>`;
+    item.innerHTML = `<div><strong>${p.name}</strong><br><small>${p.settings.ratio} • ${p.settings.fps} FPS • ${p.settings.resolution || 1080}p • ${p.settings.bgColor}</small></div>`;
     const actions = document.createElement('div'); actions.className = 'project-actions';
     const open = document.createElement('button'); open.className = 'btn primary'; open.textContent = 'Mở'; open.onclick = () => showEditor(p.id);
     const del = document.createElement('button'); del.className = 'btn danger'; del.textContent = 'Xóa'; del.onclick = () => { state.projects = state.projects.filter((x) => x.id !== p.id); if (!state.projects.length) state.projects.push(newProject({ name: 'Dự án trống', ratio: '9:16', fps: 30, bgColor: '#000000' })); saveProjects(); renderProjectList(); };
@@ -154,9 +160,9 @@ function renderProjectList() {
 
 function hydrateEditor() {
   const p = currentProject(); if (!p) return;
-  setCanvasRatio(p.settings.ratio);
+  setCanvasRatio(p.settings.ratio, p.settings.resolution);
   ui.projectTitle.textContent = p.name;
-  ui.projectMeta.textContent = `${p.settings.ratio} • ${p.settings.fps} FPS • ${p.settings.bgColor}`;
+  ui.projectMeta.textContent = `${p.settings.ratio} • ${p.settings.fps} FPS • ${p.settings.resolution || 1080}p • ${p.settings.bgColor}`;
   ui.timelineDuration.value = String(p.settings.duration);
   ui.camX.value = String(p.settings.camera?.x || 0);
   ui.camY.value = String(p.settings.camera?.y || 0);
@@ -548,7 +554,7 @@ function bind() {
   };
   ui.modalBgColor.oninput = () => { ui.modalBgHex.value = ui.modalBgColor.value.toUpperCase(); };
   ui.confirmCreateBtn.onclick = () => {
-    const p = newProject({ name: ui.modalProjectName.value.trim(), ratio: state.modalRatio, fps: +ui.modalFps.value, bgColor: ui.modalBgColor.value });
+    const p = newProject({ name: ui.modalProjectName.value.trim(), ratio: state.modalRatio, fps: +ui.modalFps.value, resolution: +ui.modalResolution.value, bgColor: ui.modalBgColor.value });
     state.projects.unshift(p); saveProjects(); closeCreateModal(); renderProjectList();
   };
 
@@ -560,6 +566,7 @@ function bind() {
     p.name = ui.menuProjectName.value.trim() || p.name;
     p.settings.ratio = ui.menuRatio.value;
     p.settings.fps = clamp(+ui.menuFps.value || 30, 12, 120);
+    p.settings.resolution = Math.max(144, +ui.menuResolution.value || 1080);
     p.settings.bgColor = ui.menuBgColor.value || '#000000';
     p.updatedAt = Date.now(); saveProjects(); closeMenu(); hydrateEditor();
   };
