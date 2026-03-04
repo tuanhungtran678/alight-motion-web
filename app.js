@@ -29,18 +29,21 @@ const ui = {
   timelineDuration: getEl('timelineDuration'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'),
-  camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn')
+  camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn'),
+  audioInput: getEl('audioInput'), addAudioBtn: getEl('addAudioBtn'), removeAudioBtn: getEl('removeAudioBtn'), audioVolume: getEl('audioVolume'), audioOffset: getEl('audioOffset'), audioInfo: getEl('audioInfo')
 };
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
 const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, theme: localStorage.getItem('uiTheme') || 'dark' };
+const audioPlayer = new Audio();
+audioPlayer.preload = 'auto';
 
 function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w || 9, h: h || 16 }; }
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
 function newLayer(type, extra = {}) { return { id: uid(), type, color: '#21b8ff', text: 'TEXT', size: 90, imageSrc: null, imageObj: null, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
 function newProject({ name, ratio, fps, resolution, bgColor }) {
-  return { id: uid(), name: name || `Project ${state.projects.length + 1}`, createdAt: Date.now(), updatedAt: Date.now(), settings: { ratio: ratio || '9:16', fps: Number(fps) || 30, resolution: Number(resolution) || 1080, bgColor: bgColor || '#000000', duration: 2, customEase: { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 }, camera: { x: 0, y: 0, zoom: 1, rotation: 0 } }, layers: [] };
+  return { id: uid(), name: name || `Project ${state.projects.length + 1}`, createdAt: Date.now(), updatedAt: Date.now(), settings: { ratio: ratio || '9:16', fps: Number(fps) || 30, resolution: Number(resolution) || 1080, bgColor: bgColor || '#000000', duration: 2, customEase: { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 }, camera: { x: 0, y: 0, zoom: 1, rotation: 0 }, audio: { src: null, name: '', volume: 1, offset: 0 } }, layers: [] };
 }
 
 function saveProjects() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.projects)); }
@@ -70,6 +73,11 @@ function normalizeProject(p) {
   p.settings.camera.y = Number.isFinite(+p.settings.camera.y) ? +p.settings.camera.y : 0;
   p.settings.camera.zoom = Number.isFinite(+p.settings.camera.zoom) ? Math.max(0.1, +p.settings.camera.zoom) : 1;
   p.settings.camera.rotation = Number.isFinite(+p.settings.camera.rotation) ? +p.settings.camera.rotation : 0;
+  p.settings.audio = p.settings.audio || { src: null, name: '', volume: 1, offset: 0 };
+  p.settings.audio.src = p.settings.audio.src || null;
+  p.settings.audio.name = p.settings.audio.name || '';
+  p.settings.audio.volume = Number.isFinite(+p.settings.audio.volume) ? clamp(+p.settings.audio.volume, 0, 2) : 1;
+  p.settings.audio.offset = Number.isFinite(+p.settings.audio.offset) ? Math.max(0, +p.settings.audio.offset) : 0;
   p.layers = Array.isArray(p.layers) ? p.layers : [];
   p.layers.forEach(normalizeLayerEasing);
   return p;
@@ -84,6 +92,38 @@ function setLayerEasing(layer, target, mode) {
   normalizeLayerEasing(layer);
   layer.easing[target] = mode;
 }
+
+function syncAudioControls() {
+  const p = currentProject();
+  if (!p) return;
+  const a = p.settings.audio || { src: null, name: '', volume: 1, offset: 0 };
+  ui.audioVolume.value = String(a.volume ?? 1);
+  ui.audioOffset.value = String(a.offset ?? 0);
+  ui.audioInfo.textContent = a.src ? `Audio: ${a.name || 'đã thêm file'} • vol ${Number(a.volume).toFixed(2)} • offset ${Number(a.offset).toFixed(2)}s` : 'Audio: chưa có';
+  if (a.src) {
+    if (audioPlayer.src !== a.src) audioPlayer.src = a.src;
+    audioPlayer.volume = clamp(a.volume ?? 1, 0, 2);
+  } else {
+    audioPlayer.pause();
+    audioPlayer.removeAttribute('src');
+    audioPlayer.load();
+  }
+}
+
+function syncAudioPlayback() {
+  const p = currentProject();
+  if (!p) return;
+  const a = p.settings.audio;
+  if (!a?.src) return;
+  const target = Math.max(0, state.time - (a.offset || 0));
+  if (Math.abs((audioPlayer.currentTime || 0) - target) > 0.12) audioPlayer.currentTime = target;
+  audioPlayer.volume = clamp(a.volume ?? 1, 0, 2);
+}
+
+function stopAudioPlayback() {
+  audioPlayer.pause();
+}
+
 function loadProjects() {
   const raw = localStorage.getItem(STORAGE_KEY);
   state.projects = raw ? JSON.parse(raw).map(normalizeProject) : [];
@@ -143,7 +183,7 @@ function closeCreateModal() { ui.modal.classList.add('hidden'); }
 function openMenu() { const p = currentProject(); if (!p) return; ui.menuProjectName.value = p.name; ui.menuRatio.value = p.settings.ratio; ui.menuFps.value = String(p.settings.fps); ui.menuResolution.value = String(p.settings.resolution || 1080); ui.menuBgColor.value = p.settings.bgColor; ui.settingsMenu.classList.remove('hidden'); }
 function closeMenu() { ui.settingsMenu.classList.add('hidden'); }
 
-function showHome() { state.playing = false; ui.home.classList.add('active'); ui.editor.classList.remove('active'); renderProjectList(); }
+function showHome() { state.playing = false; stopAudioPlayback(); ui.home.classList.add('active'); ui.editor.classList.remove('active'); renderProjectList(); }
 function showEditor(pid) { state.currentProjectId = pid; state.time = 0; ui.home.classList.remove('active'); ui.editor.classList.add('active'); hydrateEditor(); }
 
 function renderProjectList() {
@@ -174,6 +214,7 @@ function hydrateEditor() {
   syncControlsFromNearest();
   drawEaseGraph();
   drawTimelineTracks();
+  syncAudioControls();
   draw();
 }
 
@@ -467,7 +508,8 @@ function tick(ts) {
   const elapsed = (ts - state.startRef) / 1000;
   const step = 1 / (p.settings.fps || 30);
   state.time = Math.min(Math.floor(elapsed / step) * step, p.settings.duration);
-  if (state.time >= p.settings.duration) { state.playing = false; state.startRef = 0; }
+  if (state.time >= p.settings.duration) { state.playing = false; state.startRef = 0; stopAudioPlayback(); }
+  syncAudioPlayback();
   draw(); drawTimelineTracks();
   requestAnimationFrame(tick);
 }
@@ -482,6 +524,15 @@ async function exportVideoMp4() {
   }
 
   const stream = ui.preview.captureStream(p.settings.fps || 30);
+  const a = p.settings.audio;
+  if (a?.src) {
+    audioPlayer.src = a.src;
+    audioPlayer.volume = clamp(a.volume ?? 1, 0, 2);
+    audioPlayer.currentTime = 0;
+    const ac = audioPlayer.captureStream ? audioPlayer.captureStream() : null;
+    const tracks = ac?.getAudioTracks?.() || [];
+    tracks.forEach((t) => stream.addTrack(t));
+  }
   const rec = new MediaRecorder(stream, { mimeType });
   const chunks = [];
   rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
@@ -497,9 +548,10 @@ async function exportVideoMp4() {
   function loop(now) {
     const el = (now - start) / 1000;
     state.time = Math.min(el, p.settings.duration);
+    syncAudioPlayback();
     draw(); drawTimelineTracks();
     if (el < p.settings.duration) requestAnimationFrame(loop);
-    else rec.stop();
+    else { stopAudioPlayback(); rec.stop(); }
   }
   requestAnimationFrame(loop);
 }
@@ -605,11 +657,51 @@ function bind() {
     draw();
   };
 
-  ui.playBtn.onclick = () => { state.playing = true; state.startRef = 0; requestAnimationFrame(tick); };
-  ui.pauseBtn.onclick = () => { state.playing = false; state.startRef = 0; };
-  ui.resetBtn.onclick = () => { state.playing = false; state.startRef = 0; state.time = 0; draw(); drawTimelineTracks(); syncControlsFromNearest(); };
+  ui.playBtn.onclick = () => { state.playing = true; state.startRef = 0; syncAudioPlayback(); audioPlayer.play().catch(() => {}); requestAnimationFrame(tick); };
+  ui.pauseBtn.onclick = () => { state.playing = false; state.startRef = 0; stopAudioPlayback(); };
+  ui.resetBtn.onclick = () => { state.playing = false; state.startRef = 0; state.time = 0; if (audioPlayer.src) audioPlayer.currentTime = 0; stopAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
   ui.exportVideoBtn.onclick = exportVideoMp4;
-  ui.scrubber.oninput = () => { const p = currentProject(); if (!p) return; state.playing = false; state.time = (+ui.scrubber.value / 100) * p.settings.duration; draw(); drawTimelineTracks(); syncControlsFromNearest(); };
+  ui.scrubber.oninput = () => { const p = currentProject(); if (!p) return; state.playing = false; state.time = (+ui.scrubber.value / 100) * p.settings.duration; syncAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
+  ui.addAudioBtn.onclick = () => {
+    const p = currentProject();
+    const file = ui.audioInput.files?.[0];
+    if (!p || !file) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      p.settings.audio.src = fr.result;
+      p.settings.audio.name = file.name;
+      p.settings.audio.volume = clamp(+ui.audioVolume.value || 1, 0, 2);
+      p.settings.audio.offset = Math.max(0, +ui.audioOffset.value || 0);
+      p.updatedAt = Date.now();
+      saveProjects();
+      syncAudioControls();
+    };
+    fr.readAsDataURL(file);
+  };
+  ui.removeAudioBtn.onclick = () => {
+    const p = currentProject();
+    if (!p) return;
+    p.settings.audio = { src: null, name: '', volume: 1, offset: 0 };
+    p.updatedAt = Date.now();
+    saveProjects();
+    syncAudioControls();
+  };
+  ui.audioVolume.oninput = () => {
+    const p = currentProject();
+    if (!p) return;
+    p.settings.audio.volume = clamp(+ui.audioVolume.value || 1, 0, 2);
+    p.updatedAt = Date.now();
+    saveProjects();
+    syncAudioControls();
+  };
+  ui.audioOffset.oninput = () => {
+    const p = currentProject();
+    if (!p) return;
+    p.settings.audio.offset = Math.max(0, +ui.audioOffset.value || 0);
+    p.updatedAt = Date.now();
+    saveProjects();
+    syncAudioControls();
+  };
 
   bindDrag();
   bindEaseGraphDrag();

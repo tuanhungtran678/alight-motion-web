@@ -114,6 +114,18 @@
               <label>Cam Rotate° <input id="camRotation" type="number" value="0" /></label>
             </div>
             <button id="applyCameraBtn" class="btn">Áp dụng Camera</button>
+
+            <h3>Âm thanh</h3>
+            <label>Chèn audio <input id="audioInput" type="file" accept="audio/*" /></label>
+            <div class="button-grid">
+              <button id="addAudioBtn" class="btn">+ Thêm âm thanh</button>
+              <button id="removeAudioBtn" class="btn danger">Xóa âm thanh</button>
+            </div>
+            <div class="field-grid">
+              <label>Âm lượng <input id="audioVolume" type="number" min="0" max="2" step="0.05" value="1" /></label>
+              <label>Bắt đầu tại (giây) <input id="audioOffset" type="number" min="0" step="0.1" value="0" /></label>
+            </div>
+            <small id="audioInfo">Audio: chưa có</small>
           </article>
         </section>
       </section>
