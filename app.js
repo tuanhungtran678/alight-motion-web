@@ -30,7 +30,8 @@ const ui = {
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'),
   camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn'),
-  audioInput: getEl('audioInput'), addAudioBtn: getEl('addAudioBtn'), removeAudioBtn: getEl('removeAudioBtn'), audioVolume: getEl('audioVolume'), audioOffset: getEl('audioOffset'), audioInfo: getEl('audioInfo')
+  audioInput: getEl('audioInput'), addAudioBtn: getEl('addAudioBtn'), removeAudioBtn: getEl('removeAudioBtn'), audioVolume: getEl('audioVolume'), audioOffset: getEl('audioOffset'), audioInfo: getEl('audioInfo'),
+  exportOverlay: getEl('exportOverlay'), exportProgressBar: getEl('exportProgressBar'), exportProgressText: getEl('exportProgressText')
 };
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
@@ -185,6 +186,21 @@ function syncAudioPlayback() {
 
 function stopAudioPlayback() {
   audioPlayer.pause();
+}
+
+function setExportProgress(percent) {
+  const p = clamp(percent, 0, 100);
+  ui.exportProgressBar.style.width = `${p.toFixed(1)}%`;
+  ui.exportProgressText.textContent = `${Math.floor(p)}%`;
+}
+
+function showExportOverlay() {
+  setExportProgress(0);
+  ui.exportOverlay.classList.remove('hidden');
+}
+
+function hideExportOverlay() {
+  ui.exportOverlay.classList.add('hidden');
 }
 
 function loadProjects() {
@@ -680,11 +696,12 @@ async function exportVideoMp4() {
 
   const stream = ui.preview.captureStream(p.settings.fps || 30);
   const a = p.settings.audio;
-  if (a?.src) {
-    audioPlayer.src = a.src;
-    audioPlayer.volume = clamp(a.volume ?? 1, 0, 2);
-    audioPlayer.currentTime = 0;
-    const ac = audioPlayer.captureStream ? audioPlayer.captureStream() : null;
+  const exportAudio = a?.src ? new Audio(a.src) : null;
+  if (exportAudio) {
+    exportAudio.preload = 'auto';
+    exportAudio.currentTime = 0;
+    exportAudio.volume = clamp(a.volume ?? 1, 0, 2);
+    const ac = exportAudio.captureStream ? exportAudio.captureStream() : null;
     const tracks = ac?.getAudioTracks?.() || [];
     tracks.forEach((t) => stream.addTrack(t));
   }
@@ -698,15 +715,31 @@ async function exportVideoMp4() {
     URL.revokeObjectURL(url);
   };
 
+  showExportOverlay();
   rec.start();
+  if (exportAudio) {
+    try { await exportAudio.play(); } catch (_) { }
+  }
   const start = performance.now();
   function loop(now) {
     const el = (now - start) / 1000;
     state.time = Math.min(el, p.settings.duration);
+    if (exportAudio) {
+      const at = getAudioAt(state.time);
+      const target = Math.max(0, state.time - (at.offset || 0));
+      exportAudio.volume = clamp(at.volume ?? 1, 0, 2);
+      if (Math.abs((exportAudio.currentTime || 0) - target) > 0.18) exportAudio.currentTime = target;
+    }
     syncAudioPlayback();
     draw(); drawTimelineTracks();
+    setExportProgress((state.time / Math.max(0.001, p.settings.duration)) * 100);
     if (el < p.settings.duration) requestAnimationFrame(loop);
-    else { stopAudioPlayback(); rec.stop(); }
+    else {
+      stopAudioPlayback();
+      if (exportAudio) exportAudio.pause();
+      rec.stop();
+      setTimeout(hideExportOverlay, 300);
+    }
   }
   requestAnimationFrame(loop);
 }

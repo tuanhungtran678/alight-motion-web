@@ -176,6 +176,43 @@ input, select, button {
 .menu.hidden { display: none; }
 .menu-card { width: min(430px, 100%); background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
 
+.export-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 60;
+  padding: 16px;
+}
+.export-overlay.hidden { display: none; }
+.export-card {
+  width: min(560px, 100%);
+  background: #a9a9a9;
+  border-radius: 18px;
+  border: 2px solid #d9d9d9;
+  color: #fff;
+  padding: 24px;
+  text-align: center;
+}
+.export-card h3 { margin: 0 0 14px; font-size: 2rem; }
+.export-progress {
+  width: 100%;
+  height: 34px;
+  border: 3px solid #f4f4f4;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+.export-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #20d1ff, #33eeff);
+  transition: width .12s linear;
+}
+#exportProgressText { margin: 10px 0 14px; font-size: 2rem; }
+.export-note { margin: 0; font-size: 1.6rem; line-height: 1.25; }
+
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; z-index: 30; padding: 12px; }
 .modal.hidden { display: none; }
 .modal-card { width: min(760px, 100%); border: 4px solid #0e0e0e; border-radius: 56px; background: #efefef; color: #0f0f0f; padding: 26px 24px 18px; position: relative; }
