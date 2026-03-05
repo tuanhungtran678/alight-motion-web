@@ -25,7 +25,7 @@ const ui = {
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
   modal: getEl('createProjectModal'), closeModalBtn: getEl('closeModalBtn'), ratioRow: getEl('ratioRow'), modalFps: getEl('modalFps'), modalResolution: getEl('modalResolution'), modalProjectName: getEl('modalProjectName'), modalBgColor: getEl('modalBgColor'), modalBgHex: getEl('modalBgHex'), confirmCreateBtn: getEl('confirmCreateBtn'),
   preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), exportVideoBtn: getEl('exportVideoBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
-  addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerColor: getEl('layerColor'),
+  zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerColor: getEl('layerColor'), frameShape: getEl('frameShape'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'),
@@ -35,13 +35,13 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, theme: localStorage.getItem('uiTheme') || 'dark' };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1 };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 
 function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w || 9, h: h || 16 }; }
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
-function newLayer(type, extra = {}) { return { id: uid(), type, color: '#21b8ff', text: 'TEXT', size: 90, imageSrc: null, imageObj: null, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
+function newLayer(type, extra = {}) { return { id: uid(), type, color: '#21b8ff', text: 'TEXT', size: 90, imageSrc: null, imageObj: null, frameShape: 'rect', groupId: null, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
 function newProject({ name, ratio, fps, resolution, bgColor }) {
   return {
     id: uid(),
@@ -103,8 +103,18 @@ function normalizeProject(p) {
     ? p.settings.audioKeyframes
     : [{ id: uid(), time: 0, volume: p.settings.audio.volume, offset: p.settings.audio.offset }];
   p.layers = Array.isArray(p.layers) ? p.layers : [];
-  p.layers.forEach(normalizeLayerEasing);
+  p.layers.forEach((layer) => {
+    normalizeLayerEasing(layer);
+    layer.frameShape = layer.frameShape || 'rect';
+    layer.groupId = layer.groupId || null;
+  });
   return p;
+}
+
+function applyPreviewZoom() {
+  ui.preview.style.transformOrigin = 'center center';
+  ui.preview.style.transform = `scale(${state.previewScale})`;
+  ui.zoomToggleBtn.textContent = state.previewZoomEnabled ? `🔍 Zoom: On (${state.previewScale.toFixed(1)}x)` : `🔍 Zoom: Off (${state.previewScale.toFixed(1)}x)`;
 }
 
 function getLayerEasing(layer, target) {
@@ -293,6 +303,7 @@ function syncControlsFromNearest() {
   ui.startX.value = k.x; ui.startY.value = k.y; ui.startScale.value = k.scale; ui.startRotation.value = k.rotation; ui.startOpacity.value = k.opacity;
   ui.easing.value = getLayerEasing(l, ui.easeTarget.value || 'position');
   ui.layerColor.value = l.color || '#21b8ff';
+  ui.frameShape.value = l.frameShape || 'rect';
   ui.keyframeInfo.textContent = `Keyframes: ${l.keyframes.map((x) => x.time.toFixed(2)).join(', ')}`;
   if (k) ui.frameTime.value = k.time.toFixed(2);
 }
@@ -387,7 +398,24 @@ function drawLayer(layer) {
   const tf = getTransform(layer, state.time);
   ctx.save();
   ctx.translate(tf.x, tf.y); ctx.rotate((tf.rotation * Math.PI) / 180); ctx.scale(tf.scale, tf.scale); ctx.globalAlpha = clamp(tf.opacity, 0, 1);
-  if (layer.type === 'rect') { ctx.fillStyle = layer.color; ctx.fillRect(-50, -50, 100, 100); }
+  if (layer.type === 'rect') {
+    ctx.fillStyle = layer.color;
+    if (layer.frameShape === 'round') {
+      ctx.beginPath();
+      ctx.roundRect(-50, -50, 100, 100, 20);
+      ctx.fill();
+    } else if (layer.frameShape === 'diamond') {
+      ctx.beginPath();
+      ctx.moveTo(0, -60); ctx.lineTo(60, 0); ctx.lineTo(0, 60); ctx.lineTo(-60, 0); ctx.closePath();
+      ctx.fill();
+    } else if (layer.frameShape === 'pill') {
+      ctx.beginPath();
+      ctx.roundRect(-70, -35, 140, 70, 35);
+      ctx.fill();
+    } else {
+      ctx.fillRect(-50, -50, 100, 100);
+    }
+  }
   else if (layer.type === 'circle') { ctx.fillStyle = layer.color; ctx.beginPath(); ctx.arc(0, 0, 55, 0, Math.PI * 2); ctx.fill(); }
   else if (layer.type === 'image') {
     const img = layer.imageObj;
@@ -446,7 +474,7 @@ function drawTimelineTracks() {
     const lockBtn = document.createElement('button'); lockBtn.className = 'btn'; lockBtn.textContent = l.locked ? '🔒' : '🔓'; lockBtn.onclick = (e) => { e.stopPropagation(); l.locked = !l.locked; saveProjects(); drawTimelineTracks(); };
     const eyeBtn = document.createElement('button'); eyeBtn.className = 'btn eye-btn'; eyeBtn.textContent = '👁'; if (l.visible === false) eyeBtn.classList.add('is-hidden'); eyeBtn.onclick = (e) => { e.stopPropagation(); l.visible = l.visible === false ? true : false; saveProjects(); drawTimelineTracks(); draw(); };
     const chip = document.createElement('span'); chip.className = 'track-chip'; chip.style.background = l.color;
-    const name = document.createElement('strong'); name.textContent = `${l.type} ${idx + 1}`;
+    const name = document.createElement('strong'); name.textContent = `${l.type} ${idx + 1}${l.groupId ? ` [${l.groupId}]` : ''}`;
     left.append(dragHandle, lockBtn, eyeBtn, chip, name);
 
     const strip = document.createElement('div'); strip.className = `timeline-strip ${idx === 0 ? 'main' : ''}`;
@@ -704,7 +732,17 @@ function bindDrag() {
     const l = hitLayer(x, y);
     if (!l || l.locked) return;
     const tf = getTransform(l, state.time);
-    state.drag = { layerId: l.id, dx: x - tf.x, dy: y - tf.y };
+    const p = currentProject();
+    const grouped = l.groupId ? p.layers.filter((x) => x.groupId === l.groupId) : [l];
+    state.drag = {
+      layerId: l.id,
+      dx: x - tf.x,
+      dy: y - tf.y,
+      group: grouped.map((g) => {
+        const gtf = getTransform(g, state.time);
+        return { id: g.id, x: gtf.x, y: gtf.y };
+      })
+    };
     ui.preview.classList.add('dragging');
     ui.layerSelect.value = l.id;
     syncControlsFromNearest();
@@ -713,9 +751,18 @@ function bindDrag() {
     if (!state.drag) return;
     const p = currentProject(); const l = currentLayer(); if (!p || !l || l.locked) return;
     const { x, y } = posOnCanvas(e);
-    const k = ensureKeyAtCurrent(l);
-    k.x = clamp(x - state.drag.dx, 0, ui.preview.width);
-    k.y = clamp(y - state.drag.dy, 0, ui.preview.height);
+    const anchorX = clamp(x - state.drag.dx, 0, ui.preview.width);
+    const anchorY = clamp(y - state.drag.dy, 0, ui.preview.height);
+    const anchorStart = state.drag.group.find((g) => g.id === l.id) || { x: anchorX, y: anchorY };
+    const offX = anchorX - anchorStart.x;
+    const offY = anchorY - anchorStart.y;
+    state.drag.group.forEach((g) => {
+      const gl = p.layers.find((x2) => x2.id === g.id);
+      if (!gl || gl.locked) return;
+      const k = ensureKeyAtCurrent(gl);
+      k.x = clamp(g.x + offX, 0, ui.preview.width);
+      k.y = clamp(g.y + offY, 0, ui.preview.height);
+    });
     p.updatedAt = Date.now(); saveProjects();
     syncControlsFromNearest(); drawTimelineTracks(); draw();
   });
@@ -764,6 +811,35 @@ function bind() {
   };
 
   ui.layerSelect.onchange = syncControlsFromNearest;
+  ui.frameShape.onchange = () => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l) return;
+    l.frameShape = ui.frameShape.value;
+    p.updatedAt = Date.now();
+    saveProjects();
+    draw();
+    drawTimelineTracks();
+  };
+  ui.groupLayerBtn.onclick = () => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l) return;
+    const idx = p.layers.findIndex((x) => x.id === l.id);
+    const prev = p.layers[idx - 1];
+    const gid = l.groupId || prev?.groupId || `G${Date.now().toString().slice(-4)}`;
+    l.groupId = gid;
+    if (prev) prev.groupId = gid;
+    p.updatedAt = Date.now();
+    saveProjects();
+    hydrateEditor();
+  };
+  ui.ungroupLayerBtn.onclick = () => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l) return;
+    l.groupId = null;
+    p.updatedAt = Date.now();
+    saveProjects();
+    hydrateEditor();
+  };
   ui.frameTarget.onchange = syncControlsFromNearest;
   ui.frameTime.oninput = () => {
     const p = currentProject(); if (!p) return;
@@ -818,6 +894,16 @@ function bind() {
   ui.resetBtn.onclick = () => { state.playing = false; state.startRef = 0; state.time = 0; if (audioPlayer.src) audioPlayer.currentTime = 0; stopAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
   ui.exportVideoBtn.onclick = exportVideoMp4;
   ui.scrubber.oninput = () => { const p = currentProject(); if (!p) return; state.playing = false; state.time = (+ui.scrubber.value / 100) * p.settings.duration; syncAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
+  ui.zoomToggleBtn.onclick = () => {
+    state.previewZoomEnabled = !state.previewZoomEnabled;
+    applyPreviewZoom();
+  };
+  ui.preview.addEventListener('wheel', (e) => {
+    if (!state.previewZoomEnabled) return;
+    e.preventDefault();
+    state.previewScale = clamp(state.previewScale + (e.deltaY < 0 ? 0.1 : -0.1), 0.5, 3);
+    applyPreviewZoom();
+  }, { passive: false });
   ui.addAudioBtn.onclick = () => {
     const p = currentProject();
     const file = ui.audioInput.files?.[0];
@@ -879,6 +965,7 @@ function init() {
   loadProjects();
   preloadImages();
   bind();
+  applyPreviewZoom();
   applyTheme(state.theme);
   showHome();
 }
