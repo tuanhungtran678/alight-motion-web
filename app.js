@@ -696,14 +696,46 @@ async function exportVideoMp4() {
 
   const stream = ui.preview.captureStream(p.settings.fps || 30);
   const a = p.settings.audio;
-  const exportAudio = a?.src ? new Audio(a.src) : null;
-  if (exportAudio) {
+  let exportAudio = null;
+  let audioCtx = null;
+  let gainNode = null;
+  let mediaDest = null;
+  let canCaptureAudio = false;
+
+  if (a?.src) {
+    exportAudio = new Audio(a.src);
     exportAudio.preload = 'auto';
+    exportAudio.crossOrigin = 'anonymous';
     exportAudio.currentTime = 0;
-    exportAudio.volume = clamp(a.volume ?? 1, 0, 2);
-    const ac = exportAudio.captureStream ? exportAudio.captureStream() : null;
-    const tracks = ac?.getAudioTracks?.() || [];
-    tracks.forEach((t) => stream.addTrack(t));
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      try {
+        audioCtx = new AudioCtx();
+        gainNode = audioCtx.createGain();
+        mediaDest = audioCtx.createMediaStreamDestination();
+        const source = audioCtx.createMediaElementSource(exportAudio);
+        source.connect(gainNode);
+        gainNode.connect(mediaDest);
+        gainNode.connect(audioCtx.destination);
+        const audioTracks = mediaDest.stream.getAudioTracks();
+        audioTracks.forEach((t) => stream.addTrack(t));
+        canCaptureAudio = audioTracks.length > 0;
+      } catch (_) {
+        canCaptureAudio = false;
+      }
+    }
+
+    if (!canCaptureAudio) {
+      const capture = exportAudio.captureStream?.() || exportAudio.mozCaptureStream?.() || null;
+      const tracks = capture?.getAudioTracks?.() || [];
+      tracks.forEach((t) => stream.addTrack(t));
+      canCaptureAudio = tracks.length > 0;
+    }
+
+    if (!canCaptureAudio) {
+      console.warn('Không thể capture audio track để xuất video trong môi trường hiện tại.');
+    }
   }
   const rec = new MediaRecorder(stream, { mimeType });
   const chunks = [];
@@ -718,7 +750,8 @@ async function exportVideoMp4() {
   showExportOverlay();
   rec.start();
   if (exportAudio) {
-    try { await exportAudio.play(); } catch (_) { }
+    await exportAudio.play().catch(() => {});
+    if (audioCtx?.state === 'suspended') await audioCtx.resume().catch(() => {});
   }
   const start = performance.now();
   function loop(now) {
@@ -727,7 +760,9 @@ async function exportVideoMp4() {
     if (exportAudio) {
       const at = getAudioAt(state.time);
       const target = Math.max(0, state.time - (at.offset || 0));
-      exportAudio.volume = clamp(at.volume ?? 1, 0, 2);
+      const vol = clamp(at.volume ?? 1, 0, 2);
+      if (gainNode) gainNode.gain.value = vol;
+      else exportAudio.volume = vol;
       if (Math.abs((exportAudio.currentTime || 0) - target) > 0.18) exportAudio.currentTime = target;
     }
     syncAudioPlayback();
@@ -737,6 +772,7 @@ async function exportVideoMp4() {
     else {
       stopAudioPlayback();
       if (exportAudio) exportAudio.pause();
+      if (audioCtx) audioCtx.close().catch(() => {});
       rec.stop();
       setTimeout(hideExportOverlay, 300);
     }
