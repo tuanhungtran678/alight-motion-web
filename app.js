@@ -287,14 +287,14 @@ function syncControlsFromNearest() {
     const p = currentProject(); if (!p) return;
     const k = nearestTimeKey(p.settings.cameraKeyframes || [], state.time);
     if (k) ui.frameTime.value = k.time.toFixed(2);
-    ui.keyframeInfo.textContent = `Camera frames: ${(p.settings.cameraKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
+    ui.keyframeInfo.textContent = `Camera keyframes: ${(p.settings.cameraKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
     return;
   }
   if (ui.frameTarget.value === 'audio') {
     const p = currentProject(); if (!p) return;
     const k = nearestTimeKey(p.settings.audioKeyframes || [], state.time);
     if (k) ui.frameTime.value = k.time.toFixed(2);
-    ui.keyframeInfo.textContent = `Audio frames: ${(p.settings.audioKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
+    ui.keyframeInfo.textContent = `Audio keyframes: ${(p.settings.audioKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
     return;
   }
   const l = currentLayer();
@@ -469,7 +469,7 @@ function drawTimelineTracks() {
     dragHandle.className = 'btn drag-handle';
     dragHandle.draggable = true;
     dragHandle.textContent = '☰';
-    dragHandle.title = 'Kéo để đổi vị trí frame';
+    dragHandle.title = 'Kéo để đổi vị trí layer';
 
     const lockBtn = document.createElement('button'); lockBtn.className = 'btn'; lockBtn.textContent = l.locked ? '🔒' : '🔓'; lockBtn.onclick = (e) => { e.stopPropagation(); l.locked = !l.locked; saveProjects(); drawTimelineTracks(); };
     const eyeBtn = document.createElement('button'); eyeBtn.className = 'btn eye-btn'; eyeBtn.textContent = '👁'; if (l.visible === false) eyeBtn.classList.add('is-hidden'); eyeBtn.onclick = (e) => { e.stopPropagation(); l.visible = l.visible === false ? true : false; saveProjects(); drawTimelineTracks(); draw(); };

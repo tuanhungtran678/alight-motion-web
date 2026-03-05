@@ -65,7 +65,7 @@
             <button id="addImageBtn" class="btn">+ Thêm ảnh</button>
             <label>Layer hiện tại <select id="layerSelect"></select></label>
             <label>Màu layer <input id="layerColor" type="color" value="#21b8ff" /></label>
-            <label>Hình dáng frame
+            <label>Hình dáng layer
               <select id="frameShape">
                 <option value="rect" selected>Rect</option>
                 <option value="round">Bo góc</option>
@@ -74,8 +74,8 @@
               </select>
             </label>
             <div class="button-grid">
-              <button id="groupLayerBtn" class="btn">Group frame</button>
-              <button id="ungroupLayerBtn" class="btn">Ungroup frame</button>
+              <button id="groupLayerBtn" class="btn">Group layer</button>
+              <button id="ungroupLayerBtn" class="btn">Ungroup layer</button>
             </div>
             <button id="deleteLayer" class="btn danger">Xóa layer</button>
           </article>
@@ -84,14 +84,14 @@
             <h2>Timeline + Keyframes</h2>
             <label>Thời lượng (giây) <input id="timelineDuration" type="number" min="0.2" step="0.1" value="2" /></label>
             <div class="field-grid">
-              <label>Track frame
+              <label>Track layer
                 <select id="frameTarget">
                   <option value="layer" selected>Layer</option>
                   <option value="camera">Camera</option>
                   <option value="audio">Audio</option>
                 </select>
               </label>
-              <label>Thời gian frame (s) <input id="frameTime" type="number" min="0" step="0.01" value="0" /></label>
+              <label>Thời gian keyframe (s) <input id="frameTime" type="number" min="0" step="0.01" value="0" /></label>
             </div>
             <div id="timelineTracks" class="timeline-tracks"></div>
             <div class="button-grid">
