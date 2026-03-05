@@ -24,7 +24,7 @@ const ui = {
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
   modal: getEl('createProjectModal'), closeModalBtn: getEl('closeModalBtn'), ratioRow: getEl('ratioRow'), modalFps: getEl('modalFps'), modalResolution: getEl('modalResolution'), modalProjectName: getEl('modalProjectName'), modalBgColor: getEl('modalBgColor'), modalBgHex: getEl('modalBgHex'), confirmCreateBtn: getEl('confirmCreateBtn'),
-  preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), exportVideoBtn: getEl('exportVideoBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
+  preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), undoBtn: getEl('undoBtn'), redoBtn: getEl('redoBtn'), exportVideoBtn: getEl('exportVideoBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
   zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerColor: getEl('layerColor'), frameShape: getEl('frameShape'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
@@ -36,7 +36,7 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1 };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {} };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 
@@ -66,6 +66,36 @@ function newProject({ name, ratio, fps, resolution, bgColor }) {
 }
 
 function saveProjects() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.projects)); }
+
+function pushHistorySnapshot() {
+  const p = currentProject();
+  if (!p) return;
+  state.history.push({ projectId: p.id, snapshot: JSON.stringify(p) });
+  if (state.history.length > 60) state.history.shift();
+  state.future = [];
+}
+
+function restoreSnapshot(entry) {
+  const idx = state.projects.findIndex((x) => x.id === entry.projectId);
+  if (idx < 0) return;
+  state.projects[idx] = normalizeProject(JSON.parse(entry.snapshot));
+  saveProjects();
+  hydrateEditor();
+}
+
+function undo() {
+  const p = currentProject();
+  if (!p || !state.history.length) return;
+  state.future.push({ projectId: p.id, snapshot: JSON.stringify(p) });
+  restoreSnapshot(state.history.pop());
+}
+
+function redo() {
+  const p = currentProject();
+  if (!p || !state.future.length) return;
+  state.history.push({ projectId: p.id, snapshot: JSON.stringify(p) });
+  restoreSnapshot(state.future.pop());
+}
 
 function normalizeLayerEasing(layer) {
   if (!layer.easing) {
@@ -289,7 +319,10 @@ function hydrateEditor() {
   ui.camRotation.value = String(p.settings.camera?.rotation || 0);
   ui.layerSelect.innerHTML = '';
   p.layers.forEach((l, i) => { const opt = document.createElement('option'); opt.value = l.id; opt.textContent = `${l.type} ${i + 1}`; ui.layerSelect.append(opt); });
-  if (p.layers.length) ui.layerSelect.value = p.layers[0].id;
+  if (p.layers.length) {
+    ui.layerSelect.value = p.layers[0].id;
+    if (!state.selectedLayerIds.length) state.selectedLayerIds = [p.layers[0].id];
+  }
   syncControlsFromNearest();
   drawEaseGraph();
   drawTimelineTracks();
@@ -337,6 +370,7 @@ function ensureKeyAtCurrent(layer) {
 
 function addKeyframeAtCurrent() {
   const p = currentProject(); if (!p) return;
+  pushHistorySnapshot();
   if (ui.frameTarget.value === 'camera') {
     const c = getCameraAt(state.time);
     p.settings.cameraKeyframes.push({ id: uid(), time: state.time, x: c.x, y: c.y, zoom: c.zoom, rotation: c.rotation });
@@ -364,6 +398,7 @@ function addKeyframeAtCurrent() {
 
 function removeNearestKeyframe() {
   const p = currentProject(); if (!p) return;
+  pushHistorySnapshot();
   if (ui.frameTarget.value === 'camera') {
     if ((p.settings.cameraKeyframes || []).length <= 1) return;
     const k = nearestTimeKey(p.settings.cameraKeyframes, state.time);
@@ -474,6 +509,90 @@ function drawTimelineTracks() {
   const p = currentProject(); if (!p) return;
   ui.timelineTracks.innerHTML = '';
   const activeLayerId = ui.layerSelect.value;
+  state.selectedLayerIds = state.selectedLayerIds.filter((id) => p.layers.some((l) => l.id === id));
+
+  const calcTimeFromStrip = (strip, clientX) => {
+    const rect = strip.getBoundingClientRect();
+    const ratio = clamp((clientX - rect.left) / Math.max(1, rect.width), 0, 1);
+    return ratio * p.settings.duration;
+  };
+
+  const tryDeleteKeyWithDoubleRightClick = (payload) => {
+    const key = `${payload.type}:${payload.layerId || 'system'}:${payload.keyId}`;
+    const now = Date.now();
+    if (state.rightDeleteLog[key] && now - state.rightDeleteLog[key] < 380) {
+      pushHistorySnapshot();
+      if (payload.type === 'layer') {
+        const layer = p.layers.find((l) => l.id === payload.layerId);
+        if (!layer || layer.keyframes.length <= 1) return;
+        layer.keyframes = layer.keyframes.filter((k) => k.id !== payload.keyId);
+      } else if (payload.type === 'camera') {
+        if (p.settings.cameraKeyframes.length <= 1) return;
+        p.settings.cameraKeyframes = p.settings.cameraKeyframes.filter((k) => k.id !== payload.keyId);
+      } else {
+        if (p.settings.audioKeyframes.length <= 1) return;
+        p.settings.audioKeyframes = p.settings.audioKeyframes.filter((k) => k.id !== payload.keyId);
+      }
+      p.updatedAt = Date.now();
+      saveProjects();
+      drawTimelineTracks();
+      syncControlsFromNearest();
+      draw();
+      delete state.rightDeleteLog[key];
+      return;
+    }
+    state.rightDeleteLog[key] = now;
+  };
+
+  const bindKeyDotInteractions = (dot, strip, payload) => {
+    dot.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      tryDeleteKeyWithDoubleRightClick(payload);
+    });
+    dot.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      if (e.button === 2) {
+        tryDeleteKeyWithDoubleRightClick(payload);
+        return;
+      }
+      if (e.button !== 0) return;
+      pushHistorySnapshot();
+      state.keyDrag = { payload, strip };
+    });
+  };
+
+  const onDragMove = (e) => {
+    if (!state.keyDrag) return;
+    const t = clamp(calcTimeFromStrip(state.keyDrag.strip, e.clientX), 0, p.settings.duration);
+    const payload = state.keyDrag.payload;
+    if (payload.type === 'layer') {
+      const layer = p.layers.find((l) => l.id === payload.layerId);
+      const key = layer?.keyframes.find((k) => k.id === payload.keyId);
+      if (key) { key.time = t; sortKf(layer); }
+    } else if (payload.type === 'camera') {
+      const key = p.settings.cameraKeyframes.find((k) => k.id === payload.keyId);
+      if (key) { key.time = t; sortTimeKeys(p.settings.cameraKeyframes); }
+    } else {
+      const key = p.settings.audioKeyframes.find((k) => k.id === payload.keyId);
+      if (key) { key.time = t; sortTimeKeys(p.settings.audioKeyframes); }
+    }
+    state.time = t;
+    p.updatedAt = Date.now();
+    saveProjects();
+    drawTimelineTracks();
+    syncControlsFromNearest();
+    draw();
+  };
+
+  const onDragEnd = () => { state.keyDrag = null; };
+  if (state.keyDragHandlers) {
+    window.removeEventListener('mousemove', state.keyDragHandlers.move);
+    window.removeEventListener('mouseup', state.keyDragHandlers.up);
+  }
+  state.keyDragHandlers = { move: onDragMove, up: onDragEnd };
+  window.addEventListener('mousemove', onDragMove);
+  window.addEventListener('mouseup', onDragEnd);
 
   p.layers.forEach((l, idx) => {
     const row = document.createElement('div');
@@ -503,11 +622,23 @@ function drawTimelineTracks() {
       d.className = 'key-dot';
       d.style.left = `${(k.time / Math.max(p.settings.duration, 0.001)) * 100}%`;
       if (Math.abs(k.time - state.time) <= 0.04) d.classList.add('active');
+      bindKeyDotInteractions(d, strip, { type: 'layer', layerId: l.id, keyId: k.id });
       strip.append(d);
     });
 
-    row.onclick = () => { ui.layerSelect.value = l.id; syncControlsFromNearest(); drawTimelineTracks(); };
+    row.onclick = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (state.selectedLayerIds.includes(l.id)) state.selectedLayerIds = state.selectedLayerIds.filter((id) => id !== l.id);
+        else state.selectedLayerIds.push(l.id);
+      } else {
+        state.selectedLayerIds = [l.id];
+      }
+      ui.layerSelect.value = l.id;
+      syncControlsFromNearest();
+      drawTimelineTracks();
+    };
     if (activeLayerId === l.id) row.classList.add('selected');
+    if (state.selectedLayerIds.includes(l.id)) row.classList.add('multi-selected');
 
     dragHandle.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', row.dataset.index);
@@ -532,7 +663,7 @@ function drawTimelineTracks() {
     ui.timelineTracks.append(row);
   });
 
-  const appendSystemRow = (label, keys, icon) => {
+  const appendSystemRow = (label, keys, icon, type) => {
     const row = document.createElement('div');
     row.className = 'timeline-row system-row';
     const left = document.createElement('div'); left.className = 'timeline-left';
@@ -548,6 +679,7 @@ function drawTimelineTracks() {
       d.className = 'key-dot';
       d.style.left = `${(k.time / Math.max(p.settings.duration, 0.001)) * 100}%`;
       if (Math.abs(k.time - state.time) <= 0.04) d.classList.add('active');
+      bindKeyDotInteractions(d, strip, { type, keyId: k.id });
       strip.append(d);
     });
 
@@ -555,8 +687,8 @@ function drawTimelineTracks() {
     ui.timelineTracks.append(row);
   };
 
-  appendSystemRow('Camera', p.settings.cameraKeyframes, '📷');
-  appendSystemRow('Audio', p.settings.audioKeyframes, '🔊');
+  appendSystemRow('Camera', p.settings.cameraKeyframes, '📷', 'camera');
+  appendSystemRow('Audio', p.settings.audioKeyframes, '🔊', 'audio');
 }
 
 function drawEaseGraph() {
@@ -869,20 +1001,22 @@ function bind() {
   ui.themeToggleBtn.onclick = () => applyTheme(state.theme === 'dark' ? 'light' : 'dark');
   ui.backHomeBtn.onclick = showHome;
 
-  ui.addRect.onclick = () => addLayer('rect');
-  ui.addCircle.onclick = () => addLayer('circle');
-  ui.addText.onclick = () => addLayer('text');
+  ui.addRect.onclick = () => { pushHistorySnapshot(); addLayer('rect'); };
+  ui.addCircle.onclick = () => { pushHistorySnapshot(); addLayer('circle'); };
+  ui.addText.onclick = () => { pushHistorySnapshot(); addLayer('text'); };
   ui.addImageBtn.onclick = () => addImageLayer(ui.imageInput.files?.[0]);
   ui.deleteLayer.onclick = () => {
     const p = currentProject(); if (!p) return;
+    pushHistorySnapshot();
     p.layers = p.layers.filter((l) => l.id !== ui.layerSelect.value);
     p.updatedAt = Date.now(); saveProjects(); hydrateEditor();
   };
 
-  ui.layerSelect.onchange = syncControlsFromNearest;
+  ui.layerSelect.onchange = () => { state.selectedLayerIds = [ui.layerSelect.value]; syncControlsFromNearest(); drawTimelineTracks(); };
   ui.frameShape.onchange = () => {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
+    pushHistorySnapshot();
     l.frameShape = ui.frameShape.value;
     p.updatedAt = Date.now();
     saveProjects();
@@ -892,11 +1026,13 @@ function bind() {
   ui.groupLayerBtn.onclick = () => {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
-    const idx = p.layers.findIndex((x) => x.id === l.id);
-    const prev = p.layers[idx - 1];
-    const gid = l.groupId || prev?.groupId || `G${Date.now().toString().slice(-4)}`;
-    l.groupId = gid;
-    if (prev) prev.groupId = gid;
+    pushHistorySnapshot();
+    const selected = state.selectedLayerIds.length > 1
+      ? p.layers.filter((x) => state.selectedLayerIds.includes(x.id))
+      : [l, p.layers[p.layers.findIndex((x) => x.id === l.id) - 1]].filter(Boolean);
+    if (selected.length < 2) return;
+    const gid = selected.find((x) => x.groupId)?.groupId || `G${Date.now().toString().slice(-4)}`;
+    selected.forEach((x) => { x.groupId = gid; });
     p.updatedAt = Date.now();
     saveProjects();
     hydrateEditor();
@@ -904,7 +1040,9 @@ function bind() {
   ui.ungroupLayerBtn.onclick = () => {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
-    l.groupId = null;
+    pushHistorySnapshot();
+    const selected = state.selectedLayerIds.length ? p.layers.filter((x) => state.selectedLayerIds.includes(x.id)) : [l];
+    selected.forEach((x) => { x.groupId = null; });
     p.updatedAt = Date.now();
     saveProjects();
     hydrateEditor();
@@ -940,6 +1078,7 @@ function bind() {
   ui.applyCameraBtn.onclick = () => {
     const p = currentProject();
     if (!p) return;
+    pushHistorySnapshot();
     p.settings.camera = {
       x: +ui.camX.value || 0,
       y: +ui.camY.value || 0,
@@ -958,6 +1097,8 @@ function bind() {
     draw();
   };
 
+  ui.undoBtn.onclick = undo;
+  ui.redoBtn.onclick = redo;
   ui.playBtn.onclick = () => { state.playing = true; state.startRef = 0; syncAudioPlayback(); audioPlayer.play().catch(() => {}); requestAnimationFrame(tick); };
   ui.pauseBtn.onclick = () => { state.playing = false; state.startRef = 0; stopAudioPlayback(); };
   ui.resetBtn.onclick = () => { state.playing = false; state.startRef = 0; state.time = 0; if (audioPlayer.src) audioPlayer.currentTime = 0; stopAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
@@ -977,6 +1118,7 @@ function bind() {
     const p = currentProject();
     const file = ui.audioInput.files?.[0];
     if (!p || !file) return;
+    pushHistorySnapshot();
     const fr = new FileReader();
     fr.onload = () => {
       p.settings.audio.src = fr.result;
@@ -994,6 +1136,7 @@ function bind() {
   ui.removeAudioBtn.onclick = () => {
     const p = currentProject();
     if (!p) return;
+    pushHistorySnapshot();
     p.settings.audio = { src: null, name: '', volume: 1, offset: 0 };
     p.updatedAt = Date.now();
     saveProjects();
@@ -1002,6 +1145,7 @@ function bind() {
   ui.audioVolume.oninput = () => {
     const p = currentProject();
     if (!p) return;
+    pushHistorySnapshot();
     p.settings.audio.volume = clamp(+ui.audioVolume.value || 1, 0, 2);
     const ak = nearestTimeKey(p.settings.audioKeyframes || [], state.time); if (ak) ak.volume = p.settings.audio.volume;
     p.updatedAt = Date.now();
@@ -1011,6 +1155,7 @@ function bind() {
   ui.audioOffset.oninput = () => {
     const p = currentProject();
     if (!p) return;
+    pushHistorySnapshot();
     p.settings.audio.offset = Math.max(0, +ui.audioOffset.value || 0);
     const ak = nearestTimeKey(p.settings.audioKeyframes || [], state.time); if (ak) ak.offset = p.settings.audio.offset;
     p.updatedAt = Date.now();

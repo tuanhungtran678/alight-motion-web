@@ -89,6 +89,7 @@ input, select, button {
   border: 1px solid transparent;
 }
 .timeline-row.selected { border-color: color-mix(in srgb, var(--accent), white 20%); background: color-mix(in srgb, var(--card), var(--accent) 10%); }
+.timeline-row.multi-selected { border-color: #7fd3ff; background: color-mix(in srgb, #7fd3ff 14%, var(--track-bg)); }
 .timeline-row.drag-over { border-color: #4fb5ff; background: color-mix(in srgb, #4fb5ff 18%, var(--track-bg)); }
 .timeline-row.dragging-row { opacity: .55; }
 .timeline-row.system-row { border-style: dashed; border-color: color-mix(in srgb, var(--border), white 15%); }
