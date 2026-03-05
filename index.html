@@ -66,7 +66,16 @@
             <label>Chèn hình ảnh <input id="imageInput" type="file" accept="image/*" /></label>
             <button id="addImageBtn" class="btn">+ Thêm ảnh</button>
             <label>Layer hiện tại <select id="layerSelect"></select></label>
+            <label>Tên layer <input id="layerName" type="text" value="Layer" /></label>
             <label>Màu layer <input id="layerColor" type="color" value="#21b8ff" /></label>
+            <label>Hiệu ứng
+              <select id="layerEffectType">
+                <option value="none" selected>Không</option>
+                <option value="glow">Hào quang</option>
+                <option value="stars">Chùm sao</option>
+              </select>
+            </label>
+            <label>Độ mạnh hiệu ứng <input id="layerEffectStrength" type="number" min="0" max="2" step="0.1" value="0.6" /></label>
             <label>Hình dáng layer
               <select id="frameShape">
                 <option value="rect" selected>Rect</option>

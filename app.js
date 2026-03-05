@@ -25,7 +25,7 @@ const ui = {
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
   modal: getEl('createProjectModal'), closeModalBtn: getEl('closeModalBtn'), ratioRow: getEl('ratioRow'), modalFps: getEl('modalFps'), modalResolution: getEl('modalResolution'), modalProjectName: getEl('modalProjectName'), modalBgColor: getEl('modalBgColor'), modalBgHex: getEl('modalBgHex'), confirmCreateBtn: getEl('confirmCreateBtn'),
   preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), undoBtn: getEl('undoBtn'), redoBtn: getEl('redoBtn'), exportVideoBtn: getEl('exportVideoBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
-  zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerColor: getEl('layerColor'), frameShape: getEl('frameShape'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
+  zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), frameShape: getEl('frameShape'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'),
@@ -42,7 +42,7 @@ audioPlayer.preload = 'auto';
 
 function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w || 9, h: h || 16 }; }
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
-function newLayer(type, extra = {}) { return { id: uid(), type, color: '#21b8ff', text: 'TEXT', size: 90, imageSrc: null, imageObj: null, frameShape: 'rect', groupId: null, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
+function newLayer(type, extra = {}) { return { id: uid(), name: `Layer ${Date.now().toString().slice(-4)}`, type, color: '#21b8ff', text: 'TEXT', size: 90, imageSrc: null, imageObj: null, frameShape: 'rect', groupId: null, effect: { type: 'none', strength: 0.6 }, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
 function newProject({ name, ratio, fps, resolution, bgColor }) {
   return {
     id: uid(),
@@ -136,8 +136,12 @@ function normalizeProject(p) {
   p.layers = Array.isArray(p.layers) ? p.layers : [];
   p.layers.forEach((layer) => {
     normalizeLayerEasing(layer);
+    layer.name = layer.name || `${layer.type || 'Layer'} ${layer.id?.slice?.(0, 4) || ''}`.trim();
     layer.frameShape = layer.frameShape || 'rect';
     layer.groupId = layer.groupId || null;
+    layer.effect = layer.effect || { type: 'none', strength: 0.6 };
+    layer.effect.type = layer.effect.type || 'none';
+    layer.effect.strength = Number.isFinite(+layer.effect.strength) ? clamp(+layer.effect.strength, 0, 2) : 0.6;
   });
   return p;
 }
@@ -318,7 +322,7 @@ function hydrateEditor() {
   ui.camZoom.value = String(p.settings.camera?.zoom || 1);
   ui.camRotation.value = String(p.settings.camera?.rotation || 0);
   ui.layerSelect.innerHTML = '';
-  p.layers.forEach((l, i) => { const opt = document.createElement('option'); opt.value = l.id; opt.textContent = `${l.type} ${i + 1}`; ui.layerSelect.append(opt); });
+  p.layers.forEach((l, i) => { const opt = document.createElement('option'); opt.value = l.id; opt.textContent = l.name || `${l.type} ${i + 1}`; ui.layerSelect.append(opt); });
   if (p.layers.length) {
     ui.layerSelect.value = p.layers[0].id;
     if (!state.selectedLayerIds.length) state.selectedLayerIds = [p.layers[0].id];
@@ -351,7 +355,10 @@ function syncControlsFromNearest() {
   const k = nearestKey(l, state.time);
   ui.startX.value = k.x; ui.startY.value = k.y; ui.startScale.value = k.scale; ui.startRotation.value = k.rotation; ui.startOpacity.value = k.opacity;
   ui.easing.value = getLayerEasing(l, ui.easeTarget.value || 'position');
+  ui.layerName.value = l.name || '';
   ui.layerColor.value = l.color || '#21b8ff';
+  ui.layerEffectType.value = l.effect?.type || 'none';
+  ui.layerEffectStrength.value = String(l.effect?.strength ?? 0.6);
   ui.frameShape.value = l.frameShape || 'rect';
   ui.keyframeInfo.textContent = `Keyframes: ${l.keyframes.map((x) => x.time.toFixed(2)).join(', ')}`;
   if (k) ui.frameTime.value = k.time.toFixed(2);
@@ -449,6 +456,35 @@ function drawLayer(layer) {
   const tf = getTransform(layer, state.time);
   ctx.save();
   ctx.translate(tf.x, tf.y); ctx.rotate((tf.rotation * Math.PI) / 180); ctx.scale(tf.scale, tf.scale); ctx.globalAlpha = clamp(tf.opacity, 0, 1);
+  const effectType = layer.effect?.type || 'none';
+  const effectStrength = clamp(layer.effect?.strength ?? 0.6, 0, 2);
+  if (effectType === 'glow') {
+    ctx.shadowColor = layer.color || '#21b8ff';
+    ctx.shadowBlur = 20 + effectStrength * 26;
+  }
+  if (effectType === 'stars') {
+    const r = 70;
+    ctx.save();
+    ctx.fillStyle = '#fff9b6';
+    for (let i = 0; i < 7; i += 1) {
+      const a = (Math.PI * 2 * i) / 7;
+      const sx = Math.cos(a) * (r + (i % 3) * 8);
+      const sy = Math.sin(a) * (r + ((i + 1) % 3) * 6);
+      const sz = 3 + effectStrength * 2;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - sz);
+      ctx.lineTo(sx + sz * 0.35, sy - sz * 0.35);
+      ctx.lineTo(sx + sz, sy);
+      ctx.lineTo(sx + sz * 0.35, sy + sz * 0.35);
+      ctx.lineTo(sx, sy + sz);
+      ctx.lineTo(sx - sz * 0.35, sy + sz * 0.35);
+      ctx.lineTo(sx - sz, sy);
+      ctx.lineTo(sx - sz * 0.35, sy - sz * 0.35);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
   if (layer.type === 'rect') {
     ctx.fillStyle = layer.color;
     if (layer.frameShape === 'round') {
@@ -609,7 +645,7 @@ function drawTimelineTracks() {
     const lockBtn = document.createElement('button'); lockBtn.className = 'btn'; lockBtn.textContent = l.locked ? '🔒' : '🔓'; lockBtn.onclick = (e) => { e.stopPropagation(); l.locked = !l.locked; saveProjects(); drawTimelineTracks(); };
     const eyeBtn = document.createElement('button'); eyeBtn.className = 'btn eye-btn'; eyeBtn.textContent = '👁'; if (l.visible === false) eyeBtn.classList.add('is-hidden'); eyeBtn.onclick = (e) => { e.stopPropagation(); l.visible = l.visible === false ? true : false; saveProjects(); drawTimelineTracks(); draw(); };
     const chip = document.createElement('span'); chip.className = 'track-chip'; chip.style.background = l.color;
-    const name = document.createElement('strong'); name.textContent = `${l.type} ${idx + 1}${l.groupId ? ` [${l.groupId}]` : ''}`;
+    const name = document.createElement('strong'); name.textContent = `${l.name || `${l.type} ${idx + 1}`}${l.groupId ? ` [${l.groupId}]` : ''}`;
     left.append(dragHandle, lockBtn, eyeBtn, chip, name);
 
     const strip = document.createElement('div'); strip.className = `timeline-strip ${idx === 0 ? 'main' : ''}`;
@@ -1013,6 +1049,15 @@ function bind() {
   };
 
   ui.layerSelect.onchange = () => { state.selectedLayerIds = [ui.layerSelect.value]; syncControlsFromNearest(); drawTimelineTracks(); };
+  ui.layerName.oninput = () => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l) return;
+    pushHistorySnapshot();
+    l.name = ui.layerName.value.trim() || l.name;
+    p.updatedAt = Date.now();
+    saveProjects();
+    hydrateEditor();
+  };
   ui.frameShape.onchange = () => {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
@@ -1071,6 +1116,26 @@ function bind() {
   };
   ui.easeTarget.onchange = () => { const l = currentLayer(); if (!l) return; ui.easing.value = getLayerEasing(l, ui.easeTarget.value); drawEaseGraph(); };
   ui.layerColor.oninput = applyCurrentValues;
+  ui.layerEffectType.onchange = () => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l) return;
+    pushHistorySnapshot();
+    l.effect = l.effect || { type: 'none', strength: 0.6 };
+    l.effect.type = ui.layerEffectType.value;
+    p.updatedAt = Date.now();
+    saveProjects();
+    draw();
+  };
+  ui.layerEffectStrength.oninput = () => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l) return;
+    pushHistorySnapshot();
+    l.effect = l.effect || { type: 'none', strength: 0.6 };
+    l.effect.strength = clamp(+ui.layerEffectStrength.value || 0, 0, 2);
+    p.updatedAt = Date.now();
+    saveProjects();
+    draw();
+  };
   ui.addKeyBtn.onclick = addKeyframeAtCurrent;
   ui.removeKeyBtn.onclick = removeNearestKeyframe;
   ui.applyBtn.onclick = applyCurrentValues;
