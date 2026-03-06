@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alight Motion Web Lite</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section id="homeScreen" class="screen active">
+        <header class="topbar">
+          <h1>Alight Motion Web Lite</h1>
+          <p>Màn hình chính quản lý dự án.</p>
+        </header>
+
+        <article class="panel">
+          <h2>Tạo dự án mới</h2>
+          <button id="createProjectBtn" class="btn primary">+ Tạo dự án mới</button>
+        </article>
+
+        <article class="panel">
+          <h2>Danh sách dự án</h2>
+          <div id="projectList" class="project-list"></div>
+        </article>
+      </section>
+
+      <section id="editorScreen" class="screen">
+        <header class="topbar row-between">
+          <div>
+            <h1 id="projectTitle">Editor</h1>
+            <p id="projectMeta">-</p>
+          </div>
+          <div class="header-actions">
+            <button id="themeToggleBtn" class="btn">☀/🌙</button>
+            <button id="openMenuBtn" class="btn">⚙</button>
+            <button id="backHomeBtn" class="btn">← Home</button>
+          </div>
+        </header>
+
+        <section class="preview-card">
+          <div class="phone-stage">
+            <canvas id="preview" width="360" height="640"></canvas>
+          </div>
+          <div class="transport">
+            <button id="playBtn" class="btn primary">▶ Phát</button>
+            <button id="pauseBtn" class="btn">⏸ Dừng</button>
+            <button id="resetBtn" class="btn">↺ Reset</button>
+            <button id="undoBtn" class="btn">↶ Undo</button>
+            <button id="redoBtn" class="btn">↷ Redo</button>
+            <button id="exportVideoBtn" class="btn">⤓ Xuất Video MP4</button>
+            <button id="zoomToggleBtn" class="btn">🔍 Zoom: Off</button>
+            <label>Tua <input id="scrubber" type="range" min="0" max="100" value="0" /></label>
+            <span id="timeLabel">0.00s / 2.00s</span>
+          </div>
+        </section>
+
+        <section class="panel-grid">
+          <article class="panel">
+            <h2>Layer</h2>
+            <div class="button-grid">
+              <button id="addRect" class="btn">+ Hình chữ nhật</button>
+              <button id="addCircle" class="btn">+ Hình tròn</button>
+              <button id="addText" class="btn">+ Text</button>
+            </div>
+            <label>Chèn hình ảnh <input id="imageInput" type="file" accept="image/*" /></label>
+            <button id="addImageBtn" class="btn">+ Thêm ảnh</button>
+            <label>Layer hiện tại <select id="layerSelect"></select></label>
+            <label>Tên layer <input id="layerName" type="text" value="Layer" /></label>
+            <label>Màu layer <input id="layerColor" type="color" value="#21b8ff" /></label>
+            <label>Hiệu ứng
+              <select id="layerEffectType">
+                <option value="none" selected>Không</option>
+                <option value="glow">Hào quang</option>
+                <option value="stars">Chùm sao</option>
+              </select>
+            </label>
+            <label>Độ mạnh hiệu ứng <input id="layerEffectStrength" type="number" min="0" max="2" step="0.1" value="0.6" /></label>
+            <h3>Text layer</h3>
+            <label>Nội dung chữ <input id="textContent" type="text" value="TEXT" /></label>
+            <div class="field-grid">
+              <label>Cỡ chữ <input id="textSize" type="number" min="8" max="240" step="1" value="90" /></label>
+              <label>Font
+                <select id="textFontFamily">
+                  <option value="Inter" selected>Inter</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Tahoma">Tahoma</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Courier New">Courier New</option>
+                </select>
+              </label>
+              <label>Đậm
+                <select id="textWeight">
+                  <option value="400">Normal</option>
+                  <option value="700" selected>Bold</option>
+                </select>
+              </label>
+              <label>Nghiêng
+                <select id="textStyle">
+                  <option value="normal" selected>Normal</option>
+                  <option value="italic">Italic</option>
+                </select>
+              </label>
+            </div>
+            <label>Căn chữ
+              <select id="textAlign">
+                <option value="left">Left</option>
+                <option value="center" selected>Center</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+            <label>Hình dáng layer
+              <select id="frameShape">
+                <option value="rect" selected>Rect</option>
+                <option value="round">Bo góc</option>
+                <option value="diamond">Kim cương</option>
+                <option value="pill">Pill</option>
+              </select>
+            </label>
+            <div class="button-grid">
+              <button id="groupLayerBtn" class="btn">Group layer</button>
+              <button id="ungroupLayerBtn" class="btn">Ungroup layer</button>
+            </div>
+            <button id="deleteLayer" class="btn danger">Xóa layer</button>
+          </article>
+
+          <article class="panel">
+            <h2>Timeline + Keyframes</h2>
+            <label>Thời lượng (giây) <input id="timelineDuration" type="number" min="0.2" step="0.1" value="2" /></label>
+            <div class="field-grid">
+              <label>Track layer
+                <select id="frameTarget">
+                  <option value="layer" selected>Layer</option>
+                  <option value="camera">Camera</option>
+                  <option value="audio">Audio</option>
+                </select>
+              </label>
+              <label>Thời gian keyframe (s) <input id="frameTime" type="number" min="0" step="0.01" value="0" /></label>
+            </div>
+            <div id="timelineTracks" class="timeline-tracks"></div>
+            <div class="button-grid">
+              <button id="addKeyBtn" class="btn">+ Keyframe tại thời điểm hiện tại</button>
+              <button id="removeKeyBtn" class="btn danger">Xóa keyframe gần nhất</button>
+            </div>
+            <small id="keyframeInfo">Keyframes: -</small>
+
+            <h3>Giá trị keyframe hiện tại</h3>
+            <div class="field-grid">
+              <label>X <input id="startX" type="number" value="180" /></label>
+              <label>Y <input id="startY" type="number" value="320" /></label>
+              <label>Scale <input id="startScale" type="number" step="0.1" value="1" /></label>
+              <label>Rotate° <input id="startRotation" type="number" value="0" /></label>
+              <label>Opacity <input id="startOpacity" type="number" step="0.05" min="0" max="1" value="1" /></label>
+            </div>
+            <label>Ease
+              <select id="easeTarget">
+                <option value="position" selected>Áp dụng cho: Di chuyển (X/Y)</option>
+                <option value="scale">Áp dụng cho: Scale</option>
+                <option value="rotation">Áp dụng cho: Xoay</option>
+                <option value="opacity">Áp dụng cho: Opacity</option>
+              </select>
+            </label>
+            <label>Kiểu Ease
+              <select id="easing">
+                <option value="linear">Linear</option>
+                <option value="easeIn">Ease In</option>
+                <option value="easeOut">Ease Out</option>
+                <option value="easeInOut" selected>Ease In Out</option>
+                <option value="custom">Custom Graph</option>
+              </select>
+            </label>
+            <canvas id="easeGraph" width="320" height="160"></canvas>
+            <small>Kéo 2 điểm tròn trên đồ thị để chỉnh custom ease.</small>
+            <button id="applyBtn" class="btn primary">Áp dụng vào keyframe hiện tại</button>
+
+            <h3>Camera</h3>
+            <div class="field-grid">
+              <label>Cam X <input id="camX" type="number" value="0" /></label>
+              <label>Cam Y <input id="camY" type="number" value="0" /></label>
+              <label>Cam Zoom <input id="camZoom" type="number" min="0.1" step="0.1" value="1" /></label>
+              <label>Cam Rotate° <input id="camRotation" type="number" value="0" /></label>
+            </div>
+            <button id="applyCameraBtn" class="btn">Áp dụng Camera</button>
+
+            <h3>Âm thanh</h3>
+            <label>Chèn audio <input id="audioInput" type="file" accept="audio/*" /></label>
+            <div class="button-grid">
+              <button id="addAudioBtn" class="btn">+ Thêm âm thanh</button>
+              <button id="removeAudioBtn" class="btn danger">Xóa âm thanh</button>
+            </div>
+            <div class="field-grid">
+              <label>Âm lượng <input id="audioVolume" type="number" min="0" max="2" step="0.05" value="1" /></label>
+              <label>Bắt đầu tại (giây) <input id="audioOffset" type="number" min="0" step="0.1" value="0" /></label>
+            </div>
+            <small id="audioInfo">Audio: chưa có</small>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <div id="exportOverlay" class="export-overlay hidden" aria-live="polite">
+      <div class="export-card">
+        <h3>Đang xuất video...</h3>
+        <div class="export-progress">
+          <div id="exportProgressBar" class="export-progress-bar"></div>
+        </div>
+        <p id="exportProgressText">0%</p>
+        <p class="export-note">⚠️ Vui lòng không đóng trang web này hoặc chuyển sang tab khác trong quá trình kết xuất.</p>
+      </div>
+    </div>
+
+    <aside id="settingsMenu" class="menu hidden">
+      <div class="menu-card">
+        <h3>Project Menu</h3>
+        <label>Tên dự án <input id="menuProjectName" type="text" /></label>
+        <label>Tỉ lệ
+          <select id="menuRatio">
+            <option value="9:16">9:16</option><option value="16:9">16:9</option><option value="1:1">1:1</option><option value="3:4">3:4</option><option value="4:3">4:3</option>
+          </select>
+        </label>
+        <label>FPS <input id="menuFps" type="number" min="12" max="120" value="30" /></label>
+        <label>Độ phân giải
+          <select id="menuResolution">
+            <option value="4320">8K (4320p)</option>
+            <option value="2160">4K (2160p)</option>
+            <option value="1440">2K (1440p)</option>
+            <option value="1080" selected>Full HD (1080p)</option>
+            <option value="720">HD (720p)</option>
+            <option value="480">480p</option>
+            <option value="360">360p</option>
+            <option value="240">240p</option>
+            <option value="144">144p</option>
+          </select>
+        </label>
+        <label>Màu nền <input id="menuBgColor" type="color" value="#000000" /></label>
+        <div class="button-grid">
+          <button id="saveMenuBtn" class="btn primary">Lưu project</button>
+          <button id="closeMenuBtn" class="btn">Đóng</button>
+        </div>
+      </div>
+    </aside>
+
+    <div id="createProjectModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <button id="closeModalBtn" class="icon-close" aria-label="Close">✕</button>
+        <h2>Create Project</h2>
+        <hr />
+        <div class="ratio-row" id="ratioRow">
+          <button class="ratio-btn selected" data-ratio="9:16">9:16</button>
+          <button class="ratio-btn" data-ratio="16:9">16:9</button>
+          <button class="ratio-btn" data-ratio="1:1">1:1</button>
+          <button class="ratio-btn" data-ratio="3:4">3:4</button>
+          <button class="ratio-btn" data-ratio="4:3">4:3</button>
+        </div>
+        <label>FPS <select id="modalFps"><option>24</option><option selected>30</option><option>60</option></select></label>
+        <label>Resolution
+          <select id="modalResolution">
+            <option value="4320">8K (4320p)</option>
+            <option value="2160">4K (2160p)</option>
+            <option value="1440">2K (1440p)</option>
+            <option value="1080" selected>Full HD (1080p)</option>
+            <option value="720">HD (720p)</option>
+            <option value="480">480p</option>
+            <option value="360">360p</option>
+            <option value="240">240p</option>
+            <option value="144">144p</option>
+          </select>
+        </label>
+        <label>Name <input id="modalProjectName" type="text" placeholder="Enter project name here..." /></label>
+        <label>BG color
+          <div class="bg-row">
+            <input id="modalBgColor" type="color" value="#000000" />
+            <input id="modalBgHex" type="text" value="#000000" readonly />
+          </div>
+        </label>
+        <button id="confirmCreateBtn" class="btn primary">Create</button>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
