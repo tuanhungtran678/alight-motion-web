@@ -22,7 +22,7 @@ const SESSION_KEY = 'alightSessionV1';
 const LOCAL_CLOUD_KEY = 'alightCloudLocalV1';
 const AUTH_TOKEN_KEY = 'alightAuthTokenV1';
 const ui = {
-  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authSignInBtn: getEl('authSignInBtn'), authSignUpBtn: getEl('authSignUpBtn'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'),
+  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
@@ -39,7 +39,7 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi' };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin' };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 
@@ -93,9 +93,23 @@ function updateAuthStatusText() {
 
 function renderSession() { updateAuthStatusText(); }
 
+function renderAuthMode() {
+  const signup = state.authMode === 'signup';
+  if (ui.authModalTitle) ui.authModalTitle.textContent = signup ? 'Sign up' : 'Sign in';
+  if (ui.authNameRow) ui.authNameRow.classList.toggle('hidden', !signup);
+  if (ui.authSignInBtn) ui.authSignInBtn.textContent = signup ? 'Sign up' : 'Sign in';
+  if (ui.authToggleHint) ui.authToggleHint.innerHTML = signup
+    ? "Already have an account? <button id='authToggleModeBtn' class='text-link' type='button'>(sign in)</button>!"
+    : "Don't have a account? So, <button id='authToggleModeBtn' class='text-link' type='button'>(sign up)</button>!";
+  ui.authToggleModeBtn = getEl('authToggleModeBtn');
+  if (ui.authToggleModeBtn) ui.authToggleModeBtn.onclick = () => { state.authMode = signup ? 'signin' : 'signup'; renderAuthMode(); };
+}
+
 function openAuthModal(mode = 'signin') {
+  state.authMode = mode === 'signup' ? 'signup' : 'signin';
+  renderAuthMode();
   ui.authModal?.classList.remove('hidden');
-  if (mode === 'signup') ui.authName?.focus();
+  if (state.authMode === 'signup') ui.authName?.focus();
 }
 function closeAuthModal() { ui.authModal?.classList.add('hidden'); }
 function openGuestModal() { ui.guestModal?.classList.remove('hidden'); }
@@ -103,8 +117,10 @@ function closeGuestModal() { ui.guestModal?.classList.add('hidden'); }
 
 async function requestAuth(path, payload) {
   const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  if (!r.ok) throw new Error('auth_failed');
-  return r.json();
+  let data = {};
+  try { data = await r.json(); } catch {}
+  if (!r.ok) throw new Error(data?.error || 'auth_failed');
+  return data;
 }
 
 async function signInReal() {
@@ -221,7 +237,7 @@ async function renderCloudList() {
     view.rel = 'noopener';
     view.textContent = 'Xem';
     actions.append(view);
-    if (item.isOwner) {
+    if (item.isOwner || (state.session && item.ownerId === state.session.id)) {
       const unshare = document.createElement('button');
       unshare.className = 'btn danger';
       unshare.textContent = 'Unshare';
@@ -1207,8 +1223,14 @@ function bind() {
   ui.openAuthBtn.onclick = () => openAuthModal('signin');
   ui.closeAuthModalBtn.onclick = closeAuthModal;
   ui.authModal.onclick = (e) => { if (e.target === ui.authModal) closeAuthModal(); };
-  ui.authSignInBtn.onclick = async () => { try { await signInReal(); } catch { alert('Sign in failed'); } };
-  ui.authSignUpBtn.onclick = async () => { try { await signUpReal(); } catch { alert('Sign up failed'); } };
+  ui.authSignInBtn.onclick = async () => {
+    try {
+      if (state.authMode === 'signup') await signUpReal();
+      else await signInReal();
+    } catch (e) {
+      alert(e?.message || 'Authentication failed');
+    }
+  };
   ui.closeGuestModalBtn.onclick = closeGuestModal;
   ui.guestModal.onclick = (e) => { if (e.target === ui.guestModal) closeGuestModal(); };
   ui.guestSignInBtn.onclick = () => { closeGuestModal(); openAuthModal('signin'); };
@@ -1519,6 +1541,7 @@ async function init() {
   }
   preloadImages();
   bind();
+  renderAuthMode();
   applyPreviewZoom();
   applyTheme(state.theme);
   if (ui.languageSelect) ui.languageSelect.value = state.language;

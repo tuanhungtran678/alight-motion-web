@@ -305,14 +305,14 @@
     <div id="authModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="menu-card auth-card">
         <button id="closeAuthModalBtn" class="icon-close" aria-label="Close">✕</button>
-        <h3>Sign in / Sign up</h3>
+        <h3 id="authModalTitle">Sign in</h3>
         <label>Email <input id="authEmail" type="email" placeholder="you@example.com" /></label>
         <label>Password <input id="authPassword" type="password" placeholder="••••••••" /></label>
-        <label>Name (for sign up) <input id="authName" type="text" placeholder="Your name" /></label>
+        <label id="authNameRow" class="hidden">Name (for sign up) <input id="authName" type="text" placeholder="Your name" /></label>
         <div class="button-grid">
           <button id="authSignInBtn" class="btn primary">Sign in</button>
-          <button id="authSignUpBtn" class="btn">Sign up</button>
         </div>
+        <small id="authToggleHint">Don't have a account? So, <button id="authToggleModeBtn" class="text-link" type="button">(sign up)</button>!</small>
       </div>
     </div>
 
