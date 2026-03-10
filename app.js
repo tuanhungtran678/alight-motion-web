@@ -21,6 +21,8 @@ const STORAGE_KEY = 'alightProjectsV3';
 const SESSION_KEY = 'alightSessionV1';
 const LOCAL_CLOUD_KEY = 'alightCloudLocalV1';
 const AUTH_TOKEN_KEY = 'alightAuthTokenV1';
+const LOCAL_AUTH_USERS_KEY = 'alightLocalAuthUsersV1';
+const LOCAL_AUTH_OTP_KEY = 'alightLocalAuthOtpV1';
 const ui = {
   home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
@@ -122,12 +124,76 @@ function openOtpModal(email) {
 }
 function closeOtpModal() { ui.otpModal?.classList.add('hidden'); }
 
+function localAuthUsers() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_AUTH_USERS_KEY) || '[]'); } catch { return []; }
+}
+function saveLocalAuthUsers(users) { localStorage.setItem(LOCAL_AUTH_USERS_KEY, JSON.stringify(users)); }
+function localOtpGet() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_AUTH_OTP_KEY) || '{}'); } catch { return {}; }
+}
+function localOtpSet(data) { localStorage.setItem(LOCAL_AUTH_OTP_KEY, JSON.stringify(data)); }
+
+async function localAuthFallback(path, payload) {
+  const email = String(payload?.email || '').trim().toLowerCase();
+  const users = localAuthUsers();
+
+  if (path === '/api/auth/precheck') return { exists: users.some((u) => u.email === email) };
+
+  if (path === '/api/auth/send-otp') {
+    const user = users.find((u) => u.email === email);
+    if (!user) throw new Error('Email not exist!');
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    localOtpSet({ email, code, exp: Date.now() + 10 * 60 * 1000 });
+    console.info(`[LOCAL OTP] ${email} => ${code}`);
+    return { ok: true, message: `We'll send an email to ${email}, please check your inbox. If not have, check the spam folder.` };
+  }
+
+  if (path === '/api/auth/verify-otp') {
+    const otp = localOtpGet();
+    if (!otp.email || otp.email !== email || !otp.code) throw new Error('OTP expired');
+    if (otp.exp < Date.now()) throw new Error('OTP expired');
+    if (String(payload?.code || '').trim() !== String(otp.code)) throw new Error('Invalid OTP');
+    const user = users.find((u) => u.email === email);
+    if (!user) throw new Error('Email not exist!');
+    localStorage.removeItem(LOCAL_AUTH_OTP_KEY);
+    return { token: `local-${uid()}`, user: { id: user.id, email: user.email, name: user.name, provider: user.provider || 'email' } };
+  }
+
+  if (path === '/api/auth/signup') {
+    const password = String(payload?.password || '');
+    const name = String(payload?.name || '').trim() || email.split('@')[0] || 'user';
+    if (!email || !password || password.length < 6) throw new Error('Invalid email/password');
+    if (users.some((u) => u.email === email)) throw new Error('Email exists');
+    const user = { id: `lu_${uid()}`, email, name, password, provider: 'email' };
+    users.push(user);
+    saveLocalAuthUsers(users);
+    return { token: `local-${uid()}`, user: { id: user.id, email: user.email, name: user.name, provider: user.provider } };
+  }
+
+  if (path === '/api/auth/signin') {
+    const password = String(payload?.password || '');
+    const user = users.find((u) => u.email === email);
+    if (!user || user.password !== password) throw new Error('Invalid credentials');
+    return { token: `local-${uid()}`, user: { id: user.id, email: user.email, name: user.name, provider: user.provider } };
+  }
+
+  throw new Error('auth_failed');
+}
+
 async function requestAuth(path, payload) {
-  const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  let data = {};
-  try { data = await r.json(); } catch {}
-  if (!r.ok) throw new Error(data?.error || 'auth_failed');
-  return data;
+  try {
+    const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    let data = {};
+    try { data = await r.json(); } catch {}
+    if (!r.ok) {
+      const msg = data?.error || (r.status === 404 ? 'Auth API unavailable. Run `node server.js`.' : 'auth_failed');
+      throw new Error(msg);
+    }
+    return data;
+  } catch (err) {
+    if (err?.message && !['Failed to fetch', 'auth_failed'].includes(err.message)) throw err;
+    return localAuthFallback(path, payload);
+  }
 }
 
 async function sendSignInOtp(email) {
@@ -1556,11 +1622,15 @@ async function init() {
   loadProjects();
   loadSession();
   if (state.authToken) {
-    try {
-      const r = await fetch('/api/auth/me', { headers: { ...authHeaders() } });
-      if (r.ok) state.session = await r.json();
-      else { state.session = null; state.authToken = ''; localStorage.removeItem(AUTH_TOKEN_KEY); }
-    } catch {}
+    if (state.authToken.startsWith('local-')) {
+      state.session = state.session || null;
+    } else {
+      try {
+        const r = await fetch('/api/auth/me', { headers: { ...authHeaders() } });
+        if (r.ok) state.session = await r.json();
+        else { state.session = null; state.authToken = ''; localStorage.removeItem(AUTH_TOKEN_KEY); }
+      } catch {}
+    }
   }
   preloadImages();
   bind();
