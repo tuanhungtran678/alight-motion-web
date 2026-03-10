@@ -7,15 +7,31 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <header class="site-header">
+      <div class="app brand-row">
+        <strong>Alight Motion Web Lite</strong>
+        <div class="header-right">
+          <label class="lang-inline">Language
+            <select id="languageSelect">
+              <option value="vi" selected>Tiếng Việt</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+          <button id="openAuthBtn" class="btn">Sign in</button>
+          <span id="authMiniStatus" class="muted">Guest</span>
+        </div>
+      </div>
+    </header>
+
     <main class="app">
       <section id="homeScreen" class="screen active">
         <header class="topbar hero">
-          <h1>Alight Motion Web Lite</h1>
-          <p>Màn hình chính quản lý dự án, đăng nhập xã hội và Cloud.</p>
+          <h1 id="homeTitle">Alight Motion Web Lite</h1>
+          <p id="homeDesc">Màn hình chính quản lý dự án, Cloud và cộng đồng.</p>
         </header>
 
         <article class="panel">
-          <h2>Tài khoản</h2>
+          <h2 id="accountTitle">Tài khoản</h2>
           <p id="authStatus">Chưa đăng nhập</p>
           <div class="button-grid social-grid">
             <button id="loginGoogleBtn" class="btn social google">Đăng nhập Google</button>
@@ -27,18 +43,24 @@
         </article>
 
         <article class="panel">
-          <h2>Tạo dự án mới</h2>
+          <h2 id="createProjectTitle">Tạo dự án mới</h2>
           <button id="createProjectBtn" class="btn primary">+ Tạo dự án mới</button>
         </article>
 
         <article class="panel">
-          <h2>Danh sách dự án</h2>
+          <h2 id="projectListTitle">Danh sách dự án</h2>
+          <label>Tìm kiếm dự án cục bộ
+            <input id="projectSearch" type="search" placeholder="Tìm theo tên dự án..." />
+          </label>
           <div id="projectList" class="project-list"></div>
         </article>
 
         <article class="panel">
-          <h2>Cloud Community</h2>
-          <p>Các dự án đã đăng lên server có thể mở và xem công khai.</p>
+          <h2 id="cloudTitle">Cloud Community</h2>
+          <p id="cloudDesc">Các dự án đã đăng lên server có thể mở và xem công khai.</p>
+          <label>Tìm kiếm trên Cloud
+            <input id="cloudSearch" type="search" placeholder="Search cloud projects..." />
+          </label>
           <button id="refreshCloudBtn" class="btn">↻ Tải lại Cloud</button>
           <div id="cloudList" class="project-list"></div>
         </article>
@@ -218,6 +240,12 @@
       </section>
     </main>
 
+    <footer class="site-footer">
+      <div class="app">
+        <small>© 2026 Alight Motion Web Lite • Editor + Cloud Demo</small>
+      </div>
+    </footer>
+
     <div id="exportOverlay" class="export-overlay hidden" aria-live="polite">
       <div class="export-card">
         <h3>Đang xuất video...</h3>
@@ -241,15 +269,7 @@
         <label>FPS <input id="menuFps" type="number" min="12" max="120" value="30" /></label>
         <label>Độ phân giải
           <select id="menuResolution">
-            <option value="4320">8K (4320p)</option>
-            <option value="2160">4K (2160p)</option>
-            <option value="1440">2K (1440p)</option>
-            <option value="1080" selected>Full HD (1080p)</option>
-            <option value="720">HD (720p)</option>
-            <option value="480">480p</option>
-            <option value="360">360p</option>
-            <option value="240">240p</option>
-            <option value="144">144p</option>
+            <option value="4320">8K (4320p)</option><option value="2160">4K (2160p)</option><option value="1440">2K (1440p)</option><option value="1080" selected>Full HD (1080p)</option><option value="720">HD (720p)</option><option value="480">480p</option><option value="360">360p</option><option value="240">240p</option><option value="144">144p</option>
           </select>
         </label>
         <label>Màu nền <input id="menuBgColor" type="color" value="#000000" /></label>
@@ -266,34 +286,44 @@
         <h2>Create Project</h2>
         <hr />
         <div class="ratio-row" id="ratioRow">
-          <button class="ratio-btn selected" data-ratio="9:16">9:16</button>
-          <button class="ratio-btn" data-ratio="16:9">16:9</button>
-          <button class="ratio-btn" data-ratio="1:1">1:1</button>
-          <button class="ratio-btn" data-ratio="3:4">3:4</button>
-          <button class="ratio-btn" data-ratio="4:3">4:3</button>
+          <button class="ratio-btn selected" data-ratio="9:16">9:16</button><button class="ratio-btn" data-ratio="16:9">16:9</button><button class="ratio-btn" data-ratio="1:1">1:1</button><button class="ratio-btn" data-ratio="3:4">3:4</button><button class="ratio-btn" data-ratio="4:3">4:3</button>
         </div>
         <label>FPS <select id="modalFps"><option>24</option><option selected>30</option><option>60</option></select></label>
         <label>Resolution
           <select id="modalResolution">
-            <option value="4320">8K (4320p)</option>
-            <option value="2160">4K (2160p)</option>
-            <option value="1440">2K (1440p)</option>
-            <option value="1080" selected>Full HD (1080p)</option>
-            <option value="720">HD (720p)</option>
-            <option value="480">480p</option>
-            <option value="360">360p</option>
-            <option value="240">240p</option>
-            <option value="144">144p</option>
+            <option value="4320">8K (4320p)</option><option value="2160">4K (2160p)</option><option value="1440">2K (1440p)</option><option value="1080" selected>Full HD (1080p)</option><option value="720">HD (720p)</option><option value="480">480p</option><option value="360">360p</option><option value="240">240p</option><option value="144">144p</option>
           </select>
         </label>
         <label>Name <input id="modalProjectName" type="text" placeholder="Enter project name here..." /></label>
         <label>BG color
-          <div class="bg-row">
-            <input id="modalBgColor" type="color" value="#000000" />
-            <input id="modalBgHex" type="text" value="#000000" readonly />
-          </div>
+          <div class="bg-row"><input id="modalBgColor" type="color" value="#000000" /><input id="modalBgHex" type="text" value="#000000" readonly /></div>
         </label>
         <button id="confirmCreateBtn" class="btn primary">Create</button>
+      </div>
+    </div>
+
+    <div id="authModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card auth-card">
+        <button id="closeAuthModalBtn" class="icon-close" aria-label="Close">✕</button>
+        <h3>Sign in / Sign up</h3>
+        <label>Email <input id="authEmail" type="email" placeholder="you@example.com" /></label>
+        <label>Password <input id="authPassword" type="password" placeholder="••••••••" /></label>
+        <label>Name (for sign up) <input id="authName" type="text" placeholder="Your name" /></label>
+        <div class="button-grid">
+          <button id="authSignInBtn" class="btn primary">Sign in</button>
+          <button id="authSignUpBtn" class="btn">Sign up</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="guestModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card auth-card">
+        <button id="closeGuestModalBtn" class="icon-close" aria-label="Close">✕</button>
+        <p id="guestNeedSignInText">You're not signed in. Log in to use this feature.</p>
+        <div class="button-grid">
+          <button id="guestSignInBtn" class="btn primary">Sign in</button>
+          <button id="guestSignUpBtn" class="btn">Sign up</button>
+        </div>
       </div>
     </div>
 

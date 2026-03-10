@@ -256,3 +256,14 @@ input, select, button {
 @media (max-width: 760px) {
   .social-grid { grid-template-columns: 1fr; }
 }
+
+
+.site-header, .site-footer { background: color-mix(in srgb, var(--card), black 8%); border-bottom: 1px solid var(--border); }
+.site-footer { border-top: 1px solid var(--border); border-bottom: 0; margin-top: 16px; }
+.brand-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.muted { opacity: .75; font-size: .9rem; }
+.lang-inline { margin: 0; font-size: .85rem; }
+.lang-inline select { margin-top: 0; padding: 6px 8px; }
+.auth-card { position: relative; }
+#authMiniStatus { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

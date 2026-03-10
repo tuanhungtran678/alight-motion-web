@@ -1,33 +1,28 @@
 # alight-motion-web
 
-Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần, có thêm đăng nhập social + Cloud publish.
+Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần + Node server.
 
-## Tính năng mới theo yêu cầu
-- Đăng nhập nhanh bằng các nhà cung cấp: **Google, GitHub, Apple, Microsoft** (demo social login trong client).
-- Thêm khu vực **Cloud Community** ở màn hình chính.
-- Có thể **đăng project lên server** bằng nút `☁ Đăng lên Cloud` và mở trang xem công khai qua `public.html?id=...`.
-- Nâng cấp giao diện home đẹp hơn (hero, social buttons, card cloud).
-
-## Tính năng chính
-- Home quản lý nhiều dự án: tạo / mở / xóa.
-- Menu ⚙ chỉnh tên dự án, ratio, FPS, độ phân giải, màu nền.
-- Layer kéo-thả trực tiếp trên canvas.
-- Timeline + keyframe nội suy theo easing (kể cả custom graph).
-- Light/Dark mode.
-- Chỉnh text/layer/effect.
-- Export video MP4 (khi trình duyệt hỗ trợ `MediaRecorder` cho MP4).
+## Tính năng mới
+- Đăng nhập **thật** bằng email/password với API server (`/api/auth/signup`, `/api/auth/signin`, `/api/auth/me`).
+- Cloud publish: đăng dự án lên server, xem public qua `public.html?id=...`.
+- Nếu dự án Cloud là của bạn sẽ có nút **Unshare** để bỏ chia sẻ.
+- Hỗ trợ khách (guest) với modal cảnh báo:
+  - `You're not signed in. Log in to use this feature.`
+  - Nút `Sign in`, `Sign up`, và nút `X` để đóng.
+- Thêm đổi ngôn ngữ (VI/EN), tìm kiếm dự án local + cloud.
+- Thêm Header và Footer cho giao diện.
 
 ## Chạy local
-### Cách 1 (đầy đủ, có API Cloud)
 ```bash
 node server.js
 ```
 Mở: `http://localhost:4173/index.html`
 
-### Cách 2 (chỉ static)
-```bash
-python3 -m http.server 4173
-```
-Mở: `http://localhost:4173/index.html`
-
-> Nếu chạy static server, Cloud sẽ tự fallback sang localStorage (demo mode).
+## API chính
+- `POST /api/auth/signup`
+- `POST /api/auth/signin`
+- `GET /api/auth/me`
+- `GET /api/projects`
+- `POST /api/projects`
+- `DELETE /api/projects/:id/share`
+- `GET /api/projects/:id`

@@ -20,8 +20,9 @@ function cubicBezierEase(x, p1x, p1y, p2x, p2y) {
 const STORAGE_KEY = 'alightProjectsV3';
 const SESSION_KEY = 'alightSessionV1';
 const LOCAL_CLOUD_KEY = 'alightCloudLocalV1';
+const AUTH_TOKEN_KEY = 'alightAuthTokenV1';
 const ui = {
-  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'),
+  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authSignInBtn: getEl('authSignInBtn'), authSignUpBtn: getEl('authSignUpBtn'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
@@ -38,7 +39,7 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi' };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 
@@ -82,22 +83,81 @@ function loadSession() {
   }
 }
 
-function renderSession() {
-  if (!ui.authStatus) return;
-  ui.authStatus.textContent = state.session
-    ? `Đã đăng nhập: ${state.session.name} (${state.session.provider})`
-    : 'Chưa đăng nhập';
+
+function updateAuthStatusText() {
+  const signedInText = state.language === 'en' ? 'Signed in' : 'Đã đăng nhập';
+  const guestText = state.language === 'en' ? 'Not signed in' : 'Chưa đăng nhập';
+  if (ui.authStatus) ui.authStatus.textContent = state.session ? `${signedInText}: ${state.session.name} (${state.session.provider})` : guestText;
+  if (ui.authMiniStatus) ui.authMiniStatus.textContent = state.session ? state.session.name : 'Guest';
+}
+
+function renderSession() { updateAuthStatusText(); }
+
+function openAuthModal(mode = 'signin') {
+  ui.authModal?.classList.remove('hidden');
+  if (mode === 'signup') ui.authName?.focus();
+}
+function closeAuthModal() { ui.authModal?.classList.add('hidden'); }
+function openGuestModal() { ui.guestModal?.classList.remove('hidden'); }
+function closeGuestModal() { ui.guestModal?.classList.add('hidden'); }
+
+async function requestAuth(path, payload) {
+  const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  if (!r.ok) throw new Error('auth_failed');
+  return r.json();
+}
+
+async function signInReal() {
+  const email = ui.authEmail.value.trim();
+  const password = ui.authPassword.value;
+  const data = await requestAuth('/api/auth/signin', { email, password });
+  state.authToken = data.token;
+  state.session = data.user;
+  localStorage.setItem(AUTH_TOKEN_KEY, state.authToken);
+  saveSession();
+  updateAuthStatusText();
+  closeAuthModal();
+  await renderCloudList();
+}
+
+async function signUpReal() {
+  const email = ui.authEmail.value.trim();
+  const password = ui.authPassword.value;
+  const name = ui.authName.value.trim();
+  const data = await requestAuth('/api/auth/signup', { email, password, name });
+  state.authToken = data.token;
+  state.session = data.user;
+  localStorage.setItem(AUTH_TOKEN_KEY, state.authToken);
+  saveSession();
+  updateAuthStatusText();
+  closeAuthModal();
+  await renderCloudList();
+}
+
+function authHeaders() {
+  return state.authToken ? { Authorization: `Bearer ${state.authToken}` } : {};
+}
+
+function applyLanguage(lang) {
+  state.language = lang === 'en' ? 'en' : 'vi';
+  localStorage.setItem('uiLang', state.language);
+  document.documentElement.lang = state.language;
+  if (ui.guestNeedSignInText) ui.guestNeedSignInText.textContent = "You're not signed in. Log in to use this feature.";
+  const map = {
+    homeTitle: state.language === 'en' ? 'Alight Motion Web Lite' : 'Alight Motion Web Lite',
+    homeDesc: state.language === 'en' ? 'Home for projects, cloud and community.' : 'Màn hình chính quản lý dự án, Cloud và cộng đồng.',
+    createProjectTitle: state.language === 'en' ? 'Create new project' : 'Tạo dự án mới',
+    projectListTitle: state.language === 'en' ? 'Project list' : 'Danh sách dự án',
+    cloudTitle: state.language === 'en' ? 'Cloud Community' : 'Cloud Community',
+    cloudDesc: state.language === 'en' ? 'Published projects can be viewed publicly.' : 'Các dự án đã đăng lên server có thể mở và xem công khai.',
+    accountTitle: state.language === 'en' ? 'Account' : 'Tài khoản'
+  };
+  Object.entries(map).forEach(([id,txt]) => { const el=getEl(id); if(el) el.textContent = txt; });
+  updateAuthStatusText();
 }
 
 function demoLogin(provider) {
-  state.session = {
-    provider,
-    name: `user_${provider.toLowerCase()}`,
-    avatar: '',
-    loginAt: Date.now()
-  };
-  saveSession();
-  renderSession();
+  openAuthModal();
 }
 
 function localCloudGet() {
@@ -108,7 +168,7 @@ function localCloudSet(list) { localStorage.setItem(LOCAL_CLOUD_KEY, JSON.string
 
 async function fetchCloudProjects() {
   try {
-    const r = await fetch('/api/projects');
+    const r = await fetch('/api/projects', { headers: { ...authHeaders() } });
     if (!r.ok) throw new Error('api-failed');
     return await r.json();
   } catch {
@@ -119,13 +179,13 @@ async function fetchCloudProjects() {
 async function publishCurrentProject() {
   const p = currentProject();
   if (!p) return;
-  if (!state.session) {
-    alert('Bạn cần đăng nhập trước khi đăng Cloud.');
+  if (!state.session || !state.authToken) {
+    openGuestModal();
     return;
   }
   const payload = { project: p, author: state.session.name, provider: state.session.provider };
   try {
-    const r = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const r = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(payload) });
     if (!r.ok) throw new Error('publish-failed');
   } catch {
     const list = localCloudGet();
@@ -144,7 +204,11 @@ async function renderCloudList() {
     ui.cloudList.innerHTML = '<small>Cloud chưa có dự án nào.</small>';
     return;
   }
-  list.forEach((item) => {
+  const cq = (ui.cloudSearch?.value || '').trim().toLowerCase();
+  list.filter((item) => {
+    const t = `${item.title || item.project?.name || ''} ${item.author || ''}`.toLowerCase();
+    return !cq || t.includes(cq);
+  }).forEach((item) => {
     const card = document.createElement('div');
     card.className = 'project-item';
     card.innerHTML = `<div><strong>${item.title || item.project?.name || 'Untitled'}</strong><br><small>${item.author || 'unknown'} • ${new Date(item.publishedAt || Date.now()).toLocaleString()}</small></div>`;
@@ -157,6 +221,19 @@ async function renderCloudList() {
     view.rel = 'noopener';
     view.textContent = 'Xem';
     actions.append(view);
+    if (item.isOwner) {
+      const unshare = document.createElement('button');
+      unshare.className = 'btn danger';
+      unshare.textContent = 'Unshare';
+      unshare.onclick = async () => {
+        try {
+          const r = await fetch(`/api/projects/${encodeURIComponent(item.id)}/share`, { method: 'DELETE', headers: { ...authHeaders() } });
+          if (!r.ok) throw new Error('x');
+        } catch {}
+        await renderCloudList();
+      };
+      actions.append(unshare);
+    }
     card.append(actions);
     ui.cloudList.append(card);
   });
@@ -403,7 +480,8 @@ function showEditor(pid) { state.currentProjectId = pid; state.time = 0; ui.home
 
 function renderProjectList() {
   ui.projectList.innerHTML = '';
-  state.projects.forEach((p) => {
+  const q = (ui.projectSearch?.value || '').trim().toLowerCase();
+  state.projects.filter((p) => !q || (p.name || '').toLowerCase().includes(q)).forEach((p) => {
     const item = document.createElement('div'); item.className = 'project-item';
     item.innerHTML = `<div><strong>${p.name}</strong><br><small>${p.settings.ratio} • ${p.settings.fps} FPS • ${p.settings.resolution || 1080}p • ${p.settings.bgColor}</small></div>`;
     const actions = document.createElement('div'); actions.className = 'project-actions';
@@ -1122,12 +1200,24 @@ function bindDrag() {
 }
 
 function bind() {
-  ui.loginGoogleBtn.onclick = () => demoLogin('Google');
-  ui.loginGithubBtn.onclick = () => demoLogin('GitHub');
-  ui.loginAppleBtn.onclick = () => demoLogin('Apple');
-  ui.loginMicrosoftBtn.onclick = () => demoLogin('Microsoft');
-  ui.logoutBtn.onclick = () => { state.session = null; saveSession(); renderSession(); };
+  ui.loginGoogleBtn.onclick = () => openAuthModal('signin');
+  ui.loginGithubBtn.onclick = () => openAuthModal('signin');
+  ui.loginAppleBtn.onclick = () => openAuthModal('signin');
+  ui.loginMicrosoftBtn.onclick = () => openAuthModal('signin');
+  ui.openAuthBtn.onclick = () => openAuthModal('signin');
+  ui.closeAuthModalBtn.onclick = closeAuthModal;
+  ui.authModal.onclick = (e) => { if (e.target === ui.authModal) closeAuthModal(); };
+  ui.authSignInBtn.onclick = async () => { try { await signInReal(); } catch { alert('Sign in failed'); } };
+  ui.authSignUpBtn.onclick = async () => { try { await signUpReal(); } catch { alert('Sign up failed'); } };
+  ui.closeGuestModalBtn.onclick = closeGuestModal;
+  ui.guestModal.onclick = (e) => { if (e.target === ui.guestModal) closeGuestModal(); };
+  ui.guestSignInBtn.onclick = () => { closeGuestModal(); openAuthModal('signin'); };
+  ui.guestSignUpBtn.onclick = () => { closeGuestModal(); openAuthModal('signup'); };
+  ui.logoutBtn.onclick = () => { state.session = null; state.authToken = ''; localStorage.removeItem(AUTH_TOKEN_KEY); saveSession(); renderSession(); renderCloudList(); };
   ui.refreshCloudBtn.onclick = renderCloudList;
+  ui.projectSearch.oninput = renderProjectList;
+  ui.cloudSearch.oninput = renderCloudList;
+  ui.languageSelect.onchange = () => applyLanguage(ui.languageSelect.value);
 
   ui.createProjectBtn.onclick = openCreateModal;
   ui.closeModalBtn.onclick = closeCreateModal;
@@ -1417,13 +1507,22 @@ function preloadImages() {
   }));
 }
 
-function init() {
+async function init() {
   loadProjects();
   loadSession();
+  if (state.authToken) {
+    try {
+      const r = await fetch('/api/auth/me', { headers: { ...authHeaders() } });
+      if (r.ok) state.session = await r.json();
+      else { state.session = null; state.authToken = ''; localStorage.removeItem(AUTH_TOKEN_KEY); }
+    } catch {}
+  }
   preloadImages();
   bind();
   applyPreviewZoom();
   applyTheme(state.theme);
+  if (ui.languageSelect) ui.languageSelect.value = state.language;
+  applyLanguage(state.language);
   renderSession();
   renderCloudList();
   showHome();

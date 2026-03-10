@@ -1,80 +1,155 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const PORT = process.env.PORT || 4173;
 const DB_FILE = path.join(__dirname, 'cloud-projects.json');
+const USERS_FILE = path.join(__dirname, 'users.json');
+const sessions = new Map();
 
-function readDb() {
-  try {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-  } catch {
-    return [];
-  }
+function readJson(file, fallback = []) {
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return fallback; }
 }
-
-function writeDb(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
+function writeJson(file, data) { fs.writeFileSync(file, JSON.stringify(data, null, 2)); }
 
 function send(res, status, data, type = 'application/json') {
   res.writeHead(status, {
     'Content-Type': type,
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
+    'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization'
   });
   res.end(type === 'application/json' ? JSON.stringify(data) : data);
 }
 
 function staticFile(filePath, res) {
   const ext = path.extname(filePath).toLowerCase();
-  const m = {
-    '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
-    '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml'
-  }[ext] || 'application/octet-stream';
-  fs.readFile(filePath, (err, data) => {
-    if (err) send(res, 404, 'Not found', 'text/plain');
-    else send(res, 200, data, m);
-  });
+  const m = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml' }[ext] || 'application/octet-stream';
+  fs.readFile(filePath, (err, data) => { if (err) send(res, 404, 'Not found', 'text/plain'); else send(res, 200, data, m); });
 }
 
-http.createServer((req, res) => {
-  if (req.method === 'OPTIONS') return send(res, 204, {});
-
-  if (req.url === '/api/projects' && req.method === 'GET') {
-    const db = readDb();
-    return send(res, 200, db);
-  }
-
-  if (req.url && req.url.startsWith('/api/projects/') && req.method === 'GET') {
-    const id = decodeURIComponent(req.url.replace('/api/projects/', ''));
-    const item = readDb().find((x) => x.id === id);
-    return send(res, item ? 200 : 404, item || { error: 'Not found' });
-  }
-
-  if (req.url === '/api/projects' && req.method === 'POST') {
+function parseBody(req) {
+  return new Promise((resolve, reject) => {
     let body = '';
     req.on('data', (c) => { body += c; });
     req.on('end', () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const db = readDb();
-        const item = {
-          id: `pub_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
-          title: payload.project?.name || 'Untitled',
-          author: payload.author || 'anonymous',
-          provider: payload.provider || 'unknown',
-          publishedAt: Date.now(),
-          project: payload.project || null
-        };
-        db.unshift(item);
-        writeDb(db.slice(0, 300));
-        send(res, 201, item);
-      } catch {
-        send(res, 400, { error: 'Bad payload' });
-      }
+      try { resolve(JSON.parse(body || '{}')); } catch (e) { reject(e); }
     });
-    return;
+  });
+}
+
+function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
+  const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+  return { hash, salt };
+}
+
+function verifyPassword(password, salt, expectedHash) {
+  const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expectedHash));
+}
+
+function getUserFromReq(req) {
+  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (!token) return null;
+  const uid = sessions.get(token);
+  if (!uid) return null;
+  const users = readJson(USERS_FILE, []);
+  return users.find((u) => u.id === uid) || null;
+}
+
+http.createServer(async (req, res) => {
+  if (req.method === 'OPTIONS') return send(res, 204, {});
+
+  if (req.url === '/api/auth/signup' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const email = String(body.email || '').trim().toLowerCase();
+      const password = String(body.password || '');
+      const name = String(body.name || '').trim() || email.split('@')[0] || 'user';
+      if (!email || !password || password.length < 6) return send(res, 400, { error: 'Invalid email/password' });
+      const users = readJson(USERS_FILE, []);
+      if (users.some((u) => u.email === email)) return send(res, 409, { error: 'Email exists' });
+      const { hash, salt } = hashPassword(password);
+      const user = { id: `u_${Date.now()}_${Math.random().toString(16).slice(2, 7)}`, email, name, hash, salt, provider: 'email' };
+      users.push(user);
+      writeJson(USERS_FILE, users);
+      const token = crypto.randomBytes(24).toString('hex');
+      sessions.set(token, user.id);
+      return send(res, 201, { token, user: { id: user.id, email: user.email, name: user.name, provider: user.provider } });
+    } catch { return send(res, 400, { error: 'Bad payload' }); }
+  }
+
+  if (req.url === '/api/auth/signin' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const email = String(body.email || '').trim().toLowerCase();
+      const password = String(body.password || '');
+      const users = readJson(USERS_FILE, []);
+      const user = users.find((u) => u.email === email);
+      if (!user || !verifyPassword(password, user.salt, user.hash)) return send(res, 401, { error: 'Invalid credentials' });
+      const token = crypto.randomBytes(24).toString('hex');
+      sessions.set(token, user.id);
+      return send(res, 200, { token, user: { id: user.id, email: user.email, name: user.name, provider: user.provider } });
+    } catch { return send(res, 400, { error: 'Bad payload' }); }
+  }
+
+  if (req.url === '/api/auth/me' && req.method === 'GET') {
+    const user = getUserFromReq(req);
+    if (!user) return send(res, 401, { error: 'Unauthorized' });
+    return send(res, 200, { id: user.id, email: user.email, name: user.name, provider: user.provider });
+  }
+
+  if (req.url === '/api/projects' && req.method === 'GET') {
+    const user = getUserFromReq(req);
+    const db = readJson(DB_FILE, []);
+    const list = db.filter((p) => p.shared || (user && p.ownerId === user.id)).map((p) => ({ ...p, isOwner: Boolean(user && p.ownerId === user.id) }));
+    return send(res, 200, list);
+  }
+
+  if (req.url && req.url.startsWith('/api/projects/') && req.method === 'GET') {
+    const user = getUserFromReq(req);
+    const id = decodeURIComponent(req.url.replace('/api/projects/', ''));
+    const item = readJson(DB_FILE, []).find((x) => x.id === id);
+    if (!item) return send(res, 404, { error: 'Not found' });
+    if (!item.shared && (!user || user.id !== item.ownerId)) return send(res, 403, { error: 'Forbidden' });
+    return send(res, 200, { ...item, isOwner: Boolean(user && item.ownerId === user.id) });
+  }
+
+  if (req.url === '/api/projects' && req.method === 'POST') {
+    const user = getUserFromReq(req);
+    if (!user) return send(res, 401, { error: 'Unauthorized' });
+    try {
+      const payload = await parseBody(req);
+      const db = readJson(DB_FILE, []);
+      const item = {
+        id: `pub_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+        title: payload.project?.name || 'Untitled',
+        author: user.name,
+        provider: user.provider,
+        ownerId: user.id,
+        ownerEmail: user.email,
+        publishedAt: Date.now(),
+        shared: true,
+        project: payload.project || null
+      };
+      db.unshift(item);
+      writeJson(DB_FILE, db.slice(0, 500));
+      return send(res, 201, item);
+    } catch { return send(res, 400, { error: 'Bad payload' }); }
+  }
+
+  if (req.url && req.url.startsWith('/api/projects/') && req.url.endsWith('/share') && req.method === 'DELETE') {
+    const user = getUserFromReq(req);
+    if (!user) return send(res, 401, { error: 'Unauthorized' });
+    const id = decodeURIComponent(req.url.replace('/api/projects/', '').replace('/share', ''));
+    const db = readJson(DB_FILE, []);
+    const idx = db.findIndex((x) => x.id === id);
+    if (idx < 0) return send(res, 404, { error: 'Not found' });
+    if (db[idx].ownerId !== user.id) return send(res, 403, { error: 'Forbidden' });
+    db[idx].shared = false;
+    writeJson(DB_FILE, db);
+    return send(res, 200, { ok: true });
   }
 
   let urlPath = req.url === '/' ? '/index.html' : req.url;
@@ -82,6 +157,4 @@ http.createServer((req, res) => {
   const filePath = path.join(__dirname, urlPath);
   if (!filePath.startsWith(__dirname)) return send(res, 403, 'Forbidden', 'text/plain');
   staticFile(filePath, res);
-}).listen(PORT, () => {
-  console.log(`Server running: http://localhost:${PORT}`);
-});
+}).listen(PORT, () => console.log(`Server running: http://localhost:${PORT}`));
