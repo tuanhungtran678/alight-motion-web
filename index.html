@@ -9,7 +9,7 @@
   <body>
     <header class="site-header">
       <div class="app brand-row">
-        <strong>Alight Motion Web Lite</strong>
+        <div class="logo-wrap"><span class="logo-mark" aria-hidden="true"></span><strong>Alight Motion Web Lite</strong></div>
         <div class="header-right">
           <label class="lang-inline">Language
             <select id="languageSelect">
@@ -17,6 +17,7 @@
               <option value="en">English</option>
             </select>
           </label>
+          <button id="themeToggleBtn" class="btn">☀/🌙</button>
           <button id="openAuthBtn" class="btn">Sign in</button>
           <span id="authMiniStatus" class="muted">Guest</span>
         </div>
@@ -73,7 +74,6 @@
             <p id="projectMeta">-</p>
           </div>
           <div class="header-actions">
-            <button id="themeToggleBtn" class="btn">☀/🌙</button>
             <button id="openMenuBtn" class="btn">⚙</button>
             <button id="backHomeBtn" class="btn">← Home</button>
           </div>
@@ -323,6 +323,20 @@
         <div class="button-grid">
           <button id="guestSignInBtn" class="btn primary">Sign in</button>
           <button id="guestSignUpBtn" class="btn">Sign up</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="otpModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card auth-card">
+        <button id="closeOtpModalBtn" class="icon-close" aria-label="Close">✕</button>
+        <h3>Email verification</h3>
+        <p id="otpInfoText">We'll send an email to your address, please check your inbox. If not have, check the spam folder.</p>
+        <p class="warn-text">If it's not you, please change the password immediately.</p>
+        <label>6-digit code <input id="otpCode" type="text" maxlength="6" placeholder="123456" /></label>
+        <div class="button-grid">
+          <button id="verifyOtpBtn" class="btn primary">Verify & Sign in</button>
         </div>
       </div>
     </div>

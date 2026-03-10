@@ -2,11 +2,13 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { spawnSync } = require('child_process');
 
 const PORT = process.env.PORT || 4173;
 const DB_FILE = path.join(__dirname, 'cloud-projects.json');
 const USERS_FILE = path.join(__dirname, 'users.json');
 const sessions = new Map();
+const otps = new Map();
 
 function readJson(file, fallback = []) {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return fallback; }
@@ -58,8 +60,69 @@ function getUserFromReq(req) {
   return users.find((u) => u.id === uid) || null;
 }
 
+
+function sendOtpEmail(email, code) {
+  const subject = 'Alight Motion Web Lite verification code';
+  const body = `Your verification code is: ${code}
+
+If it's not you, please change the password immediately.`;
+  const sendmail = '/usr/sbin/sendmail';
+  try {
+    const mail = `To: ${email}
+Subject: ${subject}
+
+${body}
+`;
+    const r = spawnSync(sendmail, ['-t', '-oi'], { input: mail });
+    if (r.status === 0) return true;
+  } catch {}
+  console.log(`[OTP FALLBACK] ${email} => ${code}`);
+  return false;
+}
+
 http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204, {});
+
+  if (req.url === '/api/auth/precheck' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const email = String(body.email || '').trim().toLowerCase();
+      const users = readJson(USERS_FILE, []);
+      return send(res, 200, { exists: users.some((u) => u.email === email) });
+    } catch { return send(res, 400, { error: 'Bad payload' }); }
+  }
+
+  if (req.url === '/api/auth/send-otp' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const email = String(body.email || '').trim().toLowerCase();
+      const users = readJson(USERS_FILE, []);
+      const user = users.find((u) => u.email === email);
+      if (!user) return send(res, 404, { error: 'Email not exist!' });
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      otps.set(email, { code, exp: Date.now() + 10 * 60 * 1000, uid: user.id });
+      sendOtpEmail(email, code);
+      return send(res, 200, { ok: true, message: `We'll send an email to ${email}, please check your inbox. If not have, check the spam folder.` });
+    } catch { return send(res, 400, { error: 'Bad payload' }); }
+  }
+
+  if (req.url === '/api/auth/verify-otp' && req.method === 'POST') {
+    try {
+      const body = await parseBody(req);
+      const email = String(body.email || '').trim().toLowerCase();
+      const code = String(body.code || '').trim();
+      const otp = otps.get(email);
+      if (!otp || otp.exp < Date.now()) return send(res, 400, { error: 'OTP expired' });
+      if (otp.code != code) return send(res, 401, { error: 'Invalid OTP' });
+      const users = readJson(USERS_FILE, []);
+      const user = users.find((u) => u.id === otp.uid);
+      if (!user) return send(res, 404, { error: 'Email not exist!' });
+      const token = crypto.randomBytes(24).toString('hex');
+      sessions.set(token, user.id);
+      otps.delete(email);
+      return send(res, 200, { token, user: { id: user.id, email: user.email, name: user.name, provider: user.provider } });
+    } catch { return send(res, 400, { error: 'Bad payload' }); }
+  }
 
   if (req.url === '/api/auth/signup' && req.method === 'POST') {
     try {

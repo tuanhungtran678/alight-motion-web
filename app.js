@@ -22,7 +22,7 @@ const SESSION_KEY = 'alightSessionV1';
 const LOCAL_CLOUD_KEY = 'alightCloudLocalV1';
 const AUTH_TOKEN_KEY = 'alightAuthTokenV1';
 const ui = {
-  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'),
+  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
@@ -39,7 +39,7 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin' };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '' };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 
@@ -114,6 +114,13 @@ function openAuthModal(mode = 'signin') {
 function closeAuthModal() { ui.authModal?.classList.add('hidden'); }
 function openGuestModal() { ui.guestModal?.classList.remove('hidden'); }
 function closeGuestModal() { ui.guestModal?.classList.add('hidden'); }
+function openOtpModal(email) {
+  state.otpEmail = email;
+  if (ui.otpInfoText) ui.otpInfoText.textContent = `We'll send an email to ${email}, please check your inbox. If not have, check the spam folder.`;
+  ui.otpCode.value = '';
+  ui.otpModal?.classList.remove('hidden');
+}
+function closeOtpModal() { ui.otpModal?.classList.add('hidden'); }
 
 async function requestAuth(path, payload) {
   const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -123,17 +130,30 @@ async function requestAuth(path, payload) {
   return data;
 }
 
-async function signInReal() {
-  const email = ui.authEmail.value.trim();
-  const password = ui.authPassword.value;
-  const data = await requestAuth('/api/auth/signin', { email, password });
+async function sendSignInOtp(email) {
+  const pre = await requestAuth('/api/auth/precheck', { email });
+  if (!pre.exists) throw new Error('Email not exist!');
+  await requestAuth('/api/auth/send-otp', { email });
+  openOtpModal(email);
+}
+
+async function verifyOtpAndSignIn() {
+  const email = state.otpEmail || ui.authEmail.value.trim();
+  const code = ui.otpCode.value.trim();
+  const data = await requestAuth('/api/auth/verify-otp', { email, code });
   state.authToken = data.token;
   state.session = data.user;
   localStorage.setItem(AUTH_TOKEN_KEY, state.authToken);
   saveSession();
   updateAuthStatusText();
+  closeOtpModal();
   closeAuthModal();
   await renderCloudList();
+}
+
+async function signInReal() {
+  const email = ui.authEmail.value.trim();
+  await sendSignInOtp(email);
 }
 
 async function signUpReal() {
@@ -1223,6 +1243,9 @@ function bind() {
   ui.openAuthBtn.onclick = () => openAuthModal('signin');
   ui.closeAuthModalBtn.onclick = closeAuthModal;
   ui.authModal.onclick = (e) => { if (e.target === ui.authModal) closeAuthModal(); };
+  ui.closeOtpModalBtn.onclick = closeOtpModal;
+  ui.otpModal.onclick = (e) => { if (e.target === ui.otpModal) closeOtpModal(); };
+  ui.verifyOtpBtn.onclick = async () => { try { await verifyOtpAndSignIn(); } catch (e) { alert(e?.message || 'Invalid OTP'); } };
   ui.authSignInBtn.onclick = async () => {
     try {
       if (state.authMode === 'signup') await signUpReal();
