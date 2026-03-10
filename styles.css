@@ -276,3 +276,5 @@ input, select, button {
 .logo-mark { width: 30px; height: 30px; border-radius: 9px; background: conic-gradient(from 140deg, #27d5ff, #4effa1, #27d5ff); box-shadow: inset 0 0 0 2px #ffffff44, 0 4px 12px #00000033; position: relative; }
 .logo-mark::after { content: ''; position: absolute; inset: 7px; border-radius: 6px; background: #223467; }
 .warn-text { color: #ffd27a; font-size: .9rem; }
+
+#otpInfoText { white-space: pre-line; }

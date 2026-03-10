@@ -101,8 +101,14 @@ http.createServer(async (req, res) => {
       if (!user) return send(res, 404, { error: 'Email not exist!' });
       const code = String(Math.floor(100000 + Math.random() * 900000));
       otps.set(email, { code, exp: Date.now() + 10 * 60 * 1000, uid: user.id });
-      sendOtpEmail(email, code);
-      return send(res, 200, { ok: true, message: `We'll send an email to ${email}, please check your inbox. If not have, check the spam folder.` });
+      const delivered = sendOtpEmail(email, code);
+      const response = {
+        ok: true,
+        delivered,
+        message: `We'll send an email to ${email}, please check your inbox. If not have, check the spam folder.`
+      };
+      if (!delivered) response.devCode = code;
+      return send(res, 200, response);
     } catch { return send(res, 400, { error: 'Bad payload' }); }
   }
 

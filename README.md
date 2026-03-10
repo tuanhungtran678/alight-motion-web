@@ -3,6 +3,7 @@
 Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần + Node server.
 
 ## Tính năng mới
+- Nếu môi trường không gửi được email, app sẽ hiển thị demo OTP code thay vì báo lỗi mơ hồ.
 - Auth có local fallback khi API không chạy (không còn lỗi chung chung `auth_failed`).
 - Sign in theo luồng kiểm tra email tồn tại + OTP 6 chữ số qua email (kèm cảnh báo bảo mật).
 - Đăng nhập **thật** bằng email/password với API server (`/api/auth/signup`, `/api/auth/signin`, `/api/auth/me`).

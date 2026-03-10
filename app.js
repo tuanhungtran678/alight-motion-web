@@ -145,7 +145,7 @@ async function localAuthFallback(path, payload) {
     const code = String(Math.floor(100000 + Math.random() * 900000));
     localOtpSet({ email, code, exp: Date.now() + 10 * 60 * 1000 });
     console.info(`[LOCAL OTP] ${email} => ${code}`);
-    return { ok: true, message: `We'll send an email to ${email}, please check your inbox. If not have, check the spam folder.` };
+    return { ok: true, delivered: false, devCode: code, message: `We'll send an email to ${email}, please check your inbox. If not have, check the spam folder.` };
   }
 
   if (path === '/api/auth/verify-otp') {
@@ -199,8 +199,17 @@ async function requestAuth(path, payload) {
 async function sendSignInOtp(email) {
   const pre = await requestAuth('/api/auth/precheck', { email });
   if (!pre.exists) throw new Error('Email not exist!');
-  await requestAuth('/api/auth/send-otp', { email });
+  const otpResp = await requestAuth('/api/auth/send-otp', { email });
   openOtpModal(email);
+  if (ui.otpInfoText) {
+    let text = otpResp?.message || `We'll send an email to ${email}, please check your inbox. If not have, check the spam folder.`;
+    if (otpResp?.delivered === false && otpResp?.devCode) {
+      text += `
+
+Email service is not available in this environment. Use demo OTP code: ${otpResp.devCode}`;
+    }
+    ui.otpInfoText.textContent = text;
+  }
 }
 
 async function verifyOtpAndSignIn() {
