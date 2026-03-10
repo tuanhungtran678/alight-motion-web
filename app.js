@@ -18,13 +18,15 @@ function cubicBezierEase(x, p1x, p1y, p2x, p2y) {
 }
 
 const STORAGE_KEY = 'alightProjectsV3';
+const SESSION_KEY = 'alightSessionV1';
+const LOCAL_CLOUD_KEY = 'alightCloudLocalV1';
 const ui = {
-  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'),
+  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
   modal: getEl('createProjectModal'), closeModalBtn: getEl('closeModalBtn'), ratioRow: getEl('ratioRow'), modalFps: getEl('modalFps'), modalResolution: getEl('modalResolution'), modalProjectName: getEl('modalProjectName'), modalBgColor: getEl('modalBgColor'), modalBgHex: getEl('modalBgHex'), confirmCreateBtn: getEl('confirmCreateBtn'),
-  preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), undoBtn: getEl('undoBtn'), redoBtn: getEl('redoBtn'), exportVideoBtn: getEl('exportVideoBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
+  preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), undoBtn: getEl('undoBtn'), redoBtn: getEl('redoBtn'), exportVideoBtn: getEl('exportVideoBtn'), publishProjectBtn: getEl('publishProjectBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
   zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), textContent: getEl('textContent'), textSize: getEl('textSize'), textFontFamily: getEl('textFontFamily'), textWeight: getEl('textWeight'), textStyle: getEl('textStyle'), textAlign: getEl('textAlign'), frameShape: getEl('frameShape'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
@@ -36,7 +38,7 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {} };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 
@@ -66,6 +68,100 @@ function newProject({ name, ratio, fps, resolution, bgColor }) {
 }
 
 function saveProjects() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.projects)); }
+
+function saveSession() {
+  if (state.session) localStorage.setItem(SESSION_KEY, JSON.stringify(state.session));
+  else localStorage.removeItem(SESSION_KEY);
+}
+
+function loadSession() {
+  try {
+    state.session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+  } catch {
+    state.session = null;
+  }
+}
+
+function renderSession() {
+  if (!ui.authStatus) return;
+  ui.authStatus.textContent = state.session
+    ? `Đã đăng nhập: ${state.session.name} (${state.session.provider})`
+    : 'Chưa đăng nhập';
+}
+
+function demoLogin(provider) {
+  state.session = {
+    provider,
+    name: `user_${provider.toLowerCase()}`,
+    avatar: '',
+    loginAt: Date.now()
+  };
+  saveSession();
+  renderSession();
+}
+
+function localCloudGet() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_CLOUD_KEY) || '[]'); } catch { return []; }
+}
+
+function localCloudSet(list) { localStorage.setItem(LOCAL_CLOUD_KEY, JSON.stringify(list)); }
+
+async function fetchCloudProjects() {
+  try {
+    const r = await fetch('/api/projects');
+    if (!r.ok) throw new Error('api-failed');
+    return await r.json();
+  } catch {
+    return localCloudGet();
+  }
+}
+
+async function publishCurrentProject() {
+  const p = currentProject();
+  if (!p) return;
+  if (!state.session) {
+    alert('Bạn cần đăng nhập trước khi đăng Cloud.');
+    return;
+  }
+  const payload = { project: p, author: state.session.name, provider: state.session.provider };
+  try {
+    const r = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (!r.ok) throw new Error('publish-failed');
+  } catch {
+    const list = localCloudGet();
+    list.unshift({ id: uid(), title: p.name, author: state.session.name, provider: state.session.provider, publishedAt: Date.now(), project: p });
+    localCloudSet(list.slice(0, 40));
+  }
+  await renderCloudList();
+  alert('Đã đăng dự án lên Cloud thành công.');
+}
+
+async function renderCloudList() {
+  if (!ui.cloudList) return;
+  ui.cloudList.innerHTML = '';
+  const list = await fetchCloudProjects();
+  if (!list.length) {
+    ui.cloudList.innerHTML = '<small>Cloud chưa có dự án nào.</small>';
+    return;
+  }
+  list.forEach((item) => {
+    const card = document.createElement('div');
+    card.className = 'project-item';
+    card.innerHTML = `<div><strong>${item.title || item.project?.name || 'Untitled'}</strong><br><small>${item.author || 'unknown'} • ${new Date(item.publishedAt || Date.now()).toLocaleString()}</small></div>`;
+    const actions = document.createElement('div');
+    actions.className = 'project-actions';
+    const view = document.createElement('a');
+    view.className = 'btn primary';
+    view.href = `public.html?id=${encodeURIComponent(item.id)}`;
+    view.target = '_blank';
+    view.rel = 'noopener';
+    view.textContent = 'Xem';
+    actions.append(view);
+    card.append(actions);
+    ui.cloudList.append(card);
+  });
+}
+
 
 function pushHistorySnapshot() {
   const p = currentProject();
@@ -1026,6 +1122,13 @@ function bindDrag() {
 }
 
 function bind() {
+  ui.loginGoogleBtn.onclick = () => demoLogin('Google');
+  ui.loginGithubBtn.onclick = () => demoLogin('GitHub');
+  ui.loginAppleBtn.onclick = () => demoLogin('Apple');
+  ui.loginMicrosoftBtn.onclick = () => demoLogin('Microsoft');
+  ui.logoutBtn.onclick = () => { state.session = null; saveSession(); renderSession(); };
+  ui.refreshCloudBtn.onclick = renderCloudList;
+
   ui.createProjectBtn.onclick = openCreateModal;
   ui.closeModalBtn.onclick = closeCreateModal;
   ui.modal.onclick = (e) => { if (e.target === ui.modal) closeCreateModal(); };
@@ -1241,6 +1344,7 @@ function bind() {
   ui.pauseBtn.onclick = () => { state.playing = false; state.startRef = 0; stopAudioPlayback(); };
   ui.resetBtn.onclick = () => { state.playing = false; state.startRef = 0; state.time = 0; if (audioPlayer.src) audioPlayer.currentTime = 0; stopAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
   ui.exportVideoBtn.onclick = exportVideoMp4;
+  ui.publishProjectBtn.onclick = publishCurrentProject;
   ui.scrubber.oninput = () => { const p = currentProject(); if (!p) return; state.playing = false; state.time = (+ui.scrubber.value / 100) * p.settings.duration; syncAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
   ui.zoomToggleBtn.onclick = () => {
     state.previewZoomEnabled = !state.previewZoomEnabled;
@@ -1315,10 +1419,13 @@ function preloadImages() {
 
 function init() {
   loadProjects();
+  loadSession();
   preloadImages();
   bind();
   applyPreviewZoom();
   applyTheme(state.theme);
+  renderSession();
+  renderCloudList();
   showHome();
 }
 

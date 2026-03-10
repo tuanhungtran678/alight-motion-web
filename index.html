@@ -9,10 +9,22 @@
   <body>
     <main class="app">
       <section id="homeScreen" class="screen active">
-        <header class="topbar">
+        <header class="topbar hero">
           <h1>Alight Motion Web Lite</h1>
-          <p>Màn hình chính quản lý dự án.</p>
+          <p>Màn hình chính quản lý dự án, đăng nhập xã hội và Cloud.</p>
         </header>
+
+        <article class="panel">
+          <h2>Tài khoản</h2>
+          <p id="authStatus">Chưa đăng nhập</p>
+          <div class="button-grid social-grid">
+            <button id="loginGoogleBtn" class="btn social google">Đăng nhập Google</button>
+            <button id="loginGithubBtn" class="btn social github">Đăng nhập GitHub</button>
+            <button id="loginAppleBtn" class="btn social apple">Đăng nhập Apple</button>
+            <button id="loginMicrosoftBtn" class="btn social microsoft">Đăng nhập Microsoft</button>
+          </div>
+          <button id="logoutBtn" class="btn">Đăng xuất</button>
+        </article>
 
         <article class="panel">
           <h2>Tạo dự án mới</h2>
@@ -22,6 +34,13 @@
         <article class="panel">
           <h2>Danh sách dự án</h2>
           <div id="projectList" class="project-list"></div>
+        </article>
+
+        <article class="panel">
+          <h2>Cloud Community</h2>
+          <p>Các dự án đã đăng lên server có thể mở và xem công khai.</p>
+          <button id="refreshCloudBtn" class="btn">↻ Tải lại Cloud</button>
+          <div id="cloudList" class="project-list"></div>
         </article>
       </section>
 
@@ -49,6 +68,7 @@
             <button id="undoBtn" class="btn">↶ Undo</button>
             <button id="redoBtn" class="btn">↷ Redo</button>
             <button id="exportVideoBtn" class="btn">⤓ Xuất Video MP4</button>
+            <button id="publishProjectBtn" class="btn">☁ Đăng lên Cloud</button>
             <button id="zoomToggleBtn" class="btn">🔍 Zoom: Off</button>
             <label>Tua <input id="scrubber" type="range" min="0" max="100" value="0" /></label>
             <span id="timeLabel">0.00s / 2.00s</span>

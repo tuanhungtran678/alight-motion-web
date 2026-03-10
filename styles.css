@@ -235,3 +235,24 @@ input, select, button {
   .transport label { grid-column: span 2; }
   #timeLabel { grid-column: span 1; text-align: right; }
 }
+
+
+.hero {
+  background: radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--accent), white 20%) 0%, transparent 45%),
+    linear-gradient(140deg, color-mix(in srgb, var(--card), white 6%), color-mix(in srgb, var(--card), black 6%));
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--border), white 18%);
+}
+.social-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.social { font-weight: 600; }
+.social.google { background: linear-gradient(120deg, #ffffff, #f3f3f3); color: #111; }
+.social.github { background: linear-gradient(120deg, #1f2937, #111827); color: #fff; }
+.social.apple { background: linear-gradient(120deg, #0f0f10, #2f2f31); color: #fff; }
+.social.microsoft { background: linear-gradient(120deg, #2563eb, #0ea5e9); color: #fff; }
+
+.project-item a.btn { text-decoration: none; display: grid; place-items: center; }
+
+@media (max-width: 760px) {
+  .social-grid { grid-template-columns: 1fr; }
+}
