@@ -44,6 +44,7 @@ const gctx = ui.easeGraph.getContext('2d');
 const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '' };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
+const audioPlayers = [];
 
 function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w || 9, h: h || 16 }; }
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
@@ -63,6 +64,7 @@ function newProject({ name, ratio, fps, resolution, bgColor }) {
       customEase: { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 },
       camera: { x: 0, y: 0, zoom: 1, rotation: 0 },
       audio: { src: null, name: '', volume: 1, offset: 0 },
+      audioTracks: [],
       cameraKeyframes: [{ id: uid(), time: 0, x: 0, y: 0, zoom: 1, rotation: 0 }],
       audioKeyframes: [{ id: uid(), time: 0, volume: 1, offset: 0 }]
     },
@@ -120,6 +122,8 @@ function openOtpModal(email) {
   state.otpEmail = email;
   if (ui.otpInfoText) ui.otpInfoText.textContent = `We'll send an email to ${email}, please check your inbox. If not have, check the spam folder.`;
   ui.otpCode.value = '';
+  Array.from(document.querySelectorAll('.otp-digit')).forEach((x) => { x.value = ''; });
+  const firstOtp = document.querySelector('.otp-digit'); if (firstOtp) firstOtp.focus();
   ui.otpModal?.classList.remove('hidden');
 }
 function closeOtpModal() { ui.otpModal?.classList.add('hidden'); }
@@ -207,7 +211,8 @@ async function sendSignInOtp(email) {
   if (!pre.exists) throw new Error('Email not exist!');
   const otpResp = await requestAuth('/api/auth/send-otp', { email });
   if (otpResp?.delivered === false) {
-    throw new Error('Email not sent. Configure SMTP Gmail/Outlook in server environment.');
+    const reason = otpResp?.reason || 'unknown';
+    throw new Error(`Email not sent (${reason}). Configure SMTP Gmail/Outlook in server environment.`);
   }
   openOtpModal(email);
   if (ui.otpInfoText) {
@@ -217,7 +222,7 @@ async function sendSignInOtp(email) {
 
 async function verifyOtpAndSignIn() {
   const email = state.otpEmail || ui.authEmail.value.trim();
-  const code = ui.otpCode.value.trim();
+  const code = Array.from(document.querySelectorAll('.otp-digit')).map((x) => x.value || '').join('').trim();
   const data = await requestAuth('/api/auth/verify-otp', { email, code });
   state.authToken = data.token;
   state.session = data.user;
@@ -264,9 +269,15 @@ function applyLanguage(lang) {
     projectListTitle: state.language === 'en' ? 'Project list' : 'Danh sách dự án',
     cloudTitle: state.language === 'en' ? 'Cloud Community' : 'Cloud Community',
     cloudDesc: state.language === 'en' ? 'Published projects can be viewed publicly.' : 'Các dự án đã đăng lên server có thể mở và xem công khai.',
-    accountTitle: state.language === 'en' ? 'Account' : 'Tài khoản'
+    accountTitle: state.language === 'en' ? 'Account' : 'Tài khoản',
+    timelinePanelTitle: state.language === 'en' ? 'Timeline + Keyframes' : 'Timeline + Keyframes'
   };
   Object.entries(map).forEach(([id,txt]) => { const el=getEl(id); if(el) el.textContent = txt; });
+  if (ui.playBtn) ui.playBtn.textContent = state.language === 'en' ? '▶ Play' : '▶ Phát';
+  if (ui.pauseBtn) ui.pauseBtn.textContent = state.language === 'en' ? '⏸ Pause' : '⏸ Dừng';
+  if (ui.resetBtn) ui.resetBtn.textContent = state.language === 'en' ? '↺ Reset' : '↺ Reset';
+  if (ui.exportVideoBtn) ui.exportVideoBtn.textContent = state.language === 'en' ? '⤓ Export MP4' : '⤓ Xuất Video MP4';
+  if (ui.publishProjectBtn) ui.publishProjectBtn.textContent = state.language === 'en' ? '☁ Publish to Cloud' : '☁ Đăng lên Cloud';
   updateAuthStatusText();
 }
 
@@ -410,6 +421,14 @@ function normalizeProject(p) {
   p.settings.camera.zoom = Number.isFinite(+p.settings.camera.zoom) ? Math.max(0.1, +p.settings.camera.zoom) : 1;
   p.settings.camera.rotation = Number.isFinite(+p.settings.camera.rotation) ? +p.settings.camera.rotation : 0;
   p.settings.audio = p.settings.audio || { src: null, name: '', volume: 1, offset: 0 };
+  p.settings.audioTracks = Array.isArray(p.settings.audioTracks) ? p.settings.audioTracks : [];
+  p.settings.audioTracks = p.settings.audioTracks.map((t) => ({
+    id: t.id || uid(),
+    name: t.name || 'audio',
+    src: t.src || null,
+    volume: Number.isFinite(+t.volume) ? clamp(+t.volume, 0, 2) : 1,
+    offset: Number.isFinite(+t.offset) ? Math.max(0, +t.offset) : 0
+  })).filter((t) => t.src);
   p.settings.audio.src = p.settings.audio.src || null;
   p.settings.audio.name = p.settings.audio.name || '';
   p.settings.audio.volume = Number.isFinite(+p.settings.audio.volume) ? clamp(+p.settings.audio.volume, 0, 2) : 1;
@@ -487,32 +506,43 @@ function getAudioAt(t) {
 function syncAudioControls() {
   const p = currentProject();
   if (!p) return;
-  const a = p.settings.audio || { src: null, name: '', volume: 1, offset: 0 };
-  ui.audioVolume.value = String(a.volume ?? 1);
-  ui.audioOffset.value = String(a.offset ?? 0);
-  ui.audioInfo.textContent = a.src ? `Audio: ${a.name || 'đã thêm file'} • vol ${Number(a.volume).toFixed(2)} • offset ${Number(a.offset).toFixed(2)}s` : 'Audio: chưa có';
-  if (a.src) {
-    if (audioPlayer.src !== a.src) audioPlayer.src = a.src;
-    audioPlayer.volume = clamp(a.volume ?? 1, 0, 2);
-  } else {
-    audioPlayer.pause();
-    audioPlayer.removeAttribute('src');
-    audioPlayer.load();
+  const tracks = p.settings.audioTracks || [];
+  const first = tracks[0] || p.settings.audio || { src: null, name: '', volume: 1, offset: 0 };
+  ui.audioVolume.value = String(first.volume ?? 1);
+  ui.audioOffset.value = String(first.offset ?? 0);
+  ui.audioInfo.textContent = tracks.length
+    ? `Audio tracks: ${tracks.length} • ${tracks.map((t) => `${t.name} (vol ${Number(t.volume).toFixed(2)} • off ${Number(t.offset).toFixed(2)}s)`).join(' | ')}`
+    : 'Audio: chưa có';
+
+  while (audioPlayers.length < tracks.length) {
+    const a = new Audio();
+    a.preload = 'auto';
+    audioPlayers.push(a);
   }
+  audioPlayers.forEach((a, i) => {
+    const t = tracks[i];
+    if (!t) { a.pause(); a.removeAttribute('src'); a.load(); return; }
+    if (a.src !== t.src) a.src = t.src;
+    a.volume = clamp(t.volume ?? 1, 0, 2);
+  });
 }
 
 function syncAudioPlayback() {
   const p = currentProject();
   if (!p) return;
-  const a = getAudioAt(state.time);
-  if (!a?.src) return;
-  const target = Math.max(0, state.time - (a.offset || 0));
-  if (Math.abs((audioPlayer.currentTime || 0) - target) > 0.12) audioPlayer.currentTime = target;
-  audioPlayer.volume = clamp(a.volume ?? 1, 0, 2);
+  const tracks = p.settings.audioTracks || [];
+  tracks.forEach((t, i) => {
+    const a = audioPlayers[i];
+    if (!a || !t?.src) return;
+    const target = Math.max(0, state.time - (t.offset || 0));
+    if (Math.abs((a.currentTime || 0) - target) > 0.15) a.currentTime = target;
+    a.volume = clamp(t.volume ?? 1, 0, 2);
+  });
 }
 
 function stopAudioPlayback() {
   audioPlayer.pause();
+  audioPlayers.forEach((a) => a.pause());
 }
 
 function setExportProgress(percent) {
@@ -1553,9 +1583,9 @@ function bind() {
 
   ui.undoBtn.onclick = undo;
   ui.redoBtn.onclick = redo;
-  ui.playBtn.onclick = () => { state.playing = true; state.startRef = 0; syncAudioPlayback(); audioPlayer.play().catch(() => {}); requestAnimationFrame(tick); };
+  ui.playBtn.onclick = () => { state.playing = true; state.startRef = 0; syncAudioPlayback(); audioPlayer.play().catch(() => {}); audioPlayers.forEach((a)=>a.play().catch(() => {})); requestAnimationFrame(tick); };
   ui.pauseBtn.onclick = () => { state.playing = false; state.startRef = 0; stopAudioPlayback(); };
-  ui.resetBtn.onclick = () => { state.playing = false; state.startRef = 0; state.time = 0; if (audioPlayer.src) audioPlayer.currentTime = 0; stopAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
+  ui.resetBtn.onclick = () => { state.playing = false; state.startRef = 0; state.time = 0; if (audioPlayer.src) audioPlayer.currentTime = 0; audioPlayers.forEach((a)=>{ if (a.src) a.currentTime = 0; }); stopAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
   ui.exportVideoBtn.onclick = exportVideoMp4;
   ui.publishProjectBtn.onclick = publishCurrentProject;
   ui.scrubber.oninput = () => { const p = currentProject(); if (!p) return; state.playing = false; state.time = (+ui.scrubber.value / 100) * p.settings.duration; syncAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
@@ -1571,28 +1601,32 @@ function bind() {
   }, { passive: false });
   ui.addAudioBtn.onclick = () => {
     const p = currentProject();
-    const file = ui.audioInput.files?.[0];
-    if (!p || !file) return;
+    const files = Array.from(ui.audioInput.files || []);
+    if (!p || !files.length) return;
     pushHistorySnapshot();
-    const fr = new FileReader();
-    fr.onload = () => {
-      p.settings.audio.src = fr.result;
-      p.settings.audio.name = file.name;
-      p.settings.audio.volume = clamp(+ui.audioVolume.value || 1, 0, 2);
-      p.settings.audio.offset = Math.max(0, +ui.audioOffset.value || 0);
-      const ak = nearestTimeKey(p.settings.audioKeyframes || [], state.time);
-      if (ak) { ak.volume = p.settings.audio.volume; ak.offset = p.settings.audio.offset; }
+    const readers = files.map((file) => new Promise((resolve) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve({ file, src: fr.result });
+      fr.readAsDataURL(file);
+    }));
+    Promise.all(readers).then((items) => {
+      p.settings.audioTracks = p.settings.audioTracks || [];
+      items.forEach(({ file, src }) => {
+        p.settings.audioTracks.push({ id: uid(), name: file.name, src, volume: clamp(+ui.audioVolume.value || 1, 0, 2), offset: Math.max(0, +ui.audioOffset.value || 0) });
+      });
+      const first = p.settings.audioTracks[0];
+      if (first) p.settings.audio = { src: first.src, name: first.name, volume: first.volume, offset: first.offset };
       p.updatedAt = Date.now();
       saveProjects();
       syncAudioControls();
-    };
-    fr.readAsDataURL(file);
+    });
   };
   ui.removeAudioBtn.onclick = () => {
     const p = currentProject();
     if (!p) return;
     pushHistorySnapshot();
     p.settings.audio = { src: null, name: '', volume: 1, offset: 0 };
+    p.settings.audioTracks = [];
     p.updatedAt = Date.now();
     saveProjects();
     syncAudioControls();
@@ -1602,6 +1636,7 @@ function bind() {
     if (!p) return;
     pushHistorySnapshot();
     p.settings.audio.volume = clamp(+ui.audioVolume.value || 1, 0, 2);
+    (p.settings.audioTracks || []).forEach((t) => { t.volume = p.settings.audio.volume; });
     const ak = nearestTimeKey(p.settings.audioKeyframes || [], state.time); if (ak) ak.volume = p.settings.audio.volume;
     p.updatedAt = Date.now();
     saveProjects();
@@ -1612,11 +1647,25 @@ function bind() {
     if (!p) return;
     pushHistorySnapshot();
     p.settings.audio.offset = Math.max(0, +ui.audioOffset.value || 0);
+    (p.settings.audioTracks || []).forEach((t) => { t.offset = p.settings.audio.offset; });
     const ak = nearestTimeKey(p.settings.audioKeyframes || [], state.time); if (ak) ak.offset = p.settings.audio.offset;
     p.updatedAt = Date.now();
     saveProjects();
     syncAudioControls();
   };
+
+
+  const otpInputs = Array.from(document.querySelectorAll('.otp-digit'));
+  otpInputs.forEach((inp, idx) => {
+    inp.addEventListener('input', () => {
+      inp.value = (inp.value || '').replace(/\D/g, '').slice(0, 1);
+      if (inp.value && otpInputs[idx + 1]) otpInputs[idx + 1].focus();
+      ui.otpCode.value = otpInputs.map((x) => x.value || '').join('');
+    });
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !inp.value && otpInputs[idx - 1]) otpInputs[idx - 1].focus();
+    });
+  });
 
   bindDrag();
   bindEaseGraphDrag();

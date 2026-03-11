@@ -13,6 +13,9 @@ Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần + Node s
   - `You're not signed in. Log in to use this feature.`
   - Nút `Sign in`, `Sign up`, và nút `X` để đóng.
 - Thêm đổi ngôn ngữ (VI/EN), tìm kiếm dự án local + cloud.
+- Chèn nhiều audio track cùng lúc và đồng bộ playback theo timeline.
+- Ô nhập OTP dạng 6 khối lớn riêng biệt để nhập dễ hơn.
+- Giao diện editor được làm mới (header/panel/khối điều khiển đỡ thô).
 - Thêm Header và Footer cho giao diện.
 
 ## Chạy local

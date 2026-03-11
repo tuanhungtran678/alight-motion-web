@@ -279,3 +279,24 @@ input, select, button {
 
 #otpInfoText { white-space: pre-line; }
 
+
+
+/* Editor refresh */
+#editorScreen .topbar {
+  background: linear-gradient(130deg, color-mix(in srgb, var(--card), white 10%), color-mix(in srgb, var(--card), black 4%));
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--border), white 12%);
+  margin-bottom: 12px;
+}
+.preview-card, .panel {
+  box-shadow: 0 10px 26px rgba(0,0,0,.18);
+}
+.panel h2 { margin-top: 0; }
+
+.otp-digits { display: flex; gap: 20px; justify-content: center; margin: 10px 0; }
+.otp-digit {
+  width: 56px; height: 68px; text-align: center; font-size: 2rem; font-weight: 700;
+  border-radius: 12px; border: 2px solid var(--border); background: var(--input); color: var(--text);
+}
+.otp-digit:focus { outline: 2px solid var(--accent); }

@@ -7,7 +7,6 @@ const { spawnSync } = require('child_process');
 const PORT = process.env.PORT || 4173;
 const DB_FILE = path.join(__dirname, 'cloud-projects.json');
 const USERS_FILE = path.join(__dirname, 'users.json');
-const MAILBOX_FILE = path.join(__dirname, 'mailbox.json');
 const sessions = new Map();
 const otps = new Map();
 
@@ -82,10 +81,6 @@ function sendOtpEmail(email, code) {
   const body = `Your verification code is: ${code}
 
 If it's not you, please change the password immediately.`;
-  const msg = { id: `m_${Date.now()}_${Math.random().toString(16).slice(2, 6)}`, from: 'no-reply@alight-web.local', to: email, subject, body, createdAt: Date.now() };
-  const box = readJson(MAILBOX_FILE, []);
-  box.unshift(msg);
-  writeJson(MAILBOX_FILE, box.slice(0, 200));
 
   const cfg = smtpConfig();
   if (cfg.host && cfg.port && cfg.user && cfg.pass && cfg.from) {
@@ -120,16 +115,6 @@ ${body}
 
 http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204, {});
-
-
-  if (req.url && req.url.startsWith('/api/mailbox') && req.method === 'GET') {
-    const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-    const email = String(urlObj.searchParams.get('email') || '').trim().toLowerCase();
-    const all = readJson(MAILBOX_FILE, []);
-    const messages = email ? all.filter((m) => String(m.to || '').toLowerCase() === email) : all;
-    return send(res, 200, { messages: messages.slice(0, 20) });
-  }
-
   if (req.url === '/api/auth/precheck' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
