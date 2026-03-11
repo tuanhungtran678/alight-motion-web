@@ -334,6 +334,10 @@
         <h3>Email verification</h3>
         <p id="otpInfoText">We'll send an email to your address, please check your inbox. If not have, check the spam folder.</p>
         <p class="warn-text">If it's not you, please change the password immediately.</p>
+        <div id="otpMailbox" class="otp-mailbox">
+          <strong>Automated Message</strong>
+          <pre id="otpMailboxBody">(waiting for message...)</pre>
+        </div>
         <label>6-digit code <input id="otpCode" type="text" maxlength="6" placeholder="123456" /></label>
         <div class="button-grid">
           <button id="verifyOtpBtn" class="btn primary">Verify & Sign in</button>

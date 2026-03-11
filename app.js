@@ -23,8 +23,9 @@ const LOCAL_CLOUD_KEY = 'alightCloudLocalV1';
 const AUTH_TOKEN_KEY = 'alightAuthTokenV1';
 const LOCAL_AUTH_USERS_KEY = 'alightLocalAuthUsersV1';
 const LOCAL_AUTH_OTP_KEY = 'alightLocalAuthOtpV1';
+const LOCAL_AUTH_MAILBOX_KEY = 'alightLocalAuthMailboxV1';
 const ui = {
-  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'),
+  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpMailboxBody: getEl('otpMailboxBody'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
@@ -133,6 +134,44 @@ function localOtpGet() {
 }
 function localOtpSet(data) { localStorage.setItem(LOCAL_AUTH_OTP_KEY, JSON.stringify(data)); }
 
+
+function localMailboxGet() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_AUTH_MAILBOX_KEY) || '[]'); } catch { return []; }
+}
+function localMailboxPush(message) {
+  const box = localMailboxGet();
+  box.unshift(message);
+  localStorage.setItem(LOCAL_AUTH_MAILBOX_KEY, JSON.stringify(box.slice(0, 30)));
+}
+
+async function fetchAutomatedMessage(email) {
+  try {
+    const r = await fetch(`/api/mailbox?email=${encodeURIComponent(email)}`);
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data.messages) && data.messages.length) return data.messages[0];
+    }
+  } catch {}
+  return localMailboxGet().find((m) => m.to === email) || null;
+}
+
+function renderAutomatedMessage(msg, email) {
+  if (!ui.otpMailboxBody) return;
+  if (!msg) {
+    ui.otpMailboxBody.textContent = `From: no-reply@alight-web.local
+To: ${email}
+Subject: Automated Message
+
+(waiting for message...)`;
+    return;
+  }
+  ui.otpMailboxBody.textContent = `From: ${msg.from || 'no-reply@alight-web.local'}
+To: ${msg.to || email}
+Subject: ${msg.subject || 'Automated Message'}
+
+${msg.body || ''}`;
+}
+
 async function localAuthFallback(path, payload) {
   const email = String(payload?.email || '').trim().toLowerCase();
   const users = localAuthUsers();
@@ -144,6 +183,7 @@ async function localAuthFallback(path, payload) {
     if (!user) throw new Error('Email not exist!');
     const code = String(Math.floor(100000 + Math.random() * 900000));
     localOtpSet({ email, code, exp: Date.now() + 10 * 60 * 1000 });
+    localMailboxPush({ from: 'no-reply@alight-web.local', to: email, subject: 'Automated Message', body: `Your 6-digit code is ${code}.\n\nIf it's not you, please change the password immediately.`, createdAt: Date.now() });
     console.info(`[LOCAL OTP] ${email} => ${code}`);
     return { ok: true, delivered: false, devCode: code, message: `We'll send an email to ${email}, please check your inbox. If not have, check the spam folder.` };
   }
@@ -210,6 +250,8 @@ Email service is not available in this environment. Use demo OTP code: ${otpResp
     }
     ui.otpInfoText.textContent = text;
   }
+  const mail = await fetchAutomatedMessage(email);
+  renderAutomatedMessage(mail, email);
 }
 
 async function verifyOtpAndSignIn() {

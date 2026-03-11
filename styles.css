@@ -278,3 +278,7 @@ input, select, button {
 .warn-text { color: #ffd27a; font-size: .9rem; }
 
 #otpInfoText { white-space: pre-line; }
+
+
+.otp-mailbox { margin: 10px 0; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--card), black 12%); }
+.otp-mailbox pre { margin: 8px 0 0; white-space: pre-wrap; font-size: .83rem; line-height: 1.35; }
