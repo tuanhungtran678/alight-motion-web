@@ -62,6 +62,9 @@
           <label>Tìm kiếm trên Cloud
             <input id="cloudSearch" type="search" placeholder="Search cloud projects..." />
           </label>
+          <label>Cloud Server URL
+            <input id="cloudApiBase" type="url" placeholder="https://your-shared-server.example.com" />
+          </label>
           <button id="refreshCloudBtn" class="btn">↻ Tải lại Cloud</button>
           <div id="cloudList" class="project-list"></div>
         </article>
@@ -118,6 +121,14 @@
               </select>
             </label>
             <label>Độ mạnh hiệu ứng <input id="layerEffectStrength" type="number" min="0" max="2" step="0.1" value="0.6" /></label>
+            <div id="glowControls">
+              <label>Màu hào quang <input id="glowColor" type="color" value="#21b8ff" /></label>
+              <div class="field-grid">
+                <label>Độ cứng <input id="glowHardness" type="number" min="0" max="1" step="0.05" value="0.5" /></label>
+                <label>Alpha <input id="glowAlpha" type="number" min="0" max="1" step="0.05" value="0.7" /></label>
+              </div>
+            </div>
+            <div id="textLayerControls">
             <h3>Text layer</h3>
             <label>Nội dung chữ <input id="textContent" type="text" value="TEXT" /></label>
             <div class="field-grid">
@@ -151,6 +162,7 @@
                 <option value="right">Right</option>
               </select>
             </label>
+            </div>
             <label>Hình dáng layer
               <select id="frameShape">
                 <option value="rect" selected>Rect</option>
@@ -167,8 +179,8 @@
           </article>
 
           <article class="panel">
-            <h2 id="timelinePanelTitle">Timeline + Keyframes</h2>
-            <label>Thời lượng (giây) <input id="timelineDuration" type="number" min="0.2" step="0.1" value="2" /></label>
+            <h2 id="timelinePanelTitle">Timeline + Frames</h2>
+            <label>Thời lượng frame (giây) <input id="timelineDuration" type="number" min="0.2" step="0.1" value="2" /></label>
             <div class="field-grid">
               <label>Track layer
                 <select id="frameTarget">
@@ -177,16 +189,16 @@
                   <option value="audio">Audio</option>
                 </select>
               </label>
-              <label>Thời gian keyframe (s) <input id="frameTime" type="number" min="0" step="0.01" value="0" /></label>
+              <label>Thời gian frame (s) <input id="frameTime" type="number" min="0" step="0.01" value="0" /></label>
             </div>
             <div id="timelineTracks" class="timeline-tracks"></div>
             <div class="button-grid">
-              <button id="addKeyBtn" class="btn">+ Keyframe tại thời điểm hiện tại</button>
-              <button id="removeKeyBtn" class="btn danger">Xóa keyframe gần nhất</button>
+              <button id="addKeyBtn" class="btn">+ Frame tại thời điểm hiện tại</button>
+              <button id="removeKeyBtn" class="btn danger">Xóa frame gần nhất</button>
             </div>
-            <small id="keyframeInfo">Keyframes: -</small>
+            <small id="keyframeInfo">Frames: -</small>
 
-            <h3>Giá trị keyframe hiện tại</h3>
+            <h3>Giá trị frame hiện tại</h3>
             <div class="field-grid">
               <label>X <input id="startX" type="number" value="180" /></label>
               <label>Y <input id="startY" type="number" value="320" /></label>
@@ -213,9 +225,10 @@
             </label>
             <canvas id="easeGraph" width="320" height="160"></canvas>
             <small>Kéo 2 điểm tròn trên đồ thị để chỉnh custom ease.</small>
-            <button id="applyBtn" class="btn primary">Áp dụng vào keyframe hiện tại</button>
+            <button id="applyBtn" class="btn primary">Áp dụng vào frame hiện tại</button>
 
-            <h3>Camera</h3>
+            <h3>Frame Studio</h3>
+            <h4>Camera</h4>
             <div class="field-grid">
               <label>Cam X <input id="camX" type="number" value="0" /></label>
               <label>Cam Y <input id="camY" type="number" value="0" /></label>
@@ -224,7 +237,7 @@
             </div>
             <button id="applyCameraBtn" class="btn">Áp dụng Camera</button>
 
-            <h3>Âm thanh</h3>
+            <h4>Âm thanh</h4>
             <label>Chèn audio <input id="audioInput" type="file" accept="audio/*" multiple /></label>
             <div class="button-grid">
               <button id="addAudioBtn" class="btn">+ Thêm âm thanh</button>

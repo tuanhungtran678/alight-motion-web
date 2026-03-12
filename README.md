@@ -8,12 +8,15 @@ Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần + Node s
 - Sign in theo luồng kiểm tra email tồn tại + OTP 6 chữ số qua email (kèm cảnh báo bảo mật).
 - Đăng nhập **thật** bằng email/password với API server (`/api/auth/signup`, `/api/auth/signin`, `/api/auth/me`).
 - Cloud publish: đăng dự án lên server, xem public qua `public.html?id=...`.
+- Có ô **Cloud Server URL** để nhiều máy cùng trỏ vào một server => đồng bộ cloud giữa các máy.
 - Nếu dự án Cloud là của bạn sẽ có nút **Unshare** để bỏ chia sẻ.
 - Hỗ trợ khách (guest) với modal cảnh báo:
   - `You're not signed in. Log in to use this feature.`
   - Nút `Sign in`, `Sign up`, và nút `X` để đóng.
 - Thêm đổi ngôn ngữ (VI/EN), tìm kiếm dự án local + cloud.
 - Chèn nhiều audio track cùng lúc và đồng bộ playback theo timeline.
+- Hiệu ứng hào quang có thêm chỉnh màu, độ cứng và alpha.
+- Text Layer chỉ hiện khi đang chọn layer chữ.
 - Ô nhập OTP dạng 6 khối lớn riêng biệt để nhập dễ hơn.
 - Giao diện editor được làm mới (header/panel/khối điều khiển đỡ thô).
 - Thêm Header và Footer cho giao diện.

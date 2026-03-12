@@ -23,14 +23,15 @@ const LOCAL_CLOUD_KEY = 'alightCloudLocalV1';
 const AUTH_TOKEN_KEY = 'alightAuthTokenV1';
 const LOCAL_AUTH_USERS_KEY = 'alightLocalAuthUsersV1';
 const LOCAL_AUTH_OTP_KEY = 'alightLocalAuthOtpV1';
+const CLOUD_API_BASE_KEY = 'alightCloudApiBaseV1';
 const ui = {
-  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'),
+  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'), cloudApiBase: getEl('cloudApiBase'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
   modal: getEl('createProjectModal'), closeModalBtn: getEl('closeModalBtn'), ratioRow: getEl('ratioRow'), modalFps: getEl('modalFps'), modalResolution: getEl('modalResolution'), modalProjectName: getEl('modalProjectName'), modalBgColor: getEl('modalBgColor'), modalBgHex: getEl('modalBgHex'), confirmCreateBtn: getEl('confirmCreateBtn'),
   preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), undoBtn: getEl('undoBtn'), redoBtn: getEl('redoBtn'), exportVideoBtn: getEl('exportVideoBtn'), publishProjectBtn: getEl('publishProjectBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
-  zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), textContent: getEl('textContent'), textSize: getEl('textSize'), textFontFamily: getEl('textFontFamily'), textWeight: getEl('textWeight'), textStyle: getEl('textStyle'), textAlign: getEl('textAlign'), frameShape: getEl('frameShape'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
+  zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), textContent: getEl('textContent'), textSize: getEl('textSize'), textFontFamily: getEl('textFontFamily'), textWeight: getEl('textWeight'), textStyle: getEl('textStyle'), textAlign: getEl('textAlign'), textLayerControls: getEl('textLayerControls'), frameShape: getEl('frameShape'), glowColor: getEl('glowColor'), glowHardness: getEl('glowHardness'), glowAlpha: getEl('glowAlpha'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'),
@@ -41,14 +42,26 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '' };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '' };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 const audioPlayers = [];
 
+function apiUrl(path) {
+  const base = (state.cloudApiBase || '').trim();
+  if (!base) return path;
+  return `${base.replace(/\/$/, '')}${path}`;
+}
+function saveCloudApiBase(v) {
+  state.cloudApiBase = (v || '').trim();
+  if (state.cloudApiBase) localStorage.setItem(CLOUD_API_BASE_KEY, state.cloudApiBase);
+  else localStorage.removeItem(CLOUD_API_BASE_KEY);
+}
+
+
 function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w || 9, h: h || 16 }; }
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
-function newLayer(type, extra = {}) { return { id: uid(), name: `Layer ${Date.now().toString().slice(-4)}`, type, color: '#21b8ff', text: 'TEXT', size: 90, fontFamily: 'Inter', fontWeight: '700', fontStyle: 'normal', textAlign: 'center', imageSrc: null, imageObj: null, frameShape: 'rect', groupId: null, effect: { type: 'none', strength: 0.6 }, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
+function newLayer(type, extra = {}) { return { id: uid(), name: `Layer ${Date.now().toString().slice(-4)}`, type, color: '#21b8ff', text: 'TEXT', size: 90, fontFamily: 'Inter', fontWeight: '700', fontStyle: 'normal', textAlign: 'center', imageSrc: null, imageObj: null, frameShape: 'rect', groupId: null, effect: { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7 }, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
 function newProject({ name, ratio, fps, resolution, bgColor }) {
   return {
     id: uid(),
@@ -188,7 +201,7 @@ async function localAuthFallback(path, payload) {
 
 async function requestAuth(path, payload) {
   try {
-    const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const r = await fetch(apiUrl(path), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     let data = {};
     try { data = await r.json(); } catch {}
     if (!r.ok) {
@@ -270,7 +283,7 @@ function applyLanguage(lang) {
     cloudTitle: state.language === 'en' ? 'Cloud Community' : 'Cloud Community',
     cloudDesc: state.language === 'en' ? 'Published projects can be viewed publicly.' : 'Các dự án đã đăng lên server có thể mở và xem công khai.',
     accountTitle: state.language === 'en' ? 'Account' : 'Tài khoản',
-    timelinePanelTitle: state.language === 'en' ? 'Timeline + Keyframes' : 'Timeline + Keyframes'
+    timelinePanelTitle: state.language === 'en' ? 'Timeline + Frames' : 'Timeline + Frames'
   };
   Object.entries(map).forEach(([id,txt]) => { const el=getEl(id); if(el) el.textContent = txt; });
   if (ui.playBtn) ui.playBtn.textContent = state.language === 'en' ? '▶ Play' : '▶ Phát';
@@ -278,6 +291,8 @@ function applyLanguage(lang) {
   if (ui.resetBtn) ui.resetBtn.textContent = state.language === 'en' ? '↺ Reset' : '↺ Reset';
   if (ui.exportVideoBtn) ui.exportVideoBtn.textContent = state.language === 'en' ? '⤓ Export MP4' : '⤓ Xuất Video MP4';
   if (ui.publishProjectBtn) ui.publishProjectBtn.textContent = state.language === 'en' ? '☁ Publish to Cloud' : '☁ Đăng lên Cloud';
+  if (ui.addKeyBtn) ui.addKeyBtn.textContent = state.language === 'en' ? '+ Add frame at current time' : '+ Frame tại thời điểm hiện tại';
+  if (ui.removeKeyBtn) ui.removeKeyBtn.textContent = state.language === 'en' ? 'Delete nearest frame' : 'Xóa frame gần nhất';
   updateAuthStatusText();
 }
 
@@ -293,7 +308,7 @@ function localCloudSet(list) { localStorage.setItem(LOCAL_CLOUD_KEY, JSON.string
 
 async function fetchCloudProjects() {
   try {
-    const r = await fetch('/api/projects', { headers: { ...authHeaders() } });
+    const r = await fetch(apiUrl('/api/projects'), { headers: { ...authHeaders() } });
     if (!r.ok) throw new Error('api-failed');
     return await r.json();
   } catch {
@@ -310,7 +325,7 @@ async function publishCurrentProject() {
   }
   const payload = { project: p, author: state.session.name, provider: state.session.provider };
   try {
-    const r = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(payload) });
+    const r = await fetch(apiUrl('/api/projects'), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(payload) });
     if (!r.ok) throw new Error('publish-failed');
   } catch {
     const list = localCloudGet();
@@ -352,7 +367,7 @@ async function renderCloudList() {
       unshare.textContent = 'Unshare';
       unshare.onclick = async () => {
         try {
-          const r = await fetch(`/api/projects/${encodeURIComponent(item.id)}/share`, { method: 'DELETE', headers: { ...authHeaders() } });
+          const r = await fetch(apiUrl(`/api/projects/${encodeURIComponent(item.id)}/share`), { method: 'DELETE', headers: { ...authHeaders() } });
           if (!r.ok) throw new Error('x');
         } catch {}
         await renderCloudList();
@@ -451,9 +466,12 @@ function normalizeProject(p) {
     layer.textAlign = layer.textAlign || 'center';
     layer.frameShape = layer.frameShape || 'rect';
     layer.groupId = layer.groupId || null;
-    layer.effect = layer.effect || { type: 'none', strength: 0.6 };
+    layer.effect = layer.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7 };
     layer.effect.type = layer.effect.type || 'none';
     layer.effect.strength = Number.isFinite(+layer.effect.strength) ? clamp(+layer.effect.strength, 0, 2) : 0.6;
+    layer.effect.glowColor = layer.effect.glowColor || layer.color || '#21b8ff';
+    layer.effect.glowHardness = Number.isFinite(+layer.effect.glowHardness) ? clamp(+layer.effect.glowHardness, 0, 1) : 0.5;
+    layer.effect.glowAlpha = Number.isFinite(+layer.effect.glowAlpha) ? clamp(+layer.effect.glowAlpha, 0, 1) : 0.7;
   });
   return p;
 }
@@ -664,18 +682,18 @@ function syncControlsFromNearest() {
     const p = currentProject(); if (!p) return;
     const k = nearestTimeKey(p.settings.cameraKeyframes || [], state.time);
     if (k) ui.frameTime.value = k.time.toFixed(2);
-    ui.keyframeInfo.textContent = `Camera keyframes: ${(p.settings.cameraKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
+    ui.keyframeInfo.textContent = `Camera frames: ${(p.settings.cameraKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
     return;
   }
   if (ui.frameTarget.value === 'audio') {
     const p = currentProject(); if (!p) return;
     const k = nearestTimeKey(p.settings.audioKeyframes || [], state.time);
     if (k) ui.frameTime.value = k.time.toFixed(2);
-    ui.keyframeInfo.textContent = `Audio keyframes: ${(p.settings.audioKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
+    ui.keyframeInfo.textContent = `Audio frames: ${(p.settings.audioKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
     return;
   }
   const l = currentLayer();
-  if (!l) { ui.keyframeInfo.textContent = 'Keyframes: (chưa có layer)'; return; }
+  if (!l) { ui.keyframeInfo.textContent = 'Frames: (chưa có layer)'; return; }
   const k = nearestKey(l, state.time);
   ui.startX.value = k.x; ui.startY.value = k.y; ui.startScale.value = k.scale; ui.startRotation.value = k.rotation; ui.startOpacity.value = k.opacity;
   ui.easing.value = getLayerEasing(l, ui.easeTarget.value || 'position');
@@ -689,8 +707,12 @@ function syncControlsFromNearest() {
   ui.textWeight.value = l.fontWeight || '700';
   ui.textStyle.value = l.fontStyle || 'normal';
   ui.textAlign.value = l.textAlign || 'center';
+  if (ui.textLayerControls) ui.textLayerControls.classList.toggle('hidden', l.type !== 'text');
+  ui.glowColor.value = l.effect?.glowColor || l.color || '#21b8ff';
+  ui.glowHardness.value = String(l.effect?.glowHardness ?? 0.5);
+  ui.glowAlpha.value = String(l.effect?.glowAlpha ?? 0.7);
   ui.frameShape.value = l.frameShape || 'rect';
-  ui.keyframeInfo.textContent = `Keyframes: ${l.keyframes.map((x) => x.time.toFixed(2)).join(', ')}`;
+  ui.keyframeInfo.textContent = `Frames: ${l.keyframes.map((x) => x.time.toFixed(2)).join(', ')}`;
   if (k) ui.frameTime.value = k.time.toFixed(2);
 }
 
@@ -789,8 +811,13 @@ function drawLayer(layer) {
   const effectType = layer.effect?.type || 'none';
   const effectStrength = clamp(layer.effect?.strength ?? 0.6, 0, 2);
   if (effectType === 'glow') {
-    ctx.shadowColor = layer.color || '#21b8ff';
-    ctx.shadowBlur = 20 + effectStrength * 26;
+    const gc = layer.effect?.glowColor || layer.color || '#21b8ff';
+    const ga = clamp(layer.effect?.glowAlpha ?? 0.7, 0, 1);
+    const gh = clamp(layer.effect?.glowHardness ?? 0.5, 0, 1);
+    const hex = gc.replace('#', '');
+    const to = (a,b) => parseInt(hex.slice(a,b) || '00', 16);
+    ctx.shadowColor = `rgba(${to(0,2)}, ${to(2,4)}, ${to(4,6)}, ${ga})`;
+    ctx.shadowBlur = (8 + effectStrength * 34) * (1.15 - gh * 0.85);
   }
   if (effectType === 'stars') {
     const r = 70;
@@ -1368,6 +1395,7 @@ function bind() {
   ui.guestSignUpBtn.onclick = () => { closeGuestModal(); openAuthModal('signup'); };
   ui.logoutBtn.onclick = () => { state.session = null; state.authToken = ''; localStorage.removeItem(AUTH_TOKEN_KEY); saveSession(); renderSession(); renderCloudList(); };
   ui.refreshCloudBtn.onclick = renderCloudList;
+  if (ui.cloudApiBase) { ui.cloudApiBase.value = state.cloudApiBase; ui.cloudApiBase.onchange = () => { saveCloudApiBase(ui.cloudApiBase.value); renderCloudList(); }; }
   ui.projectSearch.oninput = renderProjectList;
   ui.cloudSearch.oninput = renderCloudList;
   ui.languageSelect.onchange = () => applyLanguage(ui.languageSelect.value);
@@ -1549,12 +1577,26 @@ function bind() {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
     pushHistorySnapshot();
-    l.effect = l.effect || { type: 'none', strength: 0.6 };
+    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7 };
     l.effect.strength = clamp(+ui.layerEffectStrength.value || 0, 0, 2);
     p.updatedAt = Date.now();
     saveProjects();
     draw();
   };
+  const applyGlowControl = () => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l) return;
+    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7 };
+    l.effect.glowColor = ui.glowColor.value;
+    l.effect.glowHardness = clamp(+ui.glowHardness.value || 0, 0, 1);
+    l.effect.glowAlpha = clamp(+ui.glowAlpha.value || 0, 0, 1);
+    p.updatedAt = Date.now();
+    saveProjects();
+    draw();
+  };
+  ui.glowColor.oninput = applyGlowControl;
+  ui.glowHardness.oninput = applyGlowControl;
+  ui.glowAlpha.oninput = applyGlowControl;
   ui.addKeyBtn.onclick = addKeyframeAtCurrent;
   ui.removeKeyBtn.onclick = removeNearestKeyframe;
   ui.applyBtn.onclick = applyCurrentValues;
@@ -1687,7 +1729,7 @@ async function init() {
       state.session = state.session || null;
     } else {
       try {
-        const r = await fetch('/api/auth/me', { headers: { ...authHeaders() } });
+        const r = await fetch(apiUrl('/api/auth/me'), { headers: { ...authHeaders() } });
         if (r.ok) state.session = await r.json();
         else { state.session = null; state.authToken = ''; localStorage.removeItem(AUTH_TOKEN_KEY); }
       } catch {}

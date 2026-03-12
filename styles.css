@@ -230,7 +230,7 @@ input, select, button {
 #confirmCreateBtn { width: 170px; margin: 6px auto 0; display: block; font-size: 1.1rem; border-radius: 12px; }
 
 @media (min-width: 820px) {
-  .panel-grid { grid-template-columns: 1fr 1fr; }
+  .panel-grid { grid-template-columns: minmax(320px, .9fr) minmax(420px, 1.25fr); }
   .transport { grid-template-columns: repeat(7, minmax(0, 1fr)); align-items: center; }
   .transport label { grid-column: span 2; }
   #timeLabel { grid-column: span 1; text-align: right; }
