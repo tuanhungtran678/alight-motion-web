@@ -118,6 +118,9 @@
                 <option value="none" selected>Không</option>
                 <option value="glow">Hào quang</option>
                 <option value="stars">Chùm sao</option>
+                <option value="wipe">Quệt (Wipe)</option>
+                <option value="colorAdjust">Điều chỉnh màu</option>
+                <option value="extrude3d">3D Extrude</option>
               </select>
             </label>
             <label>Độ mạnh hiệu ứng <input id="layerEffectStrength" type="number" min="0" max="2" step="0.1" value="0.6" /></label>
@@ -126,6 +129,17 @@
               <div class="field-grid">
                 <label>Độ cứng <input id="glowHardness" type="number" min="0" max="1" step="0.05" value="0.5" /></label>
                 <label>Alpha <input id="glowAlpha" type="number" min="0" max="1" step="0.05" value="0.7" /></label>
+              </div>
+            </div>
+            <div id="effectExtraControls">
+              <div class="field-grid">
+                <label>Độ xuất hiện (Wipe) <input id="effectReveal" type="number" min="0" max="1" step="0.05" value="1" /></label>
+                <label>Góc Wipe° <input id="effectWipeAngle" type="number" min="0" max="360" step="1" value="0" /></label>
+                <label>Hue° <input id="effectHue" type="number" min="-180" max="180" step="1" value="0" /></label>
+                <label>Saturation <input id="effectSaturation" type="number" min="0" max="2" step="0.05" value="1" /></label>
+                <label>Brightness <input id="effectBrightness" type="number" min="0" max="2" step="0.05" value="1" /></label>
+                <label>3D góc° <input id="effect3DAngle" type="number" min="0" max="360" step="1" value="35" /></label>
+                <label>3D độ dày <input id="effect3DDepth" type="number" min="0" max="24" step="1" value="8" /></label>
               </div>
             </div>
             <div id="textLayerControls">
@@ -215,6 +229,7 @@
                     <label>Y <input id="moveYDisplay" type="text" value="320.00" readonly /></label>
                   </div>
                   <div class="movement-hint">Drag in this area to move layer</div>
+                  <div id="movementUnavailable" class="unavailable-note hidden">(Unavailable now. Expect you add a frame.)</div>
                   <div id="moveHandle" class="move-handle" aria-hidden="true"></div>
                 </div>
               </div>
@@ -233,6 +248,7 @@
                   <div id="rotateDial" class="rotate-dial">
                     <div id="rotateKnob" class="rotate-knob"></div>
                     <div id="rotateValue" class="rotate-value">0°</div>
+                    <div id="rotateUnavailable" class="unavailable-note hidden">(Unavailable now. Expect you add a frame.)</div>
                   </div>
                 </div>
               </div>
@@ -325,6 +341,15 @@
           </select>
         </label>
         <label>Màu nền <input id="menuBgColor" type="color" value="#000000" /></label>
+        <label><input id="menuShowGrid" type="checkbox" /> Show Grid Lines</label>
+        <label>Export quality
+          <select id="menuExportQuality">
+            <option value="low">Low (faster)</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="ultra">Ultra</option>
+          </select>
+        </label>
         <div class="button-grid">
           <button id="saveMenuBtn" class="btn primary">Lưu project</button>
           <button id="closeMenuBtn" class="btn">Đóng</button>

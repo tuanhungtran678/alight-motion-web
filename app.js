@@ -28,10 +28,10 @@ const ui = {
   home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'), cloudApiBase: getEl('cloudApiBase'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
-  menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), saveMenuBtn: getEl('saveMenuBtn'),
+  menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), menuShowGrid: getEl('menuShowGrid'), menuExportQuality: getEl('menuExportQuality'), saveMenuBtn: getEl('saveMenuBtn'),
   modal: getEl('createProjectModal'), closeModalBtn: getEl('closeModalBtn'), ratioRow: getEl('ratioRow'), modalFps: getEl('modalFps'), modalResolution: getEl('modalResolution'), modalProjectName: getEl('modalProjectName'), modalBgColor: getEl('modalBgColor'), modalBgHex: getEl('modalBgHex'), confirmCreateBtn: getEl('confirmCreateBtn'),
   preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), undoBtn: getEl('undoBtn'), redoBtn: getEl('redoBtn'), exportVideoBtn: getEl('exportVideoBtn'), publishProjectBtn: getEl('publishProjectBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
-  zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), textContent: getEl('textContent'), textSize: getEl('textSize'), textFontFamily: getEl('textFontFamily'), textWeight: getEl('textWeight'), textStyle: getEl('textStyle'), textAlign: getEl('textAlign'), textLayerControls: getEl('textLayerControls'), frameShape: getEl('frameShape'), glowColor: getEl('glowColor'), glowHardness: getEl('glowHardness'), glowAlpha: getEl('glowAlpha'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
+  zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), effectReveal: getEl('effectReveal'), effectWipeAngle: getEl('effectWipeAngle'), effectHue: getEl('effectHue'), effectSaturation: getEl('effectSaturation'), effectBrightness: getEl('effectBrightness'), effect3DAngle: getEl('effect3DAngle'), effect3DDepth: getEl('effect3DDepth'), textContent: getEl('textContent'), textSize: getEl('textSize'), textFontFamily: getEl('textFontFamily'), textWeight: getEl('textWeight'), textStyle: getEl('textStyle'), textAlign: getEl('textAlign'), textLayerControls: getEl('textLayerControls'), frameShape: getEl('frameShape'), glowColor: getEl('glowColor'), glowHardness: getEl('glowHardness'), glowAlpha: getEl('glowAlpha'), movementUnavailable: getEl('movementUnavailable'), rotateUnavailable: getEl('rotateUnavailable'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'), movePad: getEl('movePad'), moveHandle: getEl('moveHandle'), moveXDisplay: getEl('moveXDisplay'), moveYDisplay: getEl('moveYDisplay'), rotateDial: getEl('rotateDial'), rotateKnob: getEl('rotateKnob'), rotateValue: getEl('rotateValue'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'),
@@ -42,7 +42,7 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, modalRatio: '9:16', drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '' };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '', modalRatio: '9:16', isExporting: false };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 const audioPlayers = [];
@@ -61,7 +61,7 @@ function saveCloudApiBase(v) {
 
 function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w || 9, h: h || 16 }; }
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
-function newLayer(type, extra = {}) { return { id: uid(), name: `Layer ${Date.now().toString().slice(-4)}`, type, color: '#21b8ff', text: 'TEXT', size: 90, fontFamily: 'Inter', fontWeight: '700', fontStyle: 'normal', textAlign: 'center', imageSrc: null, imageObj: null, frameShape: 'rect', groupId: null, effect: { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7 }, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
+function newLayer(type, extra = {}) { return { id: uid(), name: `Layer ${Date.now().toString().slice(-4)}`, type, color: '#21b8ff', text: 'TEXT', size: 90, fontFamily: 'Inter', fontWeight: '700', fontStyle: 'normal', textAlign: 'center', imageSrc: null, imageObj: null, frameShape: 'rect', groupId: null, effect: { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8 }, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
 function newProject({ name, ratio, fps, resolution, bgColor }) {
   return {
     id: uid(),
@@ -78,6 +78,8 @@ function newProject({ name, ratio, fps, resolution, bgColor }) {
       camera: { x: 0, y: 0, zoom: 1, rotation: 0 },
       audio: { src: null, name: '', volume: 1, offset: 0 },
       audioTracks: [],
+      showGridLines: false,
+      exportQuality: 'medium',
       cameraKeyframes: [{ id: uid(), time: 0, x: 0, y: 0, zoom: 1, rotation: 0 }],
       audioKeyframes: [{ id: uid(), time: 0, volume: 1, offset: 0 }]
     },
@@ -431,6 +433,8 @@ function normalizeProject(p) {
   p.settings.customEase = p.settings.customEase || { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 };
   p.settings.resolution = Number(p.settings.resolution) || 1080;
   p.settings.camera = p.settings.camera || { x: 0, y: 0, zoom: 1, rotation: 0 };
+  p.settings.showGridLines = !!p.settings.showGridLines;
+  p.settings.exportQuality = ['low','medium','high','ultra'].includes(p.settings.exportQuality) ? p.settings.exportQuality : 'medium';
   p.settings.camera.x = Number.isFinite(+p.settings.camera.x) ? +p.settings.camera.x : 0;
   p.settings.camera.y = Number.isFinite(+p.settings.camera.y) ? +p.settings.camera.y : 0;
   p.settings.camera.zoom = Number.isFinite(+p.settings.camera.zoom) ? Math.max(0.1, +p.settings.camera.zoom) : 1;
@@ -466,12 +470,19 @@ function normalizeProject(p) {
     layer.textAlign = layer.textAlign || 'center';
     layer.frameShape = layer.frameShape || 'rect';
     layer.groupId = layer.groupId || null;
-    layer.effect = layer.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7 };
+    layer.effect = layer.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8 };
     layer.effect.type = layer.effect.type || 'none';
     layer.effect.strength = Number.isFinite(+layer.effect.strength) ? clamp(+layer.effect.strength, 0, 2) : 0.6;
     layer.effect.glowColor = layer.effect.glowColor || layer.color || '#21b8ff';
     layer.effect.glowHardness = Number.isFinite(+layer.effect.glowHardness) ? clamp(+layer.effect.glowHardness, 0, 1) : 0.5;
     layer.effect.glowAlpha = Number.isFinite(+layer.effect.glowAlpha) ? clamp(+layer.effect.glowAlpha, 0, 1) : 0.7;
+    layer.effect.reveal = Number.isFinite(+layer.effect.reveal) ? clamp(+layer.effect.reveal, 0, 1) : 1;
+    layer.effect.wipeAngle = Number.isFinite(+layer.effect.wipeAngle) ? (+layer.effect.wipeAngle % 360 + 360) % 360 : 0;
+    layer.effect.hue = Number.isFinite(+layer.effect.hue) ? clamp(+layer.effect.hue, -180, 180) : 0;
+    layer.effect.saturation = Number.isFinite(+layer.effect.saturation) ? clamp(+layer.effect.saturation, 0, 2) : 1;
+    layer.effect.brightness = Number.isFinite(+layer.effect.brightness) ? clamp(+layer.effect.brightness, 0, 2) : 1;
+    layer.effect.depthAngle = Number.isFinite(+layer.effect.depthAngle) ? (+layer.effect.depthAngle % 360 + 360) % 360 : 35;
+    layer.effect.depthSize = Number.isFinite(+layer.effect.depthSize) ? clamp(+layer.effect.depthSize, 0, 24) : 8;
   });
   return p;
 }
@@ -634,7 +645,7 @@ function openCreateModal() {
 }
 function closeCreateModal() { ui.modal.classList.add('hidden'); }
 
-function openMenu() { const p = currentProject(); if (!p) return; ui.menuProjectName.value = p.name; ui.menuRatio.value = p.settings.ratio; ui.menuFps.value = String(p.settings.fps); ui.menuResolution.value = String(p.settings.resolution || 1080); ui.menuBgColor.value = p.settings.bgColor; ui.settingsMenu.classList.remove('hidden'); }
+function openMenu() { const p = currentProject(); if (!p) return; ui.menuProjectName.value = p.name; ui.menuRatio.value = p.settings.ratio; ui.menuFps.value = String(p.settings.fps); ui.menuResolution.value = String(p.settings.resolution || 1080); ui.menuBgColor.value = p.settings.bgColor; if (ui.menuShowGrid) ui.menuShowGrid.checked = !!p.settings.showGridLines; if (ui.menuExportQuality) ui.menuExportQuality.value = p.settings.exportQuality || 'medium'; ui.settingsMenu.classList.remove('hidden'); }
 function closeMenu() { ui.settingsMenu.classList.add('hidden'); }
 
 function showHome() { state.playing = false; stopAudioPlayback(); ui.home.classList.add('active'); ui.editor.classList.remove('active'); renderProjectList(); }
@@ -676,31 +687,54 @@ function hydrateEditor() {
   draw();
 }
 
+function setUnavailableCards(show) {
+  if (ui.movementUnavailable) ui.movementUnavailable.classList.toggle('hidden', !show);
+  if (ui.rotateUnavailable) ui.rotateUnavailable.classList.toggle('hidden', !show);
+  if (ui.movePad) ui.movePad.classList.toggle('is-disabled', show);
+  if (ui.rotateDial) ui.rotateDial.classList.toggle('is-disabled', show);
+}
+
 function syncControlsFromNearest() {
   ui.frameTime.value = state.time.toFixed(2);
   if (ui.frameTarget.value === 'camera') {
     const p = currentProject(); if (!p) return;
     const k = nearestTimeKey(p.settings.cameraKeyframes || [], state.time);
     if (k) ui.frameTime.value = k.time.toFixed(2);
-    ui.keyframeInfo.textContent = `Camera frames: ${(p.settings.cameraKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
+    const list = (p.settings.cameraKeyframes || []).map((x) => x.time.toFixed(2)).join(', ');
+    ui.keyframeInfo.textContent = list ? `Camera frames: ${list}` : '(Unavailable now. Expect you add a frame.)';
+    setUnavailableCards(true);
     return;
   }
   if (ui.frameTarget.value === 'audio') {
     const p = currentProject(); if (!p) return;
     const k = nearestTimeKey(p.settings.audioKeyframes || [], state.time);
     if (k) ui.frameTime.value = k.time.toFixed(2);
-    ui.keyframeInfo.textContent = `Audio frames: ${(p.settings.audioKeyframes || []).map((x) => x.time.toFixed(2)).join(', ')}`;
+    const list = (p.settings.audioKeyframes || []).map((x) => x.time.toFixed(2)).join(', ');
+    ui.keyframeInfo.textContent = list ? `Audio frames: ${list}` : '(Unavailable now. Expect you add a frame.)';
+    setUnavailableCards(true);
     return;
   }
   const l = currentLayer();
-  if (!l) { ui.keyframeInfo.textContent = 'Frames: (chưa có layer)'; return; }
+  if (!l) { ui.keyframeInfo.textContent = 'Frames: (chưa có layer)'; setUnavailableCards(true); return; }
   const k = nearestKey(l, state.time);
+  if (!k) {
+    setUnavailableCards(true);
+    ui.keyframeInfo.textContent = '(Unavailable now. Expect you add a frame.)';
+    return;
+  }
   ui.startX.value = k.x; ui.startY.value = k.y; ui.startScale.value = k.scale; ui.startRotation.value = k.rotation; ui.startOpacity.value = k.opacity;
   ui.easing.value = getLayerEasing(l, ui.easeTarget.value || 'position');
   ui.layerName.value = l.name || '';
   ui.layerColor.value = l.color || '#21b8ff';
   ui.layerEffectType.value = l.effect?.type || 'none';
   ui.layerEffectStrength.value = String(l.effect?.strength ?? 0.6);
+  if (ui.effectReveal) ui.effectReveal.value = String(l.effect?.reveal ?? 1);
+  if (ui.effectWipeAngle) ui.effectWipeAngle.value = String(l.effect?.wipeAngle ?? 0);
+  if (ui.effectHue) ui.effectHue.value = String(l.effect?.hue ?? 0);
+  if (ui.effectSaturation) ui.effectSaturation.value = String(l.effect?.saturation ?? 1);
+  if (ui.effectBrightness) ui.effectBrightness.value = String(l.effect?.brightness ?? 1);
+  if (ui.effect3DAngle) ui.effect3DAngle.value = String(l.effect?.depthAngle ?? 35);
+  if (ui.effect3DDepth) ui.effect3DDepth.value = String(l.effect?.depthSize ?? 8);
   ui.textContent.value = l.text || 'TEXT';
   ui.textSize.value = String(l.size || 90);
   ui.textFontFamily.value = l.fontFamily || 'Inter';
@@ -714,6 +748,7 @@ function syncControlsFromNearest() {
   ui.frameShape.value = l.frameShape || 'rect';
   ui.keyframeInfo.textContent = `Frames: ${l.keyframes.map((x) => x.time.toFixed(2)).join(', ')}`;
   if (k) ui.frameTime.value = k.time.toFixed(2);
+  setUnavailableCards(!l.keyframes?.length);
   syncTransformWidgets();
 }
 
@@ -837,13 +872,71 @@ function addImageLayer(file) {
   fr.readAsDataURL(file);
 }
 
+function drawLayerPrimitive(layer, fillOverride = null) {
+  if (layer.type === 'rect') {
+    ctx.fillStyle = fillOverride || layer.color;
+    if (layer.frameShape === 'round') {
+      ctx.beginPath();
+      ctx.roundRect(-50, -50, 100, 100, 20);
+      ctx.fill();
+    } else if (layer.frameShape === 'diamond') {
+      ctx.beginPath();
+      ctx.moveTo(0, -60); ctx.lineTo(60, 0); ctx.lineTo(0, 60); ctx.lineTo(-60, 0); ctx.closePath();
+      ctx.fill();
+    } else if (layer.frameShape === 'pill') {
+      ctx.beginPath();
+      ctx.roundRect(-70, -35, 140, 70, 35);
+      ctx.fill();
+    } else {
+      ctx.fillRect(-50, -50, 100, 100);
+    }
+    return;
+  }
+  if (layer.type === 'circle') {
+    ctx.fillStyle = fillOverride || layer.color;
+    ctx.beginPath(); ctx.arc(0, 0, 55, 0, Math.PI * 2); ctx.fill();
+    return;
+  }
+  if (layer.type === 'image') {
+    const img = layer.imageObj;
+    if (img) {
+      const w = layer.size;
+      const h = (img.height / img.width) * w;
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    }
+    return;
+  }
+  ctx.fillStyle = fillOverride || layer.color;
+  ctx.font = `${layer.fontStyle || 'normal'} ${layer.fontWeight || '700'} ${layer.size}px ${layer.fontFamily || 'Inter'}, sans-serif`;
+  ctx.textAlign = layer.textAlign || 'center';
+  ctx.textBaseline = 'middle';
+  const anchorX = layer.textAlign === 'left' ? -60 : layer.textAlign === 'right' ? 60 : 0;
+  ctx.fillText(layer.text || 'TEXT', anchorX, 0);
+}
+
 function drawLayer(layer) {
   if (layer.visible === false) return;
   const tf = getTransform(layer, state.time);
   ctx.save();
-  ctx.translate(tf.x, tf.y); ctx.rotate((tf.rotation * Math.PI) / 180); ctx.scale(tf.scale, tf.scale); ctx.globalAlpha = clamp(tf.opacity, 0, 1);
+  ctx.translate(tf.x, tf.y);
+  ctx.rotate((tf.rotation * Math.PI) / 180);
+  ctx.scale(tf.scale, tf.scale);
+  ctx.globalAlpha = clamp(tf.opacity, 0, 1);
+
   const effectType = layer.effect?.type || 'none';
   const effectStrength = clamp(layer.effect?.strength ?? 0.6, 0, 2);
+
+  if (effectType === 'wipe') {
+    const reveal = clamp(layer.effect?.reveal ?? 1, 0, 1);
+    const angle = ((layer.effect?.wipeAngle ?? 0) * Math.PI) / 180;
+    const reach = 180;
+    const cut = -reach + reveal * reach * 2;
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.rect(-reach, -reach, cut + reach, reach * 2);
+    ctx.clip();
+  }
+
   if (effectType === 'glow') {
     const gc = layer.effect?.glowColor || layer.color || '#21b8ff';
     const ga = clamp(layer.effect?.glowAlpha ?? 0.7, 0, 1);
@@ -853,6 +946,28 @@ function drawLayer(layer) {
     ctx.shadowColor = `rgba(${to(0,2)}, ${to(2,4)}, ${to(4,6)}, ${ga})`;
     ctx.shadowBlur = (8 + effectStrength * 34) * (1.15 - gh * 0.85);
   }
+
+  if (effectType === 'colorAdjust') {
+    const hue = clamp(layer.effect?.hue ?? 0, -180, 180);
+    const sat = clamp(layer.effect?.saturation ?? 1, 0, 2);
+    const bri = clamp(layer.effect?.brightness ?? 1, 0, 2);
+    ctx.filter = `hue-rotate(${hue}deg) saturate(${sat}) brightness(${bri})`;
+  }
+
+  if (effectType === 'extrude3d') {
+    const depth = clamp(layer.effect?.depthSize ?? 8, 0, 24);
+    const ang = ((layer.effect?.depthAngle ?? 35) * Math.PI) / 180;
+    const dx = Math.cos(ang);
+    const dy = Math.sin(ang);
+    const shadowColor = 'rgba(0,0,0,0.22)';
+    for (let i = depth; i >= 1; i -= 1) {
+      ctx.save();
+      ctx.translate(dx * i, dy * i);
+      drawLayerPrimitive(layer, shadowColor);
+      ctx.restore();
+    }
+  }
+
   if (effectType === 'stars') {
     const r = 70;
     ctx.save();
@@ -876,45 +991,20 @@ function drawLayer(layer) {
     }
     ctx.restore();
   }
-  if (layer.type === 'rect') {
-    ctx.fillStyle = layer.color;
-    if (layer.frameShape === 'round') {
-      ctx.beginPath();
-      ctx.roundRect(-50, -50, 100, 100, 20);
-      ctx.fill();
-    } else if (layer.frameShape === 'diamond') {
-      ctx.beginPath();
-      ctx.moveTo(0, -60); ctx.lineTo(60, 0); ctx.lineTo(0, 60); ctx.lineTo(-60, 0); ctx.closePath();
-      ctx.fill();
-    } else if (layer.frameShape === 'pill') {
-      ctx.beginPath();
-      ctx.roundRect(-70, -35, 140, 70, 35);
-      ctx.fill();
-    } else {
-      ctx.fillRect(-50, -50, 100, 100);
-    }
-  }
-  else if (layer.type === 'circle') { ctx.fillStyle = layer.color; ctx.beginPath(); ctx.arc(0, 0, 55, 0, Math.PI * 2); ctx.fill(); }
-  else if (layer.type === 'image') {
-    const img = layer.imageObj;
-    if (img) { const w = layer.size; const h = (img.height / img.width) * w; ctx.drawImage(img, -w / 2, -h / 2, w, h); }
-  } else {
-    ctx.fillStyle = layer.color;
-    ctx.font = `${layer.fontStyle || 'normal'} ${layer.fontWeight || '700'} ${layer.size}px ${layer.fontFamily || 'Inter'}, sans-serif`;
-    ctx.textAlign = layer.textAlign || 'center';
-    ctx.textBaseline = 'middle';
-    const anchorX = layer.textAlign === 'left' ? -60 : layer.textAlign === 'right' ? 60 : 0;
-    ctx.fillText(layer.text || 'TEXT', anchorX, 0);
-  }
+
+  drawLayerPrimitive(layer);
   ctx.restore();
 }
+
 
 function draw() {
   const p = currentProject(); if (!p) return;
   ctx.fillStyle = p.settings.bgColor || '#000000';
   ctx.fillRect(0, 0, ui.preview.width, ui.preview.height);
-  for (let x = 0; x <= ui.preview.width; x += 60) { ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.moveTo(x, 0); ctx.lineTo(x, ui.preview.height); ctx.stroke(); }
-  for (let y = 0; y <= ui.preview.height; y += 60) { ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.moveTo(0, y); ctx.lineTo(ui.preview.width, y); ctx.stroke(); }
+  if (p.settings.showGridLines && !state.isExporting) {
+    for (let x = 0; x <= ui.preview.width; x += 60) { ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.moveTo(x, 0); ctx.lineTo(x, ui.preview.height); ctx.stroke(); }
+    for (let y = 0; y <= ui.preview.height; y += 60) { ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.moveTo(0, y); ctx.lineTo(ui.preview.width, y); ctx.stroke(); }
+  }
   const cam = getCameraAt(state.time);
   ctx.save();
   ctx.translate(ui.preview.width / 2, ui.preview.height / 2);
@@ -1260,6 +1350,10 @@ async function exportVideoMp4() {
     return;
   }
 
+  const quality = p.settings.exportQuality || 'medium';
+  const qualityFactor = { low: 0.55, medium: 1, high: 1.8, ultra: 2.7 }[quality] || 1;
+  const bitrate = Math.floor((p.settings.resolution || 1080) * 8500 * qualityFactor);
+
   const stream = ui.preview.captureStream(p.settings.fps || 30);
   const a = p.settings.audio;
   let exportAudio = null;
@@ -1283,7 +1377,6 @@ async function exportVideoMp4() {
         const source = audioCtx.createMediaElementSource(exportAudio);
         source.connect(gainNode);
         gainNode.connect(mediaDest);
-        gainNode.connect(audioCtx.destination);
         const audioTracks = mediaDest.stream.getAudioTracks();
         audioTracks.forEach((t) => stream.addTrack(t));
         canCaptureAudio = audioTracks.length > 0;
@@ -1291,19 +1384,15 @@ async function exportVideoMp4() {
         canCaptureAudio = false;
       }
     }
-
     if (!canCaptureAudio) {
       const capture = exportAudio.captureStream?.() || exportAudio.mozCaptureStream?.() || null;
       const tracks = capture?.getAudioTracks?.() || [];
       tracks.forEach((t) => stream.addTrack(t));
       canCaptureAudio = tracks.length > 0;
     }
-
-    if (!canCaptureAudio) {
-      console.warn('Không thể capture audio track để xuất video trong môi trường hiện tại.');
-    }
   }
-  const rec = new MediaRecorder(stream, { mimeType });
+
+  const rec = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: bitrate });
   const chunks = [];
   rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
   rec.onstop = () => {
@@ -1314,11 +1403,21 @@ async function exportVideoMp4() {
   };
 
   showExportOverlay();
+  state.isExporting = true;
   rec.start();
+
+  const qualitySteps = Math.max(10, Math.round(36 * qualityFactor));
+  for (let i = 0; i < qualitySteps; i += 1) {
+    draw();
+    setExportProgress((i / Math.max(1, qualitySteps)) * 45);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+  }
+
   if (exportAudio) {
     await exportAudio.play().catch(() => {});
     if (audioCtx?.state === 'suspended') await audioCtx.resume().catch(() => {});
   }
+
   const start = performance.now();
   function loop(now) {
     const el = (now - start) / 1000;
@@ -1331,20 +1430,24 @@ async function exportVideoMp4() {
       else exportAudio.volume = vol;
       if (Math.abs((exportAudio.currentTime || 0) - target) > 0.18) exportAudio.currentTime = target;
     }
-    syncAudioPlayback();
-    draw(); drawTimelineTracks();
-    setExportProgress((state.time / Math.max(0.001, p.settings.duration)) * 100);
+    draw();
+    drawTimelineTracks();
+    const timelinePart = state.time / Math.max(0.001, p.settings.duration);
+    setExportProgress(45 + timelinePart * 55);
     if (el < p.settings.duration) requestAnimationFrame(loop);
     else {
       stopAudioPlayback();
       if (exportAudio) exportAudio.pause();
       if (audioCtx) audioCtx.close().catch(() => {});
       rec.stop();
+      state.isExporting = false;
       setTimeout(hideExportOverlay, 300);
+      draw();
     }
   }
   requestAnimationFrame(loop);
 }
+
 
 function posOnCanvas(e) {
   const rect = ui.preview.getBoundingClientRect();
@@ -1458,6 +1561,8 @@ function bind() {
     p.settings.fps = clamp(+ui.menuFps.value || 30, 12, 120);
     p.settings.resolution = Math.max(144, +ui.menuResolution.value || 1080);
     p.settings.bgColor = ui.menuBgColor.value || '#000000';
+    if (ui.menuShowGrid) p.settings.showGridLines = !!ui.menuShowGrid.checked;
+    if (ui.menuExportQuality) p.settings.exportQuality = ui.menuExportQuality.value || 'medium';
     p.updatedAt = Date.now(); saveProjects(); closeMenu(); hydrateEditor();
   };
 
@@ -1601,7 +1706,7 @@ function bind() {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
     pushHistorySnapshot();
-    l.effect = l.effect || { type: 'none', strength: 0.6 };
+    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8 };
     l.effect.type = ui.layerEffectType.value;
     p.updatedAt = Date.now();
     saveProjects();
@@ -1611,7 +1716,7 @@ function bind() {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
     pushHistorySnapshot();
-    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7 };
+    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8 };
     l.effect.strength = clamp(+ui.layerEffectStrength.value || 0, 0, 2);
     p.updatedAt = Date.now();
     saveProjects();
@@ -1620,7 +1725,7 @@ function bind() {
   const applyGlowControl = () => {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
-    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7 };
+    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8 };
     l.effect.glowColor = ui.glowColor.value;
     l.effect.glowHardness = clamp(+ui.glowHardness.value || 0, 0, 1);
     l.effect.glowAlpha = clamp(+ui.glowAlpha.value || 0, 0, 1);
@@ -1631,6 +1736,24 @@ function bind() {
   ui.glowColor.oninput = applyGlowControl;
   ui.glowHardness.oninput = applyGlowControl;
   ui.glowAlpha.oninput = applyGlowControl;
+  const applyAdvancedEffectControl = () => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l) return;
+    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8 };
+    l.effect.reveal = clamp(+ui.effectReveal.value || 0, 0, 1);
+    l.effect.wipeAngle = (+ui.effectWipeAngle.value % 360 + 360) % 360;
+    l.effect.hue = clamp(+ui.effectHue.value || 0, -180, 180);
+    l.effect.saturation = clamp(+ui.effectSaturation.value || 1, 0, 2);
+    l.effect.brightness = clamp(+ui.effectBrightness.value || 1, 0, 2);
+    l.effect.depthAngle = (+ui.effect3DAngle.value % 360 + 360) % 360;
+    l.effect.depthSize = clamp(+ui.effect3DDepth.value || 0, 0, 24);
+    p.updatedAt = Date.now();
+    saveProjects();
+    draw();
+  };
+  ['effectReveal', 'effectWipeAngle', 'effectHue', 'effectSaturation', 'effectBrightness', 'effect3DAngle', 'effect3DDepth'].forEach((k) => {
+    if (ui[k]) ui[k].oninput = applyAdvancedEffectControl;
+  });
   ui.addKeyBtn.onclick = addKeyframeAtCurrent;
   ui.removeKeyBtn.onclick = removeNearestKeyframe;
   ui.applyBtn.onclick = applyCurrentValues;
@@ -1745,7 +1868,7 @@ function bind() {
 
   const applyMovementFromEvent = (evt) => {
     const p = currentProject(); const l = currentLayer();
-    if (!p || !l || !ui.movePad) return;
+    if (!p || !l || !ui.movePad || ui.movePad.classList.contains('is-disabled')) return;
     const r = ui.movePad.getBoundingClientRect();
     const px = clamp(evt.clientX - r.left, 0, r.width);
     const py = clamp(evt.clientY - r.top, 0, r.height);
@@ -1764,7 +1887,7 @@ function bind() {
 
   const applyRotationFromEvent = (evt) => {
     const p = currentProject(); const l = currentLayer();
-    if (!p || !l || !ui.rotateDial) return;
+    if (!p || !l || !ui.rotateDial || ui.rotateDial.classList.contains('is-disabled')) return;
     const r = ui.rotateDial.getBoundingClientRect();
     const cx = r.left + r.width / 2;
     const cy = r.top + r.height / 2;

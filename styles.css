@@ -424,3 +424,29 @@ input, select, button {
   font-size: 2rem;
 }
 .basic-value-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+
+#effectExtraControls { margin: 8px 0 10px; }
+.unavailable-note {
+  position: absolute;
+  left: 50%;
+  top: 72%;
+  transform: translate(-50%, -50%);
+  color: #ffcf8f;
+  font-size: .92rem;
+  text-align: center;
+  background: rgba(0,0,0,.25);
+  border: 1px dashed rgba(255,255,255,.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.movement-pad.is-disabled,
+.rotate-dial.is-disabled {
+  opacity: .45;
+  filter: grayscale(.25);
+  cursor: not-allowed;
+}
+.rotate-dial .unavailable-note {
+  top: 78%;
+  width: min(220px, 80%);
+}
