@@ -198,12 +198,41 @@
             </div>
             <small id="keyframeInfo">Frames: -</small>
 
-            <h3>Giá trị frame hiện tại</h3>
-            <div class="field-grid">
-              <label>X <input id="startX" type="number" value="180" /></label>
-              <label>Y <input id="startY" type="number" value="320" /></label>
+            <h3>Current Frame Values</h3>
+
+            <section class="control-card">
+              <div class="control-card-head">
+                <span>Movement</span>
+                <span class="card-dots">•••</span>
+              </div>
+              <div class="movement-pad" id="movePad">
+                <div class="movement-pills">
+                  <label>X <input id="moveXDisplay" type="text" value="180.00" readonly /></label>
+                  <label>Y <input id="moveYDisplay" type="text" value="320.00" readonly /></label>
+                </div>
+                <div class="movement-hint">Drag in this area to move layer</div>
+                <div id="moveHandle" class="move-handle" aria-hidden="true"></div>
+              </div>
+            </section>
+
+            <section class="control-card">
+              <div class="control-card-head">
+                <span>Rotate</span>
+                <span class="card-dots">•••</span>
+              </div>
+              <div class="rotate-dial-wrap">
+                <div id="rotateDial" class="rotate-dial">
+                  <div id="rotateKnob" class="rotate-knob"></div>
+                  <div id="rotateValue" class="rotate-value">0°</div>
+                </div>
+              </div>
+            </section>
+
+            <div class="field-grid basic-value-grid">
+              <label class="hidden">X <input id="startX" type="number" value="180" /></label>
+              <label class="hidden">Y <input id="startY" type="number" value="320" /></label>
               <label>Scale <input id="startScale" type="number" step="0.1" value="1" /></label>
-              <label>Rotate° <input id="startRotation" type="number" value="0" /></label>
+              <label class="hidden">Rotate° <input id="startRotation" type="number" value="0" /></label>
               <label>Opacity <input id="startOpacity" type="number" step="0.05" min="0" max="1" value="1" /></label>
             </div>
             <label>Ease
@@ -235,9 +264,9 @@
               <label>Cam Zoom <input id="camZoom" type="number" min="0.1" step="0.1" value="1" /></label>
               <label>Cam Rotate° <input id="camRotation" type="number" value="0" /></label>
             </div>
-            <button id="applyCameraBtn" class="btn">Áp dụng Camera</button>
+            <button id="applyCameraBtn" class="btn">Apply Camera</button>
 
-            <h4>Âm thanh</h4>
+            <h4>Audio</h4>
             <label>Chèn audio <input id="audioInput" type="file" accept="audio/*" multiple /></label>
             <div class="button-grid">
               <button id="addAudioBtn" class="btn">+ Thêm âm thanh</button>

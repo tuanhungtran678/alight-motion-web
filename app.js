@@ -33,7 +33,7 @@ const ui = {
   preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), undoBtn: getEl('undoBtn'), redoBtn: getEl('redoBtn'), exportVideoBtn: getEl('exportVideoBtn'), publishProjectBtn: getEl('publishProjectBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
   zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), textContent: getEl('textContent'), textSize: getEl('textSize'), textFontFamily: getEl('textFontFamily'), textWeight: getEl('textWeight'), textStyle: getEl('textStyle'), textAlign: getEl('textAlign'), textLayerControls: getEl('textLayerControls'), frameShape: getEl('frameShape'), glowColor: getEl('glowColor'), glowHardness: getEl('glowHardness'), glowAlpha: getEl('glowAlpha'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), addKeyBtn: getEl('addKeyBtn'), removeKeyBtn: getEl('removeKeyBtn'), keyframeInfo: getEl('keyframeInfo'),
-  startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'),
+  startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'), movePad: getEl('movePad'), moveHandle: getEl('moveHandle'), moveXDisplay: getEl('moveXDisplay'), moveYDisplay: getEl('moveYDisplay'), rotateDial: getEl('rotateDial'), rotateKnob: getEl('rotateKnob'), rotateValue: getEl('rotateValue'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'),
   camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn'),
   audioInput: getEl('audioInput'), addAudioBtn: getEl('addAudioBtn'), removeAudioBtn: getEl('removeAudioBtn'), audioVolume: getEl('audioVolume'), audioOffset: getEl('audioOffset'), audioInfo: getEl('audioInfo'),
@@ -714,6 +714,37 @@ function syncControlsFromNearest() {
   ui.frameShape.value = l.frameShape || 'rect';
   ui.keyframeInfo.textContent = `Frames: ${l.keyframes.map((x) => x.time.toFixed(2)).join(', ')}`;
   if (k) ui.frameTime.value = k.time.toFixed(2);
+  syncTransformWidgets();
+}
+
+function syncTransformWidgets() {
+  const p = currentProject();
+  if (!p) return;
+  const x = +ui.startX.value || 0;
+  const y = +ui.startY.value || 0;
+  const rot = +ui.startRotation.value || 0;
+  if (ui.moveXDisplay) ui.moveXDisplay.value = x.toFixed(2);
+  if (ui.moveYDisplay) ui.moveYDisplay.value = y.toFixed(2);
+
+  if (ui.movePad && ui.moveHandle) {
+    const padRect = ui.movePad.getBoundingClientRect();
+    const px = clamp((x / Math.max(1, ui.preview.width)) * padRect.width, 0, padRect.width);
+    const py = clamp((y / Math.max(1, ui.preview.height)) * padRect.height, 0, padRect.height);
+    ui.moveHandle.style.left = `${px}px`;
+    ui.moveHandle.style.top = `${py}px`;
+  }
+
+  if (ui.rotateDial && ui.rotateKnob) {
+    const rect = ui.rotateDial.getBoundingClientRect();
+    const r = Math.max(12, Math.min(rect.width, rect.height) / 2 - 10);
+    const deg = ((rot % 360) + 360) % 360;
+    const rad = (deg * Math.PI) / 180;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    ui.rotateKnob.style.left = `${cx + Math.cos(rad) * r}px`;
+    ui.rotateKnob.style.top = `${cy + Math.sin(rad) * r}px`;
+    if (ui.rotateValue) ui.rotateValue.textContent = `${Math.round(rot)}°`;
+  }
 }
 
 function ensureKeyAtCurrent(layer) {
@@ -1708,6 +1739,44 @@ function bind() {
       if (e.key === 'Backspace' && !inp.value && otpInputs[idx - 1]) otpInputs[idx - 1].focus();
     });
   });
+
+  const applyMovementFromEvent = (evt) => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l || !ui.movePad) return;
+    const r = ui.movePad.getBoundingClientRect();
+    const px = clamp(evt.clientX - r.left, 0, r.width);
+    const py = clamp(evt.clientY - r.top, 0, r.height);
+    ui.startX.value = String((px / Math.max(1, r.width)) * ui.preview.width);
+    ui.startY.value = String((py / Math.max(1, r.height)) * ui.preview.height);
+    syncTransformWidgets();
+    applyCurrentValues();
+  };
+  if (ui.movePad) {
+    let moving = false;
+    ui.movePad.addEventListener('pointerdown', (e) => { moving = true; ui.movePad.setPointerCapture(e.pointerId); applyMovementFromEvent(e); });
+    ui.movePad.addEventListener('pointermove', (e) => { if (moving) applyMovementFromEvent(e); });
+    ui.movePad.addEventListener('pointerup', () => { moving = false; });
+    ui.movePad.addEventListener('pointercancel', () => { moving = false; });
+  }
+
+  const applyRotationFromEvent = (evt) => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l || !ui.rotateDial) return;
+    const r = ui.rotateDial.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const deg = Math.atan2(evt.clientY - cy, evt.clientX - cx) * 180 / Math.PI;
+    ui.startRotation.value = String(deg);
+    syncTransformWidgets();
+    applyCurrentValues();
+  };
+  if (ui.rotateDial) {
+    let rotating = false;
+    ui.rotateDial.addEventListener('pointerdown', (e) => { rotating = true; ui.rotateDial.setPointerCapture(e.pointerId); applyRotationFromEvent(e); });
+    ui.rotateDial.addEventListener('pointermove', (e) => { if (rotating) applyRotationFromEvent(e); });
+    ui.rotateDial.addEventListener('pointerup', () => { rotating = false; });
+    ui.rotateDial.addEventListener('pointercancel', () => { rotating = false; });
+  }
 
   bindDrag();
   bindEaseGraphDrag();
