@@ -319,6 +319,23 @@ input, select, button {
   font-weight: 700;
 }
 .card-dots { opacity: .8; letter-spacing: 2px; }
+
+.card-head-actions { display: inline-flex; align-items: center; gap: 8px; }
+.card-collapse-btn {
+  width: 34px;
+  min-height: 34px;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--border), white 20%);
+  background: color-mix(in srgb, var(--input), white 3%);
+  color: var(--text);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0;
+}
+.card-collapse-btn:hover { filter: brightness(1.08); }
+.control-card.is-collapsed .card-collapse-btn { transform: rotate(-90deg); }
+.control-card-body { display: block; }
+.control-card.is-collapsed .control-card-body { display: none; }
 .movement-pad {
   position: relative;
   min-height: 220px;

@@ -200,30 +200,40 @@
 
             <h3>Current Frame Values</h3>
 
-            <section class="control-card">
+            <section class="control-card" id="movementCard">
               <div class="control-card-head">
                 <span>Movement</span>
-                <span class="card-dots">•••</span>
-              </div>
-              <div class="movement-pad" id="movePad">
-                <div class="movement-pills">
-                  <label>X <input id="moveXDisplay" type="text" value="180.00" readonly /></label>
-                  <label>Y <input id="moveYDisplay" type="text" value="320.00" readonly /></label>
+                <div class="card-head-actions">
+                  <span class="card-dots">•••</span>
+                  <button class="card-collapse-btn" type="button" data-collapse-target="movementCardBody" aria-expanded="true" aria-label="Collapse movement card">▼</button>
                 </div>
-                <div class="movement-hint">Drag in this area to move layer</div>
-                <div id="moveHandle" class="move-handle" aria-hidden="true"></div>
+              </div>
+              <div class="control-card-body" id="movementCardBody">
+                <div class="movement-pad" id="movePad">
+                  <div class="movement-pills">
+                    <label>X <input id="moveXDisplay" type="text" value="180.00" readonly /></label>
+                    <label>Y <input id="moveYDisplay" type="text" value="320.00" readonly /></label>
+                  </div>
+                  <div class="movement-hint">Drag in this area to move layer</div>
+                  <div id="moveHandle" class="move-handle" aria-hidden="true"></div>
+                </div>
               </div>
             </section>
 
-            <section class="control-card">
+            <section class="control-card" id="rotateCard">
               <div class="control-card-head">
                 <span>Rotate</span>
-                <span class="card-dots">•••</span>
+                <div class="card-head-actions">
+                  <span class="card-dots">•••</span>
+                  <button class="card-collapse-btn" type="button" data-collapse-target="rotateCardBody" aria-expanded="true" aria-label="Collapse rotate card">▼</button>
+                </div>
               </div>
-              <div class="rotate-dial-wrap">
-                <div id="rotateDial" class="rotate-dial">
-                  <div id="rotateKnob" class="rotate-knob"></div>
-                  <div id="rotateValue" class="rotate-value">0°</div>
+              <div class="control-card-body" id="rotateCardBody">
+                <div class="rotate-dial-wrap">
+                  <div id="rotateDial" class="rotate-dial">
+                    <div id="rotateKnob" class="rotate-knob"></div>
+                    <div id="rotateValue" class="rotate-value">0°</div>
+                  </div>
                 </div>
               </div>
             </section>

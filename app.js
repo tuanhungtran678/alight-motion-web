@@ -728,14 +728,17 @@ function syncTransformWidgets() {
 
   if (ui.movePad && ui.moveHandle) {
     const padRect = ui.movePad.getBoundingClientRect();
-    const px = clamp((x / Math.max(1, ui.preview.width)) * padRect.width, 0, padRect.width);
-    const py = clamp((y / Math.max(1, ui.preview.height)) * padRect.height, 0, padRect.height);
-    ui.moveHandle.style.left = `${px}px`;
-    ui.moveHandle.style.top = `${py}px`;
+    if (padRect.width > 0 && padRect.height > 0) {
+      const px = clamp((x / Math.max(1, ui.preview.width)) * padRect.width, 0, padRect.width);
+      const py = clamp((y / Math.max(1, ui.preview.height)) * padRect.height, 0, padRect.height);
+      ui.moveHandle.style.left = `${px}px`;
+      ui.moveHandle.style.top = `${py}px`;
+    }
   }
 
   if (ui.rotateDial && ui.rotateKnob) {
     const rect = ui.rotateDial.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
     const r = Math.max(12, Math.min(rect.width, rect.height) / 2 - 10);
     const deg = ((rot % 360) + 360) % 360;
     const rad = (deg * Math.PI) / 180;
@@ -1777,6 +1780,19 @@ function bind() {
     ui.rotateDial.addEventListener('pointerup', () => { rotating = false; });
     ui.rotateDial.addEventListener('pointercancel', () => { rotating = false; });
   }
+
+  document.querySelectorAll('.card-collapse-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-collapse-target');
+      const body = targetId ? document.getElementById(targetId) : null;
+      if (!body) return;
+      const card = btn.closest('.control-card');
+      if (!card) return;
+      const collapsed = card.classList.toggle('is-collapsed');
+      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      if (!collapsed) requestAnimationFrame(syncTransformWidgets);
+    });
+  });
 
   bindDrag();
   bindEaseGraphDrag();
