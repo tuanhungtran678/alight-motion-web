@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alight Motion Web Lite</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="app brand-row">
+        <div class="logo-wrap"><span class="logo-mark" aria-hidden="true"></span><strong>Alight Motion Web Lite</strong></div>
+        <div class="header-right">
+          <label class="lang-inline">Language
+            <select id="languageSelect">
+              <option value="vi" selected>Tiếng Việt</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+          <button id="themeToggleBtn" class="btn">☀/🌙</button>
+          <button id="openAuthBtn" class="btn">Sign in</button>
+          <span id="authMiniStatus" class="muted">Guest</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="app">
+      <section id="homeScreen" class="screen active">
+        <header class="topbar hero">
+          <h1 id="homeTitle">Alight Motion Web Lite</h1>
+          <p id="homeDesc">Màn hình chính quản lý dự án, Cloud và cộng đồng.</p>
+        </header>
+
+        <article class="panel">
+          <h2 id="accountTitle">Tài khoản</h2>
+          <p id="authStatus">Chưa đăng nhập</p>
+          <div class="button-grid social-grid">
+            <button id="loginGoogleBtn" class="btn social google">Đăng nhập Google</button>
+            <button id="loginGithubBtn" class="btn social github">Đăng nhập GitHub</button>
+            <button id="loginAppleBtn" class="btn social apple">Đăng nhập Apple</button>
+            <button id="loginMicrosoftBtn" class="btn social microsoft">Đăng nhập Microsoft</button>
+          </div>
+          <button id="logoutBtn" class="btn">Đăng xuất</button>
+        </article>
+
+        <article class="panel">
+          <h2 id="createProjectTitle">Tạo dự án mới</h2>
+          <button id="createProjectBtn" class="btn primary">+ Tạo dự án mới</button>
+        </article>
+
+        <article class="panel">
+          <h2 id="projectListTitle">Danh sách dự án</h2>
+          <label>Tìm kiếm dự án cục bộ
+            <input id="projectSearch" type="search" placeholder="Tìm theo tên dự án..." />
+          </label>
+          <div id="projectList" class="project-list"></div>
+        </article>
+
+        <article class="panel">
+          <h2 id="cloudTitle">Cloud Community</h2>
+          <p id="cloudDesc">Các dự án đã đăng lên server có thể mở và xem công khai.</p>
+          <label>Tìm kiếm trên Cloud
+            <input id="cloudSearch" type="search" placeholder="Search cloud projects..." />
+          </label>
+          <label>Cloud Server URL
+            <input id="cloudApiBase" type="url" placeholder="https://your-shared-server.example.com" />
+          </label>
+          <button id="refreshCloudBtn" class="btn">↻ Tải lại Cloud</button>
+          <div id="cloudList" class="project-list"></div>
+        </article>
+      </section>
+
+      <section id="editorScreen" class="screen">
+        <header class="topbar row-between">
+          <div>
+            <h1 id="projectTitle">Editor</h1>
+            <p id="projectMeta">-</p>
+          </div>
+          <div class="header-actions">
+            <button id="openMenuBtn" class="btn">⚙</button>
+            <button id="backHomeBtn" class="btn">← Home</button>
+          </div>
+        </header>
+
+        <section class="preview-card">
+          <div class="phone-stage">
+            <canvas id="preview" width="360" height="640"></canvas>
+          </div>
+          <div class="transport">
+            <button id="playBtn" class="btn primary">▶ Phát</button>
+            <button id="pauseBtn" class="btn">⏸ Dừng</button>
+            <button id="resetBtn" class="btn">↺ Reset</button>
+            <button id="undoBtn" class="btn">↶ Undo</button>
+            <button id="redoBtn" class="btn">↷ Redo</button>
+            <button id="exportVideoBtn" class="btn">⤓ Xuất Video MP4</button>
+            <button id="publishProjectBtn" class="btn">☁ Đăng lên Cloud</button>
+            <button id="zoomToggleBtn" class="btn">🔍 Zoom: Off</button>
+            <label>Tua <input id="scrubber" type="range" min="0" max="100" value="0" /></label>
+            <span id="timeLabel">0.00s / 2.00s</span>
+          </div>
+        </section>
+
+        <section class="panel-grid">
+          <article class="panel">
+            <h2>Layer</h2>
+            <div class="button-grid">
+              <button id="addRect" class="btn">+ Hình chữ nhật</button>
+              <button id="addCircle" class="btn">+ Hình tròn</button>
+              <button id="addText" class="btn">+ Text</button>
+            </div>
+            <label>Chèn hình ảnh <input id="imageInput" type="file" accept="image/*" /></label>
+            <button id="addImageBtn" class="btn">+ Thêm ảnh</button>
+            <label>Layer hiện tại <select id="layerSelect"></select></label>
+            <label>Tên layer <input id="layerName" type="text" value="Layer" /></label>
+            <label>Màu layer <input id="layerColor" type="color" value="#21b8ff" /></label>
+            <label>Hiệu ứng
+              <select id="layerEffectType">
+                <option value="none" selected>Không</option>
+                <option value="glow">Hào quang</option>
+                <option value="stars">Chùm sao</option>
+                <option value="wipe">Quệt (Wipe)</option>
+                <option value="colorAdjust">Điều chỉnh màu</option>
+                <option value="extrude3d">3D Extrude</option>
+              </select>
+            </label>
+            <label>Độ mạnh hiệu ứng <input id="layerEffectStrength" type="number" min="0" max="2" step="0.1" value="0.6" /></label>
+            <div id="glowControls">
+              <label>Màu hào quang <input id="glowColor" type="color" value="#21b8ff" /></label>
+              <div class="field-grid">
+                <label>Độ cứng <input id="glowHardness" type="number" min="0" max="1" step="0.05" value="0.5" /></label>
+                <label>Alpha <input id="glowAlpha" type="number" min="0" max="1" step="0.05" value="0.7" /></label>
+              </div>
+            </div>
+            <div id="effectExtraControls">
+              <div class="field-grid">
+                <label>Độ xuất hiện (Wipe) <input id="effectReveal" type="number" min="0" max="1" step="0.05" value="1" /></label>
+                <label>Góc Wipe° <input id="effectWipeAngle" type="number" min="0" max="360" step="1" value="0" /></label>
+                <label>Hue° <input id="effectHue" type="number" min="-180" max="180" step="1" value="0" /></label>
+                <label>Saturation <input id="effectSaturation" type="number" min="0" max="2" step="0.05" value="1" /></label>
+                <label>Brightness <input id="effectBrightness" type="number" min="0" max="2" step="0.05" value="1" /></label>
+                <label>3D góc° <input id="effect3DAngle" type="number" min="0" max="360" step="1" value="35" /></label>
+                <label>3D độ dày <input id="effect3DDepth" type="number" min="0" max="24" step="1" value="8" /></label>
+              </div>
+            </div>
+            <div id="textLayerControls">
+            <h3>Text layer</h3>
+            <label>Nội dung chữ <input id="textContent" type="text" value="TEXT" /></label>
+            <div class="field-grid">
+              <label>Cỡ chữ <input id="textSize" type="number" min="8" max="240" step="1" value="90" /></label>
+              <label>Font
+                <select id="textFontFamily">
+                  <option value="Inter" selected>Inter</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Tahoma">Tahoma</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Courier New">Courier New</option>
+                </select>
+              </label>
+              <label>Đậm
+                <select id="textWeight">
+                  <option value="400">Normal</option>
+                  <option value="700" selected>Bold</option>
+                </select>
+              </label>
+              <label>Nghiêng
+                <select id="textStyle">
+                  <option value="normal" selected>Normal</option>
+                  <option value="italic">Italic</option>
+                </select>
+              </label>
+            </div>
+            <label>Căn chữ
+              <select id="textAlign">
+                <option value="left">Left</option>
+                <option value="center" selected>Center</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+            </div>
+            <label>Hình dáng layer
+              <select id="frameShape">
+                <option value="rect" selected>Rect</option>
+                <option value="round">Bo góc</option>
+                <option value="diamond">Kim cương</option>
+                <option value="pill">Pill</option>
+              </select>
+            </label>
+            <div class="button-grid">
+              <button id="groupLayerBtn" class="btn">Group layer</button>
+              <button id="ungroupLayerBtn" class="btn">Ungroup layer</button>
+            </div>
+            <button id="deleteLayer" class="btn danger">Xóa layer</button>
+          </article>
+
+          <article class="panel">
+            <h2 id="timelinePanelTitle">Timeline + Frames</h2>
+            <label>Thời lượng frame (giây) <input id="timelineDuration" type="number" min="0.2" step="0.1" value="2" /></label>
+            <div class="field-grid">
+              <label>Track layer
+                <select id="frameTarget">
+                  <option value="layer" selected>Layer</option>
+                  <option value="camera">Camera</option>
+                  <option value="audio">Audio</option>
+                </select>
+              </label>
+              <label>Thời gian frame (s) <input id="frameTime" type="number" min="0" step="0.01" value="0" /></label>
+            </div>
+            <div id="timelineTracks" class="timeline-tracks"></div>
+            <div class="button-grid single-action-grid">
+              <button id="frameActionBtn" class="btn frame-action-btn">◇ + Frame tại thời điểm hiện tại</button>
+            </div>
+            <small id="keyframeInfo">Frames: -</small>
+
+            <h3>Current Frame Values</h3>
+
+            <section class="control-card" id="movementCard">
+              <div class="control-card-head">
+                <span>Movement</span>
+                <div class="card-head-actions">
+                  <span class="card-dots">•••</span>
+                  <button class="card-collapse-btn" type="button" data-collapse-target="movementCardBody" aria-expanded="true" aria-label="Collapse movement card">▼</button>
+                </div>
+              </div>
+              <div class="control-card-body" id="movementCardBody">
+                <div class="movement-pad" id="movePad">
+                  <div class="movement-pills">
+                    <label>X <input id="moveXDisplay" type="text" value="180.00" readonly /></label>
+                    <label>Y <input id="moveYDisplay" type="text" value="320.00" readonly /></label>
+                  </div>
+                  <div class="movement-hint">Drag in this area to move layer</div>
+                  <div id="movementUnavailable" class="unavailable-note hidden">(Unavailable now. Expect you add a frame.)</div>
+                  <div id="moveHandle" class="move-handle" aria-hidden="true"></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="control-card" id="rotateCard">
+              <div class="control-card-head">
+                <span>Rotate</span>
+                <div class="card-head-actions">
+                  <span class="card-dots">•••</span>
+                  <button class="card-collapse-btn" type="button" data-collapse-target="rotateCardBody" aria-expanded="true" aria-label="Collapse rotate card">▼</button>
+                </div>
+              </div>
+              <div class="control-card-body" id="rotateCardBody">
+                <div class="rotate-dial-wrap">
+                  <div id="rotateDial" class="rotate-dial">
+                    <div id="rotateKnob" class="rotate-knob"></div>
+                    <div id="rotateValue" class="rotate-value">0°</div>
+                    <div id="rotateUnavailable" class="unavailable-note hidden">(Unavailable now. Expect you add a frame.)</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div class="field-grid basic-value-grid">
+              <label class="hidden">X <input id="startX" type="number" value="180" /></label>
+              <label class="hidden">Y <input id="startY" type="number" value="320" /></label>
+              <label>Scale <input id="startScale" type="number" step="0.1" value="1" /></label>
+              <label class="hidden">Rotate° <input id="startRotation" type="number" value="0" /></label>
+              <label>Opacity <input id="startOpacity" type="number" step="0.05" min="0" max="1" value="1" /></label>
+            </div>
+            <section class="control-card" id="easeCard">
+              <div class="control-card-head">
+                <span>Ease Graph</span>
+                <div class="card-head-actions">
+                  <span class="card-dots">•••</span>
+                  <button class="card-collapse-btn" type="button" data-collapse-target="easeCardBody" aria-expanded="true" aria-label="Collapse ease card">▼</button>
+                </div>
+              </div>
+              <div class="control-card-body" id="easeCardBody">
+                <label>Ease
+                  <select id="easeTarget">
+                    <option value="position" selected>Áp dụng cho: Di chuyển (X/Y)</option>
+                    <option value="scale">Áp dụng cho: Scale</option>
+                    <option value="rotation">Áp dụng cho: Xoay</option>
+                    <option value="opacity">Áp dụng cho: Opacity</option>
+                  </select>
+                </label>
+                <label>Kiểu Ease
+                  <select id="easing">
+                    <option value="linear">Linear</option>
+                    <option value="easeIn">Ease In</option>
+                    <option value="easeOut">Ease Out</option>
+                    <option value="easeInOut" selected>Ease In Out</option>
+                    <option value="custom">Custom Graph</option>
+                  </select>
+                </label>
+                <canvas id="easeGraph" width="320" height="160"></canvas>
+                <button id="applyBtn" class="btn primary">Áp dụng vào frame hiện tại</button>
+              </div>
+            </section>
+
+            <section class="control-card" id="frameStudioCard">
+              <div class="control-card-head">
+                <span>Frame Studio</span>
+                <div class="card-head-actions">
+                  <span class="card-dots">•••</span>
+                  <button class="card-collapse-btn" type="button" data-collapse-target="frameStudioCardBody" aria-expanded="true" aria-label="Collapse frame studio card">▼</button>
+                </div>
+              </div>
+              <div class="control-card-body" id="frameStudioCardBody">
+            <h4>Camera</h4>
+            <div class="field-grid">
+              <label>Cam X <input id="camX" type="number" value="0" /></label>
+              <label>Cam Y <input id="camY" type="number" value="0" /></label>
+              <label>Cam Zoom <input id="camZoom" type="number" min="0.1" step="0.1" value="1" /></label>
+              <label>Cam Rotate° <input id="camRotation" type="number" value="0" /></label>
+            </div>
+            <button id="applyCameraBtn" class="btn">Apply Camera</button>
+
+            <h4>Audio</h4>
+            <label>Chèn audio <input id="audioInput" type="file" accept="audio/*" multiple /></label>
+            <div class="button-grid">
+              <button id="addAudioBtn" class="btn">+ Thêm âm thanh</button>
+              <button id="removeAudioBtn" class="btn danger">Xóa âm thanh</button>
+            </div>
+            <div class="field-grid">
+              <label>Âm lượng <input id="audioVolume" type="number" min="0" max="2" step="0.05" value="1" /></label>
+              <label>Bắt đầu tại (giây) <input id="audioOffset" type="number" min="0" step="0.1" value="0" /></label>
+            </div>
+            <small id="audioInfo">Audio: chưa có</small>
+              </div>
+            </section>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="app">
+        <small>© 2026 Alight Motion Web Lite • Editor + Cloud Demo</small>
+      </div>
+    </footer>
+
+    <div id="exportOverlay" class="export-overlay hidden" aria-live="polite">
+      <div class="export-card">
+        <h3>Đang xuất video...</h3>
+        <div class="export-progress">
+          <div id="exportProgressBar" class="export-progress-bar"></div>
+        </div>
+        <p id="exportProgressText">0%</p>
+        <p class="export-note">⚠️ Vui lòng không đóng trang web này hoặc chuyển sang tab khác trong quá trình kết xuất.</p>
+      </div>
+    </div>
+
+    <aside id="settingsMenu" class="menu hidden">
+      <div class="menu-card">
+        <h3>Project Menu</h3>
+        <label>Tên dự án <input id="menuProjectName" type="text" /></label>
+        <label>Tỉ lệ
+          <select id="menuRatio">
+            <option value="9:16">9:16</option><option value="16:9">16:9</option><option value="1:1">1:1</option><option value="3:4">3:4</option><option value="4:3">4:3</option>
+          </select>
+        </label>
+        <label>FPS <input id="menuFps" type="number" min="12" max="120" value="30" /></label>
+        <label>Độ phân giải
+          <select id="menuResolution">
+            <option value="4320">8K (4320p)</option><option value="2160">4K (2160p)</option><option value="1440">2K (1440p)</option><option value="1080" selected>Full HD (1080p)</option><option value="720">HD (720p)</option><option value="480">480p</option><option value="360">360p</option><option value="240">240p</option><option value="144">144p</option>
+          </select>
+        </label>
+        <label>Màu nền <input id="menuBgColor" type="color" value="#000000" /></label>
+        <label><input id="menuShowGrid" type="checkbox" /> Show Grid Lines</label>
+        <label>Export quality
+          <select id="menuExportQuality">
+            <option value="low">Low (faster)</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="ultra">Ultra</option>
+          </select>
+        </label>
+        <div class="button-grid">
+          <button id="saveMenuBtn" class="btn primary">Lưu project</button>
+          <button id="closeMenuBtn" class="btn">Đóng</button>
+        </div>
+      </div>
+    </aside>
+
+    <div id="createProjectModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <button id="closeModalBtn" class="icon-close" aria-label="Close">✕</button>
+        <h2>Create Project</h2>
+        <hr />
+        <div class="ratio-row" id="ratioRow">
+          <button class="ratio-btn selected" data-ratio="9:16">9:16</button><button class="ratio-btn" data-ratio="16:9">16:9</button><button class="ratio-btn" data-ratio="1:1">1:1</button><button class="ratio-btn" data-ratio="3:4">3:4</button><button class="ratio-btn" data-ratio="4:3">4:3</button>
+        </div>
+        <label>FPS <select id="modalFps"><option>24</option><option selected>30</option><option>60</option></select></label>
+        <label>Resolution
+          <select id="modalResolution">
+            <option value="4320">8K (4320p)</option><option value="2160">4K (2160p)</option><option value="1440">2K (1440p)</option><option value="1080" selected>Full HD (1080p)</option><option value="720">HD (720p)</option><option value="480">480p</option><option value="360">360p</option><option value="240">240p</option><option value="144">144p</option>
+          </select>
+        </label>
+        <label>Name <input id="modalProjectName" type="text" placeholder="Enter project name here..." /></label>
+        <label>BG color
+          <div class="bg-row"><input id="modalBgColor" type="color" value="#000000" /><input id="modalBgHex" type="text" value="#000000" readonly /></div>
+        </label>
+        <button id="confirmCreateBtn" class="btn primary">Create</button>
+      </div>
+    </div>
+
+    <div id="authModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card auth-card">
+        <button id="closeAuthModalBtn" class="icon-close" aria-label="Close">✕</button>
+        <h3 id="authModalTitle">Sign in</h3>
+        <label>Email <input id="authEmail" type="email" placeholder="you@example.com" /></label>
+        <label>Password <input id="authPassword" type="password" placeholder="••••••••" /></label>
+        <label id="authNameRow" class="hidden">Name (for sign up) <input id="authName" type="text" placeholder="Your name" /></label>
+        <div class="button-grid">
+          <button id="authSignInBtn" class="btn primary">Sign in</button>
+        </div>
+        <small id="authToggleHint">Don't have a account? So, <button id="authToggleModeBtn" class="text-link" type="button">(sign up)</button>!</small>
+      </div>
+    </div>
+
+    <div id="guestModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card auth-card">
+        <button id="closeGuestModalBtn" class="icon-close" aria-label="Close">✕</button>
+        <p id="guestNeedSignInText">You're not signed in. Log in to use this feature.</p>
+        <div class="button-grid">
+          <button id="guestSignInBtn" class="btn primary">Sign in</button>
+          <button id="guestSignUpBtn" class="btn">Sign up</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="otpModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card auth-card">
+        <button id="closeOtpModalBtn" class="icon-close" aria-label="Close">✕</button>
+        <h3>Email verification</h3>
+        <p id="otpInfoText">We'll send an email to your address, please check your inbox. If not have, check the spam folder.</p>
+        <p class="warn-text">If it's not you, please change the password immediately.</p>
+        <label id="otpCodeLabel">6-digit code</label>
+        <div class="otp-digits" id="otpDigits">
+          <input class="otp-digit" data-idx="0" inputmode="numeric" maxlength="1" />
+          <input class="otp-digit" data-idx="1" inputmode="numeric" maxlength="1" />
+          <input class="otp-digit" data-idx="2" inputmode="numeric" maxlength="1" />
+          <input class="otp-digit" data-idx="3" inputmode="numeric" maxlength="1" />
+          <input class="otp-digit" data-idx="4" inputmode="numeric" maxlength="1" />
+          <input class="otp-digit" data-idx="5" inputmode="numeric" maxlength="1" />
+        </div>
+        <input id="otpCode" type="hidden" />
+        <div class="button-grid">
+          <button id="verifyOtpBtn" class="btn primary">Verify & Sign in</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
