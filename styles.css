@@ -213,6 +213,63 @@ input, select, button {
 }
 #exportProgressText { margin: 10px 0 14px; font-size: 2rem; }
 .export-note { margin: 0; font-size: 1.6rem; line-height: 1.25; }
+.export-cancel-btn {
+  margin-top: 16px;
+  width: 100%;
+  background: linear-gradient(90deg, #11d9ff, #28f0ff);
+  border-color: #a3f5ff;
+  color: #00333f;
+  font-weight: 800;
+}
+
+.hot-alert {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: grid;
+  place-items: center;
+  z-index: 70;
+  padding: 14px;
+}
+.hot-alert.hidden { display: none; }
+.hot-alert-card {
+  position: relative;
+  width: min(760px, 100%);
+  border-radius: 34px;
+  border: 8px solid #111;
+  background: #f1dee2;
+  padding: 30px 22px 24px;
+  text-align: center;
+  color: #e62a35;
+}
+.hot-alert-icon { font-size: 3.4rem; line-height: 1; }
+.hot-alert-card h3 {
+  margin: 8px 0 14px;
+  font-size: clamp(2rem, 7vw, 4.3rem);
+}
+.hot-alert-card p {
+  margin: 0 0 10px;
+  color: #f7f7f7;
+  font-size: clamp(1.4rem, 5.2vw, 4.2rem);
+  line-height: 1.12;
+}
+.hot-alert-card small {
+  color: #ffffffcc;
+  font-size: clamp(1rem, 2vw, 1.8rem);
+}
+.hot-alert-close {
+  position: absolute;
+  right: -14px;
+  top: -14px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 0;
+  background: #ef1f2f;
+  color: #fff;
+  font-size: 1.8rem;
+  cursor: pointer;
+}
 
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; z-index: 30; padding: 12px; }
 .modal.hidden { display: none; }

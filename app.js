@@ -37,12 +37,13 @@ const ui = {
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'), scaleQuickInput: getEl('scaleQuickInput'), scaleUpBtn: getEl('scaleUpBtn'), scaleDownBtn: getEl('scaleDownBtn'), frameActionMiniBtn: getEl('frameActionMiniBtn'), easeGraphModeBtn: getEl('easeGraphModeBtn'), opacitySlider: getEl('opacitySlider'), opacityPercent: getEl('opacityPercent'),
   camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn'),
   audioInput: getEl('audioInput'), addAudioBtn: getEl('addAudioBtn'), removeAudioBtn: getEl('removeAudioBtn'), audioVolume: getEl('audioVolume'), audioOffset: getEl('audioOffset'), audioInfo: getEl('audioInfo'),
-  exportOverlay: getEl('exportOverlay'), exportProgressBar: getEl('exportProgressBar'), exportProgressText: getEl('exportProgressText')
+  exportOverlay: getEl('exportOverlay'), exportProgressBar: getEl('exportProgressBar'), exportProgressText: getEl('exportProgressText'), exportCancelBtn: getEl('exportCancelBtn'),
+  hotAlertModal: getEl('hotAlertModal'), hotAlertCloseBtn: getEl('hotAlertCloseBtn'), hotAlertTempText: getEl('hotAlertTempText')
 };
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '', modalRatio: '9:16', isExporting: false };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '', modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 const audioPlayers = [];
@@ -614,6 +615,46 @@ function showExportOverlay() {
 
 function hideExportOverlay() {
   ui.exportOverlay.classList.add('hidden');
+}
+
+function showHotAlert(tempC) {
+  if (!ui.hotAlertModal) return;
+  if (ui.hotAlertTempText) ui.hotAlertTempText.textContent = Number.isFinite(tempC) ? `Current temperature: ${tempC.toFixed(1)}℃` : 'Current temperature: > 40℃';
+  if (!state.hotAlertDismissed) ui.hotAlertModal.classList.remove('hidden');
+}
+
+function hideHotAlert() {
+  if (!ui.hotAlertModal) return;
+  ui.hotAlertModal.classList.add('hidden');
+}
+
+async function setupThermalMonitor() {
+  const threshold = 40;
+  const emitTemperature = (tempC) => {
+    if (!Number.isFinite(tempC)) return;
+    if (tempC > threshold) showHotAlert(tempC);
+    else {
+      state.hotAlertDismissed = false;
+      hideHotAlert();
+    }
+  };
+
+  const batteryApi = navigator.getBattery ? await navigator.getBattery().catch(() => null) : null;
+  if (batteryApi && Number.isFinite(batteryApi.temperature)) {
+    emitTemperature(Number(batteryApi.temperature));
+    batteryApi.addEventListener?.('temperaturechange', () => emitTemperature(Number(batteryApi.temperature)));
+  }
+
+  const thermalApi = navigator.thermal;
+  if (thermalApi?.addEventListener) {
+    thermalApi.addEventListener('change', (e) => {
+      const tempC = Number(e?.temperature ?? thermalApi.temperature);
+      emitTemperature(tempC);
+    });
+    if (Number.isFinite(Number(thermalApi.temperature))) emitTemperature(Number(thermalApi.temperature));
+  }
+
+  window.setDeviceTemperatureForDemo = (tempC) => emitTemperature(Number(tempC));
 }
 
 function loadProjects() {
@@ -1377,6 +1418,7 @@ function tick(ts) {
 
 async function exportVideoMp4() {
   const p = currentProject(); if (!p) return;
+  if (state.isExporting) return;
   const mp4Types = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=h264', 'video/mp4'];
   const mimeType = mp4Types.find((t) => MediaRecorder.isTypeSupported(t));
   if (!mimeType) {
@@ -1428,8 +1470,10 @@ async function exportVideoMp4() {
 
   const rec = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: bitrate });
   const chunks = [];
+  let cleaned = false;
   rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
   rec.onstop = () => {
+    if (state.exportSession?.cancelled) return;
     const blob = new Blob(chunks, { type: 'video/mp4' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `${p.name || 'project'}.mp4`; a.click();
@@ -1438,22 +1482,47 @@ async function exportVideoMp4() {
 
   showExportOverlay();
   state.isExporting = true;
+  state.exportSession = { cancelled: false };
+
+  const cleanupExport = () => {
+    if (cleaned) return;
+    cleaned = true;
+    stopAudioPlayback();
+    if (exportAudio) exportAudio.pause();
+    if (audioCtx) audioCtx.close().catch(() => {});
+    state.isExporting = false;
+    state.exportSession = null;
+    hideExportOverlay();
+    draw();
+  };
+
+  const cancelExport = () => {
+    if (!state.exportSession || state.exportSession.cancelled) return;
+    state.exportSession.cancelled = true;
+    if (rec.state !== 'inactive') rec.stop();
+    cleanupExport();
+  };
+
+  if (ui.exportCancelBtn) ui.exportCancelBtn.onclick = cancelExport;
   rec.start();
 
   const qualitySteps = Math.max(10, Math.round(36 * qualityFactor));
   for (let i = 0; i < qualitySteps; i += 1) {
+    if (state.exportSession?.cancelled) return;
     draw();
     setExportProgress((i / Math.max(1, qualitySteps)) * 45);
     await new Promise((resolve) => requestAnimationFrame(resolve));
   }
 
   if (exportAudio) {
+    if (state.exportSession?.cancelled) return;
     await exportAudio.play().catch(() => {});
     if (audioCtx?.state === 'suspended') await audioCtx.resume().catch(() => {});
   }
 
   const start = performance.now();
   function loop(now) {
+    if (state.exportSession?.cancelled) return;
     const el = (now - start) / 1000;
     state.time = Math.min(el, p.settings.duration);
     if (exportAudio) {
@@ -1470,13 +1539,8 @@ async function exportVideoMp4() {
     setExportProgress(45 + timelinePart * 55);
     if (el < p.settings.duration) requestAnimationFrame(loop);
     else {
-      stopAudioPlayback();
-      if (exportAudio) exportAudio.pause();
-      if (audioCtx) audioCtx.close().catch(() => {});
-      rec.stop();
-      state.isExporting = false;
-      setTimeout(hideExportOverlay, 300);
-      draw();
+      if (rec.state !== 'inactive') rec.stop();
+      cleanupExport();
     }
   }
   requestAnimationFrame(loop);
@@ -1855,6 +1919,9 @@ function bind() {
   ui.pauseBtn.onclick = () => { state.playing = false; state.startRef = 0; stopAudioPlayback(); };
   ui.resetBtn.onclick = () => { state.playing = false; state.startRef = 0; state.time = 0; if (audioPlayer.src) audioPlayer.currentTime = 0; audioPlayers.forEach((a)=>{ if (a.src) a.currentTime = 0; }); stopAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); };
   ui.exportVideoBtn.onclick = exportVideoMp4;
+  if (ui.exportCancelBtn) ui.exportCancelBtn.onclick = () => {
+    if (state.exportSession) state.exportSession.cancelled = true;
+  };
   ui.publishProjectBtn.onclick = publishCurrentProject;
   ui.scrubber.oninput = () => { const p = currentProject(); if (!p) return; state.playing = false; state.time = (+ui.scrubber.value / 100) * p.settings.duration; syncAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); syncFrameActionButton(); };
   ui.zoomToggleBtn.onclick = () => {
@@ -2020,6 +2087,12 @@ function bind() {
 
   bindDrag();
   bindEaseGraphDrag();
+  if (ui.hotAlertCloseBtn) {
+    ui.hotAlertCloseBtn.onclick = () => {
+      state.hotAlertDismissed = true;
+      hideHotAlert();
+    };
+  }
 }
 
 function preloadImages() {
@@ -2054,6 +2127,7 @@ async function init() {
   renderSession();
   renderCloudList();
   syncFrameActionButton();
+  setupThermalMonitor().catch(() => {});
   showHome();
 }
 

@@ -359,6 +359,17 @@
         </div>
         <p id="exportProgressText">0%</p>
         <p class="export-note">⚠️ Vui lòng không đóng trang web này hoặc chuyển sang tab khác trong quá trình kết xuất.</p>
+        <button id="exportCancelBtn" class="btn export-cancel-btn" type="button">Huỷ</button>
+      </div>
+    </div>
+
+    <div id="hotAlertModal" class="hot-alert hidden" role="alertdialog" aria-live="assertive" aria-modal="true">
+      <div class="hot-alert-card">
+        <button id="hotAlertCloseBtn" class="hot-alert-close" type="button" aria-label="Close hot alert">✕</button>
+        <div class="hot-alert-icon" aria-hidden="true">⚠️</div>
+        <h3>🔥 Hot alert 🔥</h3>
+        <p>Your PC is too hot. Please let it cold.</p>
+        <small id="hotAlertTempText">Current temperature: --℃</small>
       </div>
     </div>
 
