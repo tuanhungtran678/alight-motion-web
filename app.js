@@ -35,7 +35,7 @@ const ui = {
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), frameActionBtn: getEl('frameActionBtn'), keyframeInfo: getEl('keyframeInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'), movePad: getEl('movePad'), moveHandle: getEl('moveHandle'), moveXDisplay: getEl('moveXDisplay'), moveYDisplay: getEl('moveYDisplay'), rotateDial: getEl('rotateDial'), rotateKnob: getEl('rotateKnob'), rotateValue: getEl('rotateValue'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'), scaleQuickInput: getEl('scaleQuickInput'), scaleUpBtn: getEl('scaleUpBtn'), scaleDownBtn: getEl('scaleDownBtn'), frameActionMiniBtn: getEl('frameActionMiniBtn'), easeGraphModeBtn: getEl('easeGraphModeBtn'), opacitySlider: getEl('opacitySlider'), opacityPercent: getEl('opacityPercent'),
-  camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn'),
+  camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn'), addCameraBtn: getEl('addCameraBtn'), cameraMissingNote: getEl('cameraMissingNote'),
   audioInput: getEl('audioInput'), addAudioBtn: getEl('addAudioBtn'), removeAudioBtn: getEl('removeAudioBtn'), audioVolume: getEl('audioVolume'), audioOffset: getEl('audioOffset'), audioInfo: getEl('audioInfo'),
   exportOverlay: getEl('exportOverlay'), exportProgressBar: getEl('exportProgressBar'), exportProgressText: getEl('exportProgressText'), exportCancelBtn: getEl('exportCancelBtn'),
   hotAlertModal: getEl('hotAlertModal'), hotAlertCloseBtn: getEl('hotAlertCloseBtn'), hotAlertTempText: getEl('hotAlertTempText')
@@ -43,7 +43,7 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '', modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '', modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false, selectedTimelineKey: null };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 const audioPlayers = [];
@@ -81,7 +81,7 @@ function newProject({ name, ratio, fps, resolution, bgColor }) {
       audioTracks: [],
       showGridLines: false,
       exportQuality: 'medium',
-      cameraKeyframes: [{ id: uid(), time: 0, x: 0, y: 0, zoom: 1, rotation: 0 }],
+      cameraKeyframes: [],
       audioKeyframes: [{ id: uid(), time: 0, volume: 1, offset: 0 }]
     },
     layers: []
@@ -453,9 +453,7 @@ function normalizeProject(p) {
   p.settings.audio.name = p.settings.audio.name || '';
   p.settings.audio.volume = Number.isFinite(+p.settings.audio.volume) ? clamp(+p.settings.audio.volume, 0, 2) : 1;
   p.settings.audio.offset = Number.isFinite(+p.settings.audio.offset) ? Math.max(0, +p.settings.audio.offset) : 0;
-  p.settings.cameraKeyframes = Array.isArray(p.settings.cameraKeyframes) && p.settings.cameraKeyframes.length
-    ? p.settings.cameraKeyframes
-    : [{ id: uid(), time: 0, x: p.settings.camera.x, y: p.settings.camera.y, zoom: p.settings.camera.zoom, rotation: p.settings.camera.rotation }];
+  p.settings.cameraKeyframes = Array.isArray(p.settings.cameraKeyframes) ? p.settings.cameraKeyframes : [];
   p.settings.audioKeyframes = Array.isArray(p.settings.audioKeyframes) && p.settings.audioKeyframes.length
     ? p.settings.audioKeyframes
     : [{ id: uid(), time: 0, volume: p.settings.audio.volume, offset: p.settings.audio.offset }];
@@ -775,6 +773,9 @@ function syncControlsFromNearest() {
     if (k) ui.frameTime.value = k.time.toFixed(2);
     const list = (p.settings.cameraKeyframes || []).map((x) => x.time.toFixed(2)).join(', ');
     ui.keyframeInfo.textContent = list ? `Camera frames: ${list}` : '(Unavailable now. Expect you add a frame.)';
+    const hasCamera = (p.settings.cameraKeyframes || []).length > 0;
+    if (ui.cameraMissingNote) ui.cameraMissingNote.classList.toggle('hidden', hasCamera);
+    ['camX', 'camY', 'camZoom', 'camRotation', 'applyCameraBtn'].forEach((id) => { if (ui[id]) ui[id].disabled = !hasCamera; });
     setUnavailableCards(true);
     syncFrameActionButton();
     return;
@@ -1163,6 +1164,7 @@ function drawTimelineTracks() {
       }
       if (e.button !== 0) return;
       pushHistorySnapshot();
+      state.selectedTimelineKey = payload;
       state.keyDrag = { payload, strip };
     });
   };
@@ -1786,15 +1788,25 @@ function bind() {
   ui.frameTime.oninput = () => {
     const p = currentProject(); if (!p) return;
     const t = clamp(+ui.frameTime.value || 0, 0, p.settings.duration);
+    const selected = state.selectedTimelineKey;
     if (ui.frameTarget.value === 'camera') {
-      const k = nearestTimeKey(p.settings.cameraKeyframes || [], state.time); if (!k) return;
+      const k = (selected?.type === 'camera' && selected?.keyId)
+        ? (p.settings.cameraKeyframes || []).find((x) => x.id === selected.keyId)
+        : nearestTimeKey(p.settings.cameraKeyframes || [], state.time);
+      if (!k) return;
       k.time = t; sortTimeKeys(p.settings.cameraKeyframes);
     } else if (ui.frameTarget.value === 'audio') {
-      const k = nearestTimeKey(p.settings.audioKeyframes || [], state.time); if (!k) return;
+      const k = (selected?.type === 'audio' && selected?.keyId)
+        ? (p.settings.audioKeyframes || []).find((x) => x.id === selected.keyId)
+        : nearestTimeKey(p.settings.audioKeyframes || [], state.time);
+      if (!k) return;
       k.time = t; sortTimeKeys(p.settings.audioKeyframes);
     } else {
       const l = currentLayer(); if (!l) return;
-      const k = nearestKey(l, state.time); if (!k) return;
+      const k = (selected?.type === 'layer' && selected?.layerId === l.id && selected?.keyId)
+        ? l.keyframes.find((x) => x.id === selected.keyId)
+        : nearestKey(l, state.time);
+      if (!k) return;
       k.time = t; sortKf(l);
     }
     p.updatedAt = Date.now();
@@ -1916,6 +1928,7 @@ function bind() {
   ui.applyCameraBtn.onclick = () => {
     const p = currentProject();
     if (!p) return;
+    if (!(p.settings.cameraKeyframes || []).length) return;
     pushHistorySnapshot();
     p.settings.camera = {
       x: +ui.camX.value || 0,
@@ -1933,6 +1946,12 @@ function bind() {
     p.updatedAt = Date.now();
     saveProjects();
     draw();
+  };
+  if (ui.addCameraBtn) ui.addCameraBtn.onclick = () => {
+    const choice = window.prompt('Choose action: "buy" for Buy Premium or "ad" for Watch Ad.', 'ad');
+    if (!choice) return;
+    if (choice.toLowerCase().startsWith('buy')) alert('Buy Premium');
+    else alert('Watch Ad');
   };
 
   ui.undoBtn.onclick = undo;

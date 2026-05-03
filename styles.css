@@ -499,6 +499,11 @@ input, select, button {
   border-color: #45d7ff;
   box-shadow: 0 0 0 2px #45d7ff55 inset;
 }
+.camera-missing-note {
+  color: #ffb8b8;
+  margin: 6px 0 10px;
+  font-weight: 600;
+}
 .unavailable-note {
   position: absolute;
   left: 50%;
