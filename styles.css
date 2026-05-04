@@ -504,6 +504,30 @@ input, select, button {
   margin: 6px 0 10px;
   font-weight: 600;
 }
+.camera-paywall-card {
+  width: min(440px, 92vw);
+  background: #122758;
+  border: 3px solid #0e1730;
+  border-radius: 38px;
+  color: #e8efff;
+  padding: 22px 20px 20px;
+  position: relative;
+}
+.camera-paywall-close {
+  position: absolute;
+  right: -16px;
+  top: -16px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 0;
+  background: #ff2438;
+  color: #fff;
+  font-size: 2rem;
+}
+.pro-badge { background: #2876bb; border-radius: 8px; padding: 2px 10px; }
+.buy-pro-btn { margin-top: 10px; background: #f4f4f4; color: #36d9c6; font-weight: 800; }
+.watch-ad-btn { margin-top: 10px; background: #3a56a5; color: #fff; }
 .unavailable-note {
   position: absolute;
   left: 50%;

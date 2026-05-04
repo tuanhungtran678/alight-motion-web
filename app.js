@@ -38,7 +38,8 @@ const ui = {
   camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn'), addCameraBtn: getEl('addCameraBtn'), cameraMissingNote: getEl('cameraMissingNote'),
   audioInput: getEl('audioInput'), addAudioBtn: getEl('addAudioBtn'), removeAudioBtn: getEl('removeAudioBtn'), audioVolume: getEl('audioVolume'), audioOffset: getEl('audioOffset'), audioInfo: getEl('audioInfo'),
   exportOverlay: getEl('exportOverlay'), exportProgressBar: getEl('exportProgressBar'), exportProgressText: getEl('exportProgressText'), exportCancelBtn: getEl('exportCancelBtn'),
-  hotAlertModal: getEl('hotAlertModal'), hotAlertCloseBtn: getEl('hotAlertCloseBtn'), hotAlertTempText: getEl('hotAlertTempText')
+  hotAlertModal: getEl('hotAlertModal'), hotAlertCloseBtn: getEl('hotAlertCloseBtn'), hotAlertTempText: getEl('hotAlertTempText'),
+  cameraPaywallModal: getEl('cameraPaywallModal'), closeCameraPaywallBtn: getEl('closeCameraPaywallBtn'), buyProBtn: getEl('buyProBtn'), watchAdBtn: getEl('watchAdBtn')
 };
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
@@ -77,6 +78,7 @@ function newProject({ name, ratio, fps, resolution, bgColor }) {
       duration: 2,
       customEase: { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 },
       camera: { x: 0, y: 0, zoom: 1, rotation: 0 },
+      cameraUnlocked: false,
       audio: { src: null, name: '', volume: 1, offset: 0 },
       audioTracks: [],
       showGridLines: false,
@@ -453,7 +455,9 @@ function normalizeProject(p) {
   p.settings.audio.name = p.settings.audio.name || '';
   p.settings.audio.volume = Number.isFinite(+p.settings.audio.volume) ? clamp(+p.settings.audio.volume, 0, 2) : 1;
   p.settings.audio.offset = Number.isFinite(+p.settings.audio.offset) ? Math.max(0, +p.settings.audio.offset) : 0;
+  p.settings.cameraUnlocked = !!p.settings.cameraUnlocked;
   p.settings.cameraKeyframes = Array.isArray(p.settings.cameraKeyframes) ? p.settings.cameraKeyframes : [];
+  if (!p.settings.cameraUnlocked) p.settings.cameraKeyframes = [];
   p.settings.audioKeyframes = Array.isArray(p.settings.audioKeyframes) && p.settings.audioKeyframes.length
     ? p.settings.audioKeyframes
     : [{ id: uid(), time: 0, volume: p.settings.audio.volume, offset: p.settings.audio.offset }];
@@ -715,6 +719,8 @@ function openCreateModal() {
   ui.ratioRow.querySelectorAll('.ratio-btn').forEach((b) => b.classList.toggle('selected', b.dataset.ratio === '9:16'));
 }
 function closeCreateModal() { ui.modal.classList.add('hidden'); }
+function openCameraPaywallModal() { if (ui.cameraPaywallModal) ui.cameraPaywallModal.classList.remove('hidden'); }
+function closeCameraPaywallModal() { if (ui.cameraPaywallModal) ui.cameraPaywallModal.classList.add('hidden'); }
 
 function openMenu() { const p = currentProject(); if (!p) return; ui.menuProjectName.value = p.name; ui.menuRatio.value = p.settings.ratio; ui.menuFps.value = String(p.settings.fps); ui.menuResolution.value = String(p.settings.resolution || 1080); ui.menuBgColor.value = p.settings.bgColor; if (ui.menuShowGrid) ui.menuShowGrid.checked = !!p.settings.showGridLines; if (ui.menuExportQuality) ui.menuExportQuality.value = p.settings.exportQuality || 'medium'; ui.settingsMenu.classList.remove('hidden'); }
 function closeMenu() { ui.settingsMenu.classList.add('hidden'); }
@@ -882,6 +888,7 @@ function addKeyframeAtCurrent() {
   const p = currentProject(); if (!p) return;
   pushHistorySnapshot();
   if (ui.frameTarget.value === 'camera') {
+    if (!p.settings.cameraUnlocked) { openCameraPaywallModal(); return; }
     const c = getCameraAt(state.time);
     p.settings.cameraKeyframes.push({ id: uid(), time: state.time, x: c.x, y: c.y, zoom: c.zoom, rotation: c.rotation });
     sortTimeKeys(p.settings.cameraKeyframes);
@@ -1947,12 +1954,11 @@ function bind() {
     saveProjects();
     draw();
   };
-  if (ui.addCameraBtn) ui.addCameraBtn.onclick = () => {
-    const choice = window.prompt('Choose action: "buy" for Buy Premium or "ad" for Watch Ad.', 'ad');
-    if (!choice) return;
-    if (choice.toLowerCase().startsWith('buy')) alert('Buy Premium');
-    else alert('Watch Ad');
-  };
+  if (ui.addCameraBtn) ui.addCameraBtn.onclick = openCameraPaywallModal;
+  if (ui.closeCameraPaywallBtn) ui.closeCameraPaywallBtn.onclick = closeCameraPaywallModal;
+  if (ui.cameraPaywallModal) ui.cameraPaywallModal.onclick = (e) => { if (e.target === ui.cameraPaywallModal) closeCameraPaywallModal(); };
+  if (ui.buyProBtn) ui.buyProBtn.onclick = () => { alert('Buy Premium'); closeCameraPaywallModal(); };
+  if (ui.watchAdBtn) ui.watchAdBtn.onclick = () => { alert('Watch Ad'); closeCameraPaywallModal(); };
 
   ui.undoBtn.onclick = undo;
   ui.redoBtn.onclick = redo;
