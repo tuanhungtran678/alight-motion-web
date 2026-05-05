@@ -330,6 +330,8 @@ input, select, button {
 
 
 .logo-wrap { display: inline-flex; align-items: center; gap: 10px; }
+.header-nav { display: inline-flex; gap: 6px; margin-right: 8px; flex-wrap: wrap; }
+.header-nav .btn { min-height: 32px; padding: 6px 10px; font-size: .86rem; }
 .header-lite-badge {
   background: linear-gradient(90deg, #8ff3b4, #8bdcff);
   color: #08324f;

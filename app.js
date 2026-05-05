@@ -26,6 +26,7 @@ const LOCAL_AUTH_OTP_KEY = 'alightLocalAuthOtpV1';
 const CLOUD_API_BASE_KEY = 'alightCloudApiBaseV1';
 const ui = {
   home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), loginAppleBtn: getEl('loginAppleBtn'), loginMicrosoftBtn: getEl('loginMicrosoftBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'), cloudApiBase: getEl('cloudApiBase'),
+  navHomeBtn: getEl('navHomeBtn'), navProjectsBtn: getEl('navProjectsBtn'), navCloudBtn: getEl('navCloudBtn'), navPurchaseHistoryBtn: getEl('navPurchaseHistoryBtn'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), menuShowGrid: getEl('menuShowGrid'), menuExportQuality: getEl('menuExportQuality'), saveMenuBtn: getEl('saveMenuBtn'),
@@ -1648,6 +1649,18 @@ function bind() {
   ui.guestSignUpBtn.onclick = () => { closeGuestModal(); openAuthModal('signup'); };
   ui.logoutBtn.onclick = () => { state.session = null; state.authToken = ''; localStorage.removeItem(AUTH_TOKEN_KEY); saveSession(); renderSession(); renderCloudList(); };
   ui.refreshCloudBtn.onclick = renderCloudList;
+  if (ui.navHomeBtn) ui.navHomeBtn.onclick = () => showHome();
+  if (ui.navProjectsBtn) ui.navProjectsBtn.onclick = () => {
+    showHome();
+    document.getElementById('projectListTitle')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  if (ui.navCloudBtn) ui.navCloudBtn.onclick = () => {
+    showHome();
+    document.getElementById('cloudTitle')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  if (ui.navPurchaseHistoryBtn) ui.navPurchaseHistoryBtn.onclick = () => {
+    alert('Purchase History (Demo): Alight Motion Pro • Active plan • Started today.');
+  };
   if (ui.cloudApiBase) { ui.cloudApiBase.value = state.cloudApiBase; ui.cloudApiBase.onchange = () => { saveCloudApiBase(ui.cloudApiBase.value); renderCloudList(); }; }
   ui.projectSearch.oninput = renderProjectList;
   ui.cloudSearch.oninput = renderCloudList;
