@@ -319,13 +319,13 @@ input, select, button {
 .site-footer { border-top: 1px solid var(--border); border-bottom: 0; margin-top: 16px; }
 .brand-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 14px;
   padding: 10px 16px;
 }
-.header-right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: nowrap; }
+.header-right { display: flex; align-items: center; justify-content: flex-start; gap: 12px; flex-wrap: wrap; }
 .header-tools { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; flex-wrap: nowrap; }
 .lang-inline {
   display: inline-flex;
