@@ -317,8 +317,14 @@ input, select, button {
 
 .site-header, .site-footer { background: color-mix(in srgb, var(--card), black 8%); border-bottom: 1px solid var(--border); }
 .site-footer { border-top: 1px solid var(--border); border-bottom: 0; margin-top: 16px; }
-.brand-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 16px; gap: 10px; }
-.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: min(620px, 100%); }
+.brand-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 14px;
+  padding: 10px 16px;
+}
+.header-right { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .muted { opacity: .75; font-size: .9rem; }
 .lang-inline { margin: 0; font-size: .85rem; }
 .lang-inline select { margin-top: 0; padding: 6px 8px; }
@@ -331,10 +337,9 @@ input, select, button {
 
 .logo-wrap { display: inline-flex; align-items: center; gap: 10px; }
 .header-nav {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  display: inline-grid;
+  grid-template-columns: repeat(4, minmax(140px, max-content));
   gap: 8px;
-  width: 100%;
 }
 .nav-chip {
   min-height: 40px;
@@ -351,9 +356,9 @@ input, select, button {
 .nav-chip:hover { border-color: #7fdfff; transform: translateY(-1px); }
 
 @media (max-width: 980px) {
-  .brand-row { flex-direction: column; align-items: stretch; }
+  .brand-row { grid-template-columns: 1fr; align-items: stretch; }
   .header-right { align-items: stretch; min-width: 0; }
-  .header-nav { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+  .header-nav { display: grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); }
 }
 .header-lite-badge {
   background: linear-gradient(90deg, #8ff3b4, #8bdcff);
