@@ -11,11 +11,11 @@
       <div class="app brand-row">
         <div class="logo-wrap"><span class="logo-mark" aria-hidden="true"></span><strong>Alight Motion Web</strong><span class="header-lite-badge">LITE</span><span id="headerProBadge" class="header-pro-badge hidden">PRO</span></div>
         <div class="header-right">
-          <div class="header-nav">
-            <button id="navHomeBtn" class="btn">Home</button>
-            <button id="navProjectsBtn" class="btn">Projects</button>
-            <button id="navCloudBtn" class="btn">Cloud</button>
-            <button id="navPurchaseHistoryBtn" class="btn">Purchase History</button>
+          <div class="header-nav" role="tablist" aria-label="Header navigation">
+            <button id="navHomeBtn" class="nav-chip" type="button">Home</button>
+            <button id="navProjectsBtn" class="nav-chip" type="button">Projects</button>
+            <button id="navCloudBtn" class="nav-chip" type="button">Cloud</button>
+            <button id="navPurchaseHistoryBtn" class="nav-chip" type="button">Purchase History</button>
           </div>
           <label class="lang-inline">Language
             <select id="languageSelect">
@@ -500,6 +500,16 @@
         <button id="closeProSuccessBtn" class="icon-close" aria-label="Close">✕</button>
         <h3>Purchase Complete ✅</h3>
         <p>You can cancel at any time if you don't want to. No penalties or extra fees will be charged.</p>
+      </div>
+    </div>
+
+    <div id="purchaseHistoryModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card auth-card">
+        <button id="closePurchaseHistoryBtn" class="icon-close" aria-label="Close">✕</button>
+        <h3>Purchase History</h3>
+        <p>Alight Motion PRO (Demo) • Active</p>
+        <p>Started: Today</p>
+        <button id="unsubscribeBtn" class="btn danger">Unsubscribe (Huỷ đăng kí)</button>
       </div>
     </div>
 

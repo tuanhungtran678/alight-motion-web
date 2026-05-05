@@ -41,7 +41,8 @@ const ui = {
   exportOverlay: getEl('exportOverlay'), exportProgressBar: getEl('exportProgressBar'), exportProgressText: getEl('exportProgressText'), exportCancelBtn: getEl('exportCancelBtn'),
   hotAlertModal: getEl('hotAlertModal'), hotAlertCloseBtn: getEl('hotAlertCloseBtn'), hotAlertTempText: getEl('hotAlertTempText'),
   cameraPaywallModal: getEl('cameraPaywallModal'), closeCameraPaywallBtn: getEl('closeCameraPaywallBtn'), buyProBtn: getEl('buyProBtn'), watchAdBtn: getEl('watchAdBtn'),
-  headerProBadge: getEl('headerProBadge'), proSuccessModal: getEl('proSuccessModal'), closeProSuccessBtn: getEl('closeProSuccessBtn')
+  headerProBadge: getEl('headerProBadge'), proSuccessModal: getEl('proSuccessModal'), closeProSuccessBtn: getEl('closeProSuccessBtn'),
+  purchaseHistoryModal: getEl('purchaseHistoryModal'), closePurchaseHistoryBtn: getEl('closePurchaseHistoryBtn'), unsubscribeBtn: getEl('unsubscribeBtn')
 };
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
@@ -725,6 +726,8 @@ function openCameraPaywallModal() { if (ui.cameraPaywallModal) ui.cameraPaywallM
 function closeCameraPaywallModal() { if (ui.cameraPaywallModal) ui.cameraPaywallModal.classList.add('hidden'); }
 function openProSuccessModal() { if (ui.proSuccessModal) ui.proSuccessModal.classList.remove('hidden'); }
 function closeProSuccessModal() { if (ui.proSuccessModal) ui.proSuccessModal.classList.add('hidden'); }
+function openPurchaseHistoryModal() { if (ui.purchaseHistoryModal) ui.purchaseHistoryModal.classList.remove('hidden'); }
+function closePurchaseHistoryModal() { if (ui.purchaseHistoryModal) ui.purchaseHistoryModal.classList.add('hidden'); }
 function syncProBadge() { if (ui.headerProBadge) ui.headerProBadge.classList.toggle('hidden', !state.isPro); }
 
 function openMenu() { const p = currentProject(); if (!p) return; ui.menuProjectName.value = p.name; ui.menuRatio.value = p.settings.ratio; ui.menuFps.value = String(p.settings.fps); ui.menuResolution.value = String(p.settings.resolution || 1080); ui.menuBgColor.value = p.settings.bgColor; if (ui.menuShowGrid) ui.menuShowGrid.checked = !!p.settings.showGridLines; if (ui.menuExportQuality) ui.menuExportQuality.value = p.settings.exportQuality || 'medium'; ui.settingsMenu.classList.remove('hidden'); }
@@ -1658,9 +1661,7 @@ function bind() {
     showHome();
     document.getElementById('cloudTitle')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-  if (ui.navPurchaseHistoryBtn) ui.navPurchaseHistoryBtn.onclick = () => {
-    alert('Purchase History (Demo): Alight Motion Pro • Active plan • Started today.');
-  };
+  if (ui.navPurchaseHistoryBtn) ui.navPurchaseHistoryBtn.onclick = openPurchaseHistoryModal;
   if (ui.cloudApiBase) { ui.cloudApiBase.value = state.cloudApiBase; ui.cloudApiBase.onchange = () => { saveCloudApiBase(ui.cloudApiBase.value); renderCloudList(); }; }
   ui.projectSearch.oninput = renderProjectList;
   ui.cloudSearch.oninput = renderCloudList;
@@ -1985,6 +1986,15 @@ function bind() {
   if (ui.watchAdBtn) ui.watchAdBtn.onclick = () => { alert('Watch Ad'); closeCameraPaywallModal(); };
   if (ui.closeProSuccessBtn) ui.closeProSuccessBtn.onclick = closeProSuccessModal;
   if (ui.proSuccessModal) ui.proSuccessModal.onclick = (e) => { if (e.target === ui.proSuccessModal) closeProSuccessModal(); };
+  if (ui.closePurchaseHistoryBtn) ui.closePurchaseHistoryBtn.onclick = closePurchaseHistoryModal;
+  if (ui.purchaseHistoryModal) ui.purchaseHistoryModal.onclick = (e) => { if (e.target === ui.purchaseHistoryModal) closePurchaseHistoryModal(); };
+  if (ui.unsubscribeBtn) ui.unsubscribeBtn.onclick = () => {
+    state.isPro = false;
+    localStorage.removeItem('alightProDemoV1');
+    syncProBadge();
+    alert('Unsubscribed successfully.');
+    closePurchaseHistoryModal();
+  };
 
   ui.undoBtn.onclick = undo;
   ui.redoBtn.onclick = redo;
