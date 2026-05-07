@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cloud Project Viewer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="screen active">
+        <header class="topbar hero">
+          <h1>Cloud Project Viewer</h1>
+          <p>Xem dự án đã đăng lên server.</p>
+        </header>
+        <article class="panel">
+          <h2 id="viewerTitle">Đang tải...</h2>
+          <p id="viewerMeta">-</p>
+          <div class="phone-stage"><canvas id="viewerCanvas" width="360" height="640"></canvas></div>
+        </article>
+      </section>
+    </main>
+    <script>
+      const LOCAL_CLOUD_KEY = 'alightCloudLocalV1';
+      const q = new URLSearchParams(location.search);
+      const id = q.get('id');
+      const title = document.getElementById('viewerTitle');
+      const meta = document.getElementById('viewerMeta');
+      const canvas = document.getElementById('viewerCanvas');
+      const ctx = canvas.getContext('2d');
+
+      function parseRatio(r){const [w,h]=(r||'9:16').split(':').map(Number);return {w:w||9,h:h||16};}
+      function setCanvasRatio(r, resolution){const rr=parseRatio(r);const h=Math.max(240,Math.min(1080, Number(resolution)||1080));canvas.height=h;canvas.width=Math.round((h*rr.w)/rr.h);}      
+      function drawProject(project){
+        if(!project){ title.textContent='Không tìm thấy dự án'; return; }
+        const st = project.settings || {};
+        setCanvasRatio(st.ratio, st.resolution);
+        title.textContent = project.name || 'Untitled';
+        meta.textContent = `${st.ratio||'9:16'} • ${st.fps||30} FPS • ${project.layers?.length||0} layer`;
+        ctx.fillStyle = st.bgColor || '#000';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        (project.layers||[]).forEach((l)=>{
+          const k=(l.keyframes&&l.keyframes[0])||{x:canvas.width/2,y:canvas.height/2,scale:1,rotation:0,opacity:1};
+          if(l.visible===false) return;
+          ctx.save();
+          ctx.translate(k.x||canvas.width/2, k.y||canvas.height/2);
+          ctx.rotate(((k.rotation||0)*Math.PI)/180);
+          ctx.scale(k.scale||1,k.scale||1);
+          ctx.globalAlpha = Math.max(0, Math.min(1, k.opacity??1));
+          ctx.fillStyle = l.color || '#21b8ff';
+          if(l.effect?.type==='checker'){
+            const grid=Math.max(2, Math.min(16, Math.round(Number(l.effect?.checkerGrid)||8)));
+            const size=l.type==='circle'?112:120;
+            const cell=size/grid;
+            if(l.type==='circle'){ctx.beginPath();ctx.arc(0,0,size/2,0,Math.PI*2);ctx.clip();}
+            for(let yy=0;yy<grid;yy+=1){for(let xx=0;xx<grid;xx+=1){ctx.fillStyle=(xx+yy)%2===0?(l.effect?.checkerColorA||'#fff'):(l.effect?.checkerColorB||l.color||'#21b8ff');ctx.fillRect(-size/2+xx*cell,-size/2+yy*cell,cell+.5,cell+.5);}}
+          }
+          else if(l.type==='circle'){ctx.beginPath();ctx.arc(0,0,55,0,Math.PI*2);ctx.fill();}
+          else if(l.type==='text'){ctx.font=`${l.fontStyle||'normal'} ${l.fontWeight||'700'} ${l.size||90}px ${l.fontFamily||'Inter'}, sans-serif`;ctx.textAlign=l.textAlign||'center';ctx.textBaseline='middle';ctx.fillText(l.text||'TEXT',0,0);}
+          else {ctx.fillRect(-50,-50,100,100);}          
+          ctx.restore();
+        });
+      }
+
+      async function load(){
+        let item = null;
+        try {
+          const r = await fetch(`/api/projects/${encodeURIComponent(id)}`);
+          if (r.ok) item = await r.json();
+        } catch {}
+        if(!item){
+          const list = JSON.parse(localStorage.getItem(LOCAL_CLOUD_KEY) || '[]');
+          item = list.find((x)=>x.id===id) || null;
+        }
+        drawProject(item?.project || null);
+      }
+      load();
+    </script>
+  </body>
+</html>
