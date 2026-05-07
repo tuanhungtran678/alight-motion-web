@@ -34,7 +34,7 @@ const ui = {
   preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), undoBtn: getEl('undoBtn'), redoBtn: getEl('redoBtn'), exportVideoBtn: getEl('exportVideoBtn'), publishProjectBtn: getEl('publishProjectBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
   zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), effectReveal: getEl('effectReveal'), effectWipeAngle: getEl('effectWipeAngle'), effectHue: getEl('effectHue'), effectSaturation: getEl('effectSaturation'), effectBrightness: getEl('effectBrightness'), effect3DAngle: getEl('effect3DAngle'), effect3DDepth: getEl('effect3DDepth'), textContent: getEl('textContent'), textSize: getEl('textSize'), textFontFamily: getEl('textFontFamily'), textWeight: getEl('textWeight'), textStyle: getEl('textStyle'), textAlign: getEl('textAlign'), textLayerControls: getEl('textLayerControls'), glowColor: getEl('glowColor'), glowHardness: getEl('glowHardness'), glowAlpha: getEl('glowAlpha'), movementUnavailable: getEl('movementUnavailable'), rotateUnavailable: getEl('rotateUnavailable'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), frameActionBtn: getEl('frameActionBtn'), keyframeInfo: getEl('keyframeInfo'),
-  startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'), movePad: getEl('movePad'), moveHandle: getEl('moveHandle'), moveXDisplay: getEl('moveXDisplay'), moveYDisplay: getEl('moveYDisplay'), rotateDial: getEl('rotateDial'), rotateKnob: getEl('rotateKnob'), rotateValue: getEl('rotateValue'),
+  startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'), movePad: getEl('movePad'), moveHandle: getEl('moveHandle'), moveXDisplay: getEl('moveXDisplay'), moveYDisplay: getEl('moveYDisplay'), rotateDial: getEl('rotateDial'), rotateKnob: getEl('rotateKnob'), rotateValue: getEl('rotateValue'), rotateTurns: getEl('rotateTurns'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'), scaleQuickInput: getEl('scaleQuickInput'), scaleUpBtn: getEl('scaleUpBtn'), scaleDownBtn: getEl('scaleDownBtn'), frameActionMiniBtn: getEl('frameActionMiniBtn'), easeGraphModeBtn: getEl('easeGraphModeBtn'), opacitySlider: getEl('opacitySlider'), opacityPercent: getEl('opacityPercent'),
   camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn'), addCameraBtn: getEl('addCameraBtn'), cameraMissingNote: getEl('cameraMissingNote'),
   audioInput: getEl('audioInput'), addAudioBtn: getEl('addAudioBtn'), removeAudioBtn: getEl('removeAudioBtn'), audioVolume: getEl('audioVolume'), audioOffset: getEl('audioOffset'), audioInfo: getEl('audioInfo'),
@@ -47,7 +47,7 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '', modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false, selectedTimelineKey: null, isPro: localStorage.getItem('alightProDemoV1') === '1' };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '', modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false, selectedTimelineKey: null, rotationDrag: null, isPro: localStorage.getItem('alightProDemoV1') === '1' };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 const audioPlayers = [];
@@ -877,6 +877,9 @@ function syncTransformWidgets() {
     ui.rotateKnob.style.left = `${cx + Math.cos(rad) * r}px`;
     ui.rotateKnob.style.top = `${cy + Math.sin(rad) * r}px`;
     if (ui.rotateValue) ui.rotateValue.textContent = `${Math.round(rot)}°`;
+    const turns = rot === 0 ? 0 : (rot > 0 ? Math.floor(rot / 360) : Math.ceil(rot / 360));
+    if (ui.rotateTurns) ui.rotateTurns.textContent = turns ? `${turns}x` : '';
+    ui.rotateDial.classList.toggle('has-turns', Math.abs(turns) > 0);
   }
 }
 
@@ -2104,23 +2107,41 @@ function bind() {
     ui.movePad.addEventListener('pointercancel', () => { moving = false; });
   }
 
-  const applyRotationFromEvent = (evt) => {
-    const p = currentProject(); const l = currentLayer();
-    if (!p || !l || !ui.rotateDial || ui.rotateDial.classList.contains('is-disabled')) return;
+  const angleFromRotationEvent = (evt) => {
     const r = ui.rotateDial.getBoundingClientRect();
     const cx = r.left + r.width / 2;
     const cy = r.top + r.height / 2;
-    const deg = Math.atan2(evt.clientY - cy, evt.clientX - cx) * 180 / Math.PI;
-    ui.startRotation.value = String(deg);
+    return Math.atan2(evt.clientY - cy, evt.clientX - cx) * 180 / Math.PI;
+  };
+  const signedAngleDelta = (current, previous) => {
+    let delta = current - previous;
+    while (delta > 180) delta -= 360;
+    while (delta < -180) delta += 360;
+    return delta;
+  };
+  const applyRotationFromEvent = (evt) => {
+    const p = currentProject(); const l = currentLayer();
+    if (!p || !l || !ui.rotateDial || ui.rotateDial.classList.contains('is-disabled') || !state.rotationDrag) return;
+    const angle = angleFromRotationEvent(evt);
+    state.rotationDrag.rotation += signedAngleDelta(angle, state.rotationDrag.lastAngle);
+    state.rotationDrag.lastAngle = angle;
+    ui.startRotation.value = String(state.rotationDrag.rotation);
     syncTransformWidgets();
     applyCurrentValues();
   };
   if (ui.rotateDial) {
     let rotating = false;
-    ui.rotateDial.addEventListener('pointerdown', (e) => { rotating = true; ui.rotateDial.setPointerCapture(e.pointerId); applyRotationFromEvent(e); });
+    const endRotation = () => { rotating = false; state.rotationDrag = null; };
+    ui.rotateDial.addEventListener('pointerdown', (e) => {
+      const p = currentProject(); const l = currentLayer();
+      if (!p || !l || ui.rotateDial.classList.contains('is-disabled')) return;
+      rotating = true;
+      ui.rotateDial.setPointerCapture(e.pointerId);
+      state.rotationDrag = { lastAngle: angleFromRotationEvent(e), rotation: +ui.startRotation.value || 0 };
+    });
     ui.rotateDial.addEventListener('pointermove', (e) => { if (rotating) applyRotationFromEvent(e); });
-    ui.rotateDial.addEventListener('pointerup', () => { rotating = false; });
-    ui.rotateDial.addEventListener('pointercancel', () => { rotating = false; });
+    ui.rotateDial.addEventListener('pointerup', endRotation);
+    ui.rotateDial.addEventListener('pointercancel', endRotation);
   }
 
   const animateCollapse = (card, body, btn) => {
