@@ -32,7 +32,7 @@ const ui = {
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), menuShowGrid: getEl('menuShowGrid'), menuExportQuality: getEl('menuExportQuality'), saveMenuBtn: getEl('saveMenuBtn'),
   modal: getEl('createProjectModal'), closeModalBtn: getEl('closeModalBtn'), ratioRow: getEl('ratioRow'), modalFps: getEl('modalFps'), modalResolution: getEl('modalResolution'), modalProjectName: getEl('modalProjectName'), modalBgColor: getEl('modalBgColor'), modalBgHex: getEl('modalBgHex'), confirmCreateBtn: getEl('confirmCreateBtn'),
   preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), undoBtn: getEl('undoBtn'), redoBtn: getEl('redoBtn'), exportVideoBtn: getEl('exportVideoBtn'), publishProjectBtn: getEl('publishProjectBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
-  zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), checkerColorA: getEl('checkerColorA'), checkerColorB: getEl('checkerColorB'), checkerGrid: getEl('checkerGrid'), checkerGridValue: getEl('checkerGridValue'), effectReveal: getEl('effectReveal'), effectWipeAngle: getEl('effectWipeAngle'), effectHue: getEl('effectHue'), effectSaturation: getEl('effectSaturation'), effectBrightness: getEl('effectBrightness'), effect3DAngle: getEl('effect3DAngle'), effect3DDepth: getEl('effect3DDepth'), textContent: getEl('textContent'), textSize: getEl('textSize'), textFontFamily: getEl('textFontFamily'), textWeight: getEl('textWeight'), textStyle: getEl('textStyle'), textAlign: getEl('textAlign'), textLayerControls: getEl('textLayerControls'), glowColor: getEl('glowColor'), glowHardness: getEl('glowHardness'), glowAlpha: getEl('glowAlpha'), movementUnavailable: getEl('movementUnavailable'), rotateUnavailable: getEl('rotateUnavailable'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
+  zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), checkerColorA: getEl('checkerColorA'), checkerColorB: getEl('checkerColorB'), checkerGrid: getEl('checkerGrid'), checkerGridValue: getEl('checkerGridValue'), copyBackgroundMode: getEl('copyBackgroundMode'), copyBackgroundStrength: getEl('copyBackgroundStrength'), effectReveal: getEl('effectReveal'), effectWipeAngle: getEl('effectWipeAngle'), effectHue: getEl('effectHue'), effectSaturation: getEl('effectSaturation'), effectBrightness: getEl('effectBrightness'), effect3DAngle: getEl('effect3DAngle'), effect3DDepth: getEl('effect3DDepth'), textContent: getEl('textContent'), textSize: getEl('textSize'), textFontFamily: getEl('textFontFamily'), textWeight: getEl('textWeight'), textStyle: getEl('textStyle'), textAlign: getEl('textAlign'), textLayerControls: getEl('textLayerControls'), glowColor: getEl('glowColor'), glowHardness: getEl('glowHardness'), glowAlpha: getEl('glowAlpha'), movementUnavailable: getEl('movementUnavailable'), rotateUnavailable: getEl('rotateUnavailable'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), frameActionBtn: getEl('frameActionBtn'), prevFrameBtn: getEl('prevFrameBtn'), nextFrameBtn: getEl('nextFrameBtn'), markPartBtn: getEl('markPartBtn'), keyframeInfo: getEl('keyframeInfo'), markInfo: getEl('markInfo'),
   startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'), movePad: getEl('movePad'), moveHandle: getEl('moveHandle'), moveXDisplay: getEl('moveXDisplay'), moveYDisplay: getEl('moveYDisplay'), rotateDial: getEl('rotateDial'), rotateKnob: getEl('rotateKnob'), rotateValue: getEl('rotateValue'), rotateTurns: getEl('rotateTurns'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'), scaleQuickInput: getEl('scaleQuickInput'), scaleUpBtn: getEl('scaleUpBtn'), scaleDownBtn: getEl('scaleDownBtn'), frameActionMiniBtn: getEl('frameActionMiniBtn'), easeGraphModeBtn: getEl('easeGraphModeBtn'), opacitySlider: getEl('opacitySlider'), opacityPercent: getEl('opacityPercent'),
@@ -47,7 +47,7 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '', modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false, selectedTimelineKey: null, rotationDrag: null, isPro: localStorage.getItem('alightProDemoV1') === '1' };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: localStorage.getItem(CLOUD_API_BASE_KEY) || '', modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false, selectedTimelineKey: null, rotationDrag: null, activeKeyScope: 'position', isPro: localStorage.getItem('alightProDemoV1') === '1' };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 const audioPlayers = [];
@@ -66,7 +66,7 @@ function saveCloudApiBase(v) {
 
 function parseRatio(r) { const [w, h] = r.split(':').map(Number); return { w: w || 9, h: h || 16 }; }
 function newKeyframe(time, x = 180, y = 320, scale = 1, rotation = 0, opacity = 1) { return { id: uid(), time, x, y, scale, rotation, opacity }; }
-function newLayer(type, extra = {}) { return { id: uid(), name: `Layer ${Date.now().toString().slice(-4)}`, type, color: '#21b8ff', text: 'TEXT', size: 90, fontFamily: 'Inter', fontWeight: '700', fontStyle: 'normal', textAlign: 'center', imageSrc: null, imageObj: null, frameShape: 'rect', groupId: null, effect: { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8 }, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
+function newLayer(type, extra = {}) { return { id: uid(), name: `Layer ${Date.now().toString().slice(-4)}`, type, color: '#21b8ff', text: 'TEXT', size: 90, fontFamily: 'Inter', fontWeight: '700', fontStyle: 'normal', textAlign: 'center', imageSrc: null, imageObj: null, frameShape: 'rect', groupId: null, effect: { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8, copyBackgroundMode: 'gaussianBlur', copyBackgroundStrength: 1 }, easing: { position: 'easeInOut', scale: 'easeInOut', rotation: 'easeInOut', opacity: 'easeInOut' }, visible: true, locked: false, keyframes: [newKeyframe(0), newKeyframe(2, 180, 180, 1.4, 360, 1)], ...extra }; }
 function newProject({ name, ratio, fps, resolution, bgColor }) {
   return {
     id: uid(),
@@ -479,7 +479,7 @@ function normalizeProject(p) {
     layer.textAlign = layer.textAlign || 'center';
     layer.frameShape = layer.frameShape || 'rect';
     layer.groupId = layer.groupId || null;
-    layer.effect = layer.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8 };
+    layer.effect = layer.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8, copyBackgroundMode: 'gaussianBlur', copyBackgroundStrength: 1 };
     layer.effect.type = layer.effect.type === 'extrude3d' ? 'rasterExtrude' : (layer.effect.type || 'none');
     layer.effect.strength = Number.isFinite(+layer.effect.strength) ? clamp(+layer.effect.strength, 0, 2) : 0.6;
     layer.effect.glowColor = layer.effect.glowColor || layer.color || '#21b8ff';
@@ -495,6 +495,9 @@ function normalizeProject(p) {
     layer.effect.checkerColorA = layer.effect.checkerColorA || '#ffffff';
     layer.effect.checkerColorB = layer.effect.checkerColorB || layer.color || '#21b8ff';
     layer.effect.checkerGrid = Number.isFinite(+layer.effect.checkerGrid) ? clamp(Math.round(+layer.effect.checkerGrid), 2, 16) : 8;
+    layer.effect.copyBackgroundMode = ['gaussianBlur', 'invertColor', 'grayscale'].includes(layer.effect.copyBackgroundMode) ? layer.effect.copyBackgroundMode : 'gaussianBlur';
+    layer.effect.copyBackgroundStrength = Number.isFinite(+layer.effect.copyBackgroundStrength) ? clamp(+layer.effect.copyBackgroundStrength, 0, 2) : 1;
+    (layer.keyframes || []).forEach(ensureKeyTimes);
   });
   return p;
 }
@@ -525,6 +528,7 @@ function effectToTab(type) {
   if (type === 'colorAdjust') return 'color';
   if (type === 'rasterExtrude' || type === 'extrude3d') return 'raster';
   if (type === 'checker') return 'checker';
+  if (type === 'copyBackground') return 'background';
   return 'glow';
 }
 function tabToEffect(tab) {
@@ -532,6 +536,7 @@ function tabToEffect(tab) {
   if (tab === 'color') return 'colorAdjust';
   if (tab === 'raster') return 'rasterExtrude';
   if (tab === 'checker') return 'checker';
+  if (tab === 'background') return 'copyBackground';
   return 'glow';
 }
 function getTimelinePoints(p) {
@@ -576,8 +581,9 @@ function hasExactFrameAtCurrent(target, p, l) {
   if (target === 'camera') return !!nearestTimeKey(p.settings.cameraKeyframes || [], state.time) && Math.abs(nearestTimeKey(p.settings.cameraKeyframes || [], state.time).time - state.time) < EPS;
   if (target === 'audio') return !!nearestTimeKey(p.settings.audioKeyframes || [], state.time) && Math.abs(nearestTimeKey(p.settings.audioKeyframes || [], state.time).time - state.time) < EPS;
   if (!l) return false;
-  const k = nearestKey(l, state.time);
-  return !!k && Math.abs(k.time - state.time) < EPS;
+  const scope = activeLayerScope();
+  const k = nearestKey(l, state.time, scope);
+  return !!k && Math.abs(keyTime(k, scope) - state.time) < EPS;
 }
 
 function syncFrameActionButton() {
@@ -737,8 +743,34 @@ function loadProjects() {
 
 function currentProject() { return state.projects.find((p) => p.id === state.currentProjectId) || null; }
 function currentLayer() { const p = currentProject(); if (!p) return null; return p.layers.find((l) => l.id === ui.layerSelect.value) || p.layers[0] || null; }
-function sortKf(layer) { layer.keyframes.sort((a, b) => a.time - b.time); }
-function nearestKey(layer, t) { if (!layer.keyframes.length) return null; return layer.keyframes.reduce((best, k) => Math.abs(k.time - t) < Math.abs(best.time - t) ? k : best, layer.keyframes[0]); }
+function sortKf(layer) { layer.keyframes.sort((a, b) => keyTime(a, state.activeKeyScope || 'position') - keyTime(b, state.activeKeyScope || 'position')); }
+function keyTime(k, scope = 'position') { return Number.isFinite(+k?.times?.[scope]) ? +k.times[scope] : +k.time || 0; }
+function ensureKeyTimes(k) {
+  k.times = k.times || {};
+  ['position', 'rotation', 'scale', 'opacity'].forEach((scope) => {
+    if (!Number.isFinite(+k.times[scope])) k.times[scope] = +k.time || 0;
+  });
+  return k.times;
+}
+function nearestKey(layer, t, scope = state.activeKeyScope || 'position') {
+  if (!layer.keyframes.length) return null;
+  return layer.keyframes.reduce((best, k) => Math.abs(keyTime(k, scope) - t) < Math.abs(keyTime(best, scope) - t) ? k : best, layer.keyframes[0]);
+}
+function sortedKeysForScope(layer, scope) { return [...(layer.keyframes || [])].sort((a, b) => keyTime(a, scope) - keyTime(b, scope)); }
+function sampleLayerProp(layer, t, scope, props) {
+  const keys = sortedKeysForScope(layer, scope);
+  if (!keys.length) return Object.fromEntries(props.map((prop) => [prop, prop === 'opacity' ? 1 : prop === 'scale' ? 1 : 0]));
+  if (t <= keyTime(keys[0], scope)) return Object.fromEntries(props.map((prop) => [prop, keys[0][prop]]));
+  if (t >= keyTime(keys[keys.length - 1], scope)) return Object.fromEntries(props.map((prop) => [prop, keys[keys.length - 1][prop]]));
+  let a = keys[0], b = keys[1];
+  for (let i = 0; i < keys.length - 1; i += 1) {
+    if (t >= keyTime(keys[i], scope) && t <= keyTime(keys[i + 1], scope)) { a = keys[i]; b = keys[i + 1]; break; }
+  }
+  const u = (t - keyTime(a, scope)) / Math.max(0.0001, keyTime(b, scope) - keyTime(a, scope));
+  const e = easeValue(u, getLayerEasing(layer, scope));
+  return Object.fromEntries(props.map((prop) => [prop, lerp(a[prop], b[prop], e)]));
+}
+function activeLayerScope() { return state.activeKeyScope || 'position'; }
 
 function easeValue(t, mode) {
   const p = currentProject(); const c = p?.settings.customEase || { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 };
@@ -750,21 +782,21 @@ function easeValue(t, mode) {
 }
 
 function getTransform(layer, t) {
-  sortKf(layer);
   if (!layer.keyframes.length) return { x: 180, y: 320, scale: 1, rotation: 0, opacity: 1 };
-  if (t <= layer.keyframes[0].time) return layer.keyframes[0];
-  if (t >= layer.keyframes[layer.keyframes.length - 1].time) return layer.keyframes[layer.keyframes.length - 1];
-  let a = layer.keyframes[0], b = layer.keyframes[1];
-  for (let i = 0; i < layer.keyframes.length - 1; i += 1) {
-    if (t >= layer.keyframes[i].time && t <= layer.keyframes[i + 1].time) { a = layer.keyframes[i]; b = layer.keyframes[i + 1]; break; }
-  }
-  const u = (t - a.time) / Math.max(0.0001, b.time - a.time);
-  const ePos = easeValue(u, getLayerEasing(layer, 'position'));
-  const eScale = easeValue(u, getLayerEasing(layer, 'scale'));
-  const eRotation = easeValue(u, getLayerEasing(layer, 'rotation'));
-  const eOpacity = easeValue(u, getLayerEasing(layer, 'opacity'));
-  return { x: lerp(a.x, b.x, ePos), y: lerp(a.y, b.y, ePos), scale: lerp(a.scale, b.scale, eScale), rotation: lerp(a.rotation, b.rotation, eRotation), opacity: lerp(a.opacity, b.opacity, eOpacity) };
+  (layer.keyframes || []).forEach(ensureKeyTimes);
+  const pos = sampleLayerProp(layer, t, 'position', ['x', 'y']);
+  const scale = sampleLayerProp(layer, t, 'scale', ['scale']);
+  const rotation = sampleLayerProp(layer, t, 'rotation', ['rotation']);
+  const opacity = sampleLayerProp(layer, t, 'opacity', ['opacity']);
+  return {
+    x: Number.isFinite(pos.x) ? pos.x : 180,
+    y: Number.isFinite(pos.y) ? pos.y : 320,
+    scale: Number.isFinite(scale.scale) ? scale.scale : 1,
+    rotation: Number.isFinite(rotation.rotation) ? rotation.rotation : 0,
+    opacity: Number.isFinite(opacity.opacity) ? opacity.opacity : 1
+  };
 }
+
 
 function setCanvasRatio(r, resolution = 1080) {
   const rr = parseRatio(r);
@@ -881,7 +913,8 @@ function syncControlsFromNearest() {
   }
   const l = currentLayer();
   if (!l) { ui.keyframeInfo.textContent = 'Frames: (chưa có layer)'; setUnavailableCards(true); syncFrameActionButton(); return; }
-  const k = nearestKey(l, state.time);
+  const scope = activeLayerScope();
+  const k = nearestKey(l, state.time, scope);
   if (!k) {
     setUnavailableCards(true);
     ui.keyframeInfo.textContent = '(Unavailable now. Expect you add a frame.)';
@@ -910,6 +943,8 @@ function syncControlsFromNearest() {
   if (ui.checkerColorB) ui.checkerColorB.value = l.effect?.checkerColorB || l.color || '#21b8ff';
   if (ui.checkerGrid) ui.checkerGrid.value = String(l.effect?.checkerGrid || 8);
   if (ui.checkerGridValue) ui.checkerGridValue.textContent = `${ui.checkerGrid?.value || 8}x${ui.checkerGrid?.value || 8}`;
+  if (ui.copyBackgroundMode) ui.copyBackgroundMode.value = l.effect?.copyBackgroundMode || 'gaussianBlur';
+  if (ui.copyBackgroundStrength) ui.copyBackgroundStrength.value = String(l.effect?.copyBackgroundStrength ?? 1);
   ui.textContent.value = l.text || 'TEXT';
   ui.textSize.value = String(l.size || 90);
   ui.textFontFamily.value = l.fontFamily || 'Inter';
@@ -920,8 +955,8 @@ function syncControlsFromNearest() {
   ui.glowColor.value = l.effect?.glowColor || l.color || '#21b8ff';
   ui.glowHardness.value = String(l.effect?.glowHardness ?? 0.5);
   ui.glowAlpha.value = String(l.effect?.glowAlpha ?? 0.7);
-  ui.keyframeInfo.textContent = `Frames: ${l.keyframes.map((x) => x.time.toFixed(2)).join(', ')}`;
-  if (k) ui.frameTime.value = k.time.toFixed(2);
+  ui.keyframeInfo.textContent = `${scope === 'rotation' ? 'Rotation' : 'Movement'} frames: ${l.keyframes.map((x) => keyTime(x, scope).toFixed(2)).join(', ')}`;
+  if (k) ui.frameTime.value = keyTime(k, scope).toFixed(2);
   setUnavailableCards(!l.keyframes?.length);
   syncTransformWidgets();
   syncFrameActionButton();
@@ -965,14 +1000,17 @@ function syncTransformWidgets() {
 }
 
 function ensureKeyAtCurrent(layer) {
-  let k = nearestKey(layer, state.time);
-  if (!k || Math.abs(k.time - state.time) >= 0.03) {
+  const scope = activeLayerScope();
+  let k = nearestKey(layer, state.time, scope);
+  if (!k || Math.abs(keyTime(k, scope) - state.time) >= 0.03) {
     const tf = getTransform(layer, state.time);
     k = newKeyframe(state.time, tf.x, tf.y, tf.scale, tf.rotation, tf.opacity);
+    ensureKeyTimes(k);
+    k.times[scope] = state.time;
     layer.keyframes.push(k);
   }
   sortKf(layer);
-  return nearestKey(layer, state.time);
+  return nearestKey(layer, state.time, scope);
 }
 
 function addKeyframeAtCurrent() {
@@ -996,9 +1034,14 @@ function addKeyframeAtCurrent() {
     return;
   }
   const l = currentLayer(); if (!l) return;
-  if (!nearestKey(l, state.time) || Math.abs(nearestKey(l, state.time).time - state.time) > 0.03) {
+  const scope = activeLayerScope();
+  const nk = nearestKey(l, state.time, scope);
+  if (!nk || Math.abs(keyTime(nk, scope) - state.time) > 0.03) {
     const tf = getTransform(l, state.time);
-    l.keyframes.push(newKeyframe(state.time, tf.x, tf.y, tf.scale, tf.rotation, tf.opacity));
+    const created = newKeyframe(state.time, tf.x, tf.y, tf.scale, tf.rotation, tf.opacity);
+    ensureKeyTimes(created);
+    created.times[scope] = state.time;
+    l.keyframes.push(created);
     sortKf(l); p.updatedAt = Date.now(); saveProjects();
   }
   drawTimelineTracks(); syncControlsFromNearest();
@@ -1022,7 +1065,7 @@ function removeNearestKeyframe() {
     return;
   }
   const l = currentLayer(); if (!l || l.keyframes.length <= 1) return;
-  const k = nearestKey(l, state.time);
+  const k = nearestKey(l, state.time, activeLayerScope());
   l.keyframes = l.keyframes.filter((x) => x.id !== k.id);
   p.updatedAt = Date.now(); saveProjects();
   drawTimelineTracks(); syncControlsFromNearest(); draw();
@@ -1094,6 +1137,38 @@ function drawLayerPrimitive(layer, fillOverride = null) {
   ctx.fillText(layer.text || 'TEXT', anchorX, 0);
 }
 
+
+
+function clipLayerPrimitivePath(layer) {
+  ctx.beginPath();
+  if (layer.type === 'circle') ctx.arc(0, 0, 55, 0, Math.PI * 2);
+  else if (layer.frameShape === 'diamond') { ctx.moveTo(0, -60); ctx.lineTo(60, 0); ctx.lineTo(0, 60); ctx.lineTo(-60, 0); ctx.closePath(); }
+  else if (layer.frameShape === 'pill') ctx.roundRect(-70, -35, 140, 70, 35);
+  else if (layer.frameShape === 'round') ctx.roundRect(-50, -50, 100, 100, 20);
+  else ctx.rect(-60, -60, 120, 120);
+  ctx.clip();
+}
+
+function drawCopyBackgroundLayer(layer, tf) {
+  const mode = layer.effect?.copyBackgroundMode || 'gaussianBlur';
+  const strength = clamp(layer.effect?.copyBackgroundStrength ?? 1, 0, 2);
+  ctx.save();
+  clipLayerPrimitivePath(layer);
+  if (mode === 'invertColor') ctx.filter = `invert(${Math.round(strength * 100)}%)`;
+  else if (mode === 'grayscale') ctx.filter = `grayscale(${Math.round(strength * 100)}%)`;
+  else ctx.filter = `blur(${Math.max(0.5, strength * 7).toFixed(1)}px)`;
+  ctx.globalAlpha = 0.92;
+  ctx.drawImage(ui.preview, -tf.x, -tf.y, ui.preview.width, ui.preview.height);
+  ctx.restore();
+  ctx.save();
+  ctx.strokeStyle = layer.color || '#21b8ff';
+  ctx.lineWidth = 3 / Math.max(0.1, tf.scale || 1);
+  ctx.globalAlpha = 0.8;
+  ctx.beginPath();
+  ctx.rect(-60, -60, 120, 120);
+  ctx.stroke();
+  ctx.restore();
+}
 
 function drawCheckerPrimitive(layer) {
   const grid = clamp(Math.round(Number(layer.effect?.checkerGrid) || 8), 2, 16);
@@ -1194,7 +1269,8 @@ function drawLayer(layer) {
     ctx.restore();
   }
 
-  if (effectType === 'checker') drawCheckerPrimitive(layer);
+  if (effectType === 'copyBackground') drawCopyBackgroundLayer(layer, tf);
+  else if (effectType === 'checker') drawCheckerPrimitive(layer);
   else drawLayerPrimitive(layer);
   ctx.restore();
 }
@@ -1260,6 +1336,7 @@ function drawTimelineTracks() {
     if (state.rightDeleteLog[key] && now - state.rightDeleteLog[key] < 380) {
       pushHistorySnapshot();
       if (payload.type === 'layer') {
+        if (payload.scope !== activeLayerScope()) return;
         const layer = p.layers.find((l) => l.id === payload.layerId);
         if (!layer || layer.keyframes.length <= 1) return;
         layer.keyframes = layer.keyframes.filter((k) => k.id !== payload.keyId);
@@ -1293,10 +1370,10 @@ function drawTimelineTracks() {
         tryDeleteKeyWithDoubleRightClick(payload);
         return;
       }
-      if (e.button !== 0) return;
+      if (e.button !== 0 || payload.inactive) return;
       pushHistorySnapshot();
       state.selectedTimelineKey = payload;
-      state.keyDrag = { payload, strip };
+      state.keyDrag = { payload, strip, dot };
     });
   };
 
@@ -1304,10 +1381,17 @@ function drawTimelineTracks() {
     if (!state.keyDrag) return;
     const t = clamp(calcTimeFromStrip(state.keyDrag.strip, e.clientX), 0, p.settings.duration);
     const payload = state.keyDrag.payload;
+    if (payload.inactive) return;
     if (payload.type === 'layer') {
       const layer = p.layers.find((l) => l.id === payload.layerId);
       const key = layer?.keyframes.find((k) => k.id === payload.keyId);
-      if (key) { key.time = t; sortKf(layer); }
+      if (key) {
+        const scope = payload.scope || activeLayerScope();
+        ensureKeyTimes(key);
+        key.times[scope] = t;
+        if (scope === 'position') key.time = t;
+        sortKf(layer);
+      }
     } else if (payload.type === 'camera') {
       const key = p.settings.cameraKeyframes.find((k) => k.id === payload.keyId);
       if (key) { key.time = t; sortTimeKeys(p.settings.cameraKeyframes); }
@@ -1316,14 +1400,19 @@ function drawTimelineTracks() {
       if (key) { key.time = t; sortTimeKeys(p.settings.audioKeyframes); }
     }
     state.time = t;
-    p.updatedAt = Date.now();
-    saveProjects();
-    drawTimelineTracks();
-    syncControlsFromNearest();
+    if (state.keyDrag.dot) state.keyDrag.dot.style.left = `${(t / Math.max(p.settings.duration, 0.001)) * 100}%`;
     draw();
   };
 
-  const onDragEnd = () => { state.keyDrag = null; };
+  const onDragEnd = () => {
+    if (state.keyDrag) {
+      p.updatedAt = Date.now();
+      saveProjects();
+      state.keyDrag = null;
+      drawTimelineTracks();
+      syncControlsFromNearest();
+    }
+  };
   if (state.keyDragHandlers) {
     window.removeEventListener('mousemove', state.keyDragHandlers.move);
     window.removeEventListener('mouseup', state.keyDragHandlers.up);
@@ -1334,7 +1423,7 @@ function drawTimelineTracks() {
 
   p.layers.forEach((l, idx) => {
     const row = document.createElement('div');
-    row.className = 'timeline-row';
+    row.className = `timeline-row scope-${activeLayerScope()}`;
     row.dataset.index = String(idx);
 
     const left = document.createElement('div'); left.className = 'timeline-left';
@@ -1357,12 +1446,18 @@ function drawTimelineTracks() {
 
     sortKf(l);
     l.keyframes.forEach((k) => {
-      const d = document.createElement('div');
-      d.className = 'key-dot';
-      d.style.left = `${(k.time / Math.max(p.settings.duration, 0.001)) * 100}%`;
-      if (Math.abs(k.time - state.time) <= 0.04) d.classList.add('active');
-      bindKeyDotInteractions(d, strip, { type: 'layer', layerId: l.id, keyId: k.id });
-      strip.append(d);
+      ensureKeyTimes(k);
+      ['position', 'rotation'].forEach((scope) => {
+        const d = document.createElement('div');
+        const inactive = scope !== activeLayerScope();
+        d.className = `key-dot ${scope}-key-dot${inactive ? ' parallel-key-dot' : ''}`;
+        const t = keyTime(k, scope);
+        d.style.left = `${(t / Math.max(p.settings.duration, 0.001)) * 100}%`;
+        if (Math.abs(t - state.time) <= 0.04 && !inactive) d.classList.add('active');
+        if (!inactive) bindKeyDotInteractions(d, strip, { type: 'layer', layerId: l.id, keyId: k.id, scope });
+        else d.title = scope === 'position' ? 'Movement keyframe inactive while another card is active' : 'Rotation keyframe inactive while another card is active';
+        strip.append(d);
+      });
     });
 
     row.onclick = (e) => {
@@ -1940,11 +2035,15 @@ function bind() {
       k.time = t; sortTimeKeys(p.settings.audioKeyframes);
     } else {
       const l = currentLayer(); if (!l) return;
+      const scope = selected?.scope || activeLayerScope();
       const k = (selected?.type === 'layer' && selected?.layerId === l.id && selected?.keyId)
         ? l.keyframes.find((x) => x.id === selected.keyId)
-        : nearestKey(l, state.time);
+        : nearestKey(l, state.time, scope);
       if (!k) return;
-      k.time = t; sortKf(l);
+      ensureKeyTimes(k);
+      k.times[scope] = t;
+      if (scope === 'position') k.time = t;
+      sortKf(l);
     }
     p.updatedAt = Date.now();
     state.time = t;
@@ -1953,13 +2052,13 @@ function bind() {
     syncControlsFromNearest();
     draw();
   };
-  ui.easeTarget.onchange = () => { const l = currentLayer(); if (!l) return; ui.easing.value = getLayerEasing(l, ui.easeTarget.value); drawEaseGraph(); };
+  ui.easeTarget.onchange = () => { const l = currentLayer(); if (!l) return; if (['position','rotation'].includes(ui.easeTarget.value)) state.activeKeyScope = ui.easeTarget.value; ui.easing.value = getLayerEasing(l, ui.easeTarget.value); drawEaseGraph(); drawTimelineTracks(); syncControlsFromNearest(); };
   ui.layerColor.oninput = applyCurrentValues;
   ui.layerEffectType.onchange = () => {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
     pushHistorySnapshot();
-    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8 };
+    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8, copyBackgroundMode: 'gaussianBlur', copyBackgroundStrength: 1 };
     l.effect.type = ui.layerEffectType.value;
     syncEffectTab(effectToTab(l.effect.type));
     p.updatedAt = Date.now();
@@ -1970,7 +2069,7 @@ function bind() {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
     pushHistorySnapshot();
-    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8 };
+    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8, copyBackgroundMode: 'gaussianBlur', copyBackgroundStrength: 1 };
     l.effect.strength = clamp(+ui.layerEffectStrength.value || 0, 0, 2);
     p.updatedAt = Date.now();
     saveProjects();
@@ -2007,7 +2106,7 @@ function bind() {
   const applyGlowControl = () => {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
-    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8 };
+    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8, copyBackgroundMode: 'gaussianBlur', copyBackgroundStrength: 1 };
     l.effect.glowColor = ui.glowColor.value;
     l.effect.glowHardness = clamp(+ui.glowHardness.value || 0, 0, 1);
     l.effect.glowAlpha = clamp(+ui.glowAlpha.value || 0, 0, 1);
@@ -2021,7 +2120,7 @@ function bind() {
   const applyAdvancedEffectControl = () => {
     const p = currentProject(); const l = currentLayer();
     if (!p || !l) return;
-    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8 };
+    l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8, copyBackgroundMode: 'gaussianBlur', copyBackgroundStrength: 1 };
     l.effect.reveal = clamp(+ui.effectReveal.value || 0, 0, 1);
     l.effect.wipeAngle = (+ui.effectWipeAngle.value % 360 + 360) % 360;
     l.effect.hue = clamp(+ui.effectHue.value || 0, -180, 180);
@@ -2033,11 +2132,13 @@ function bind() {
     l.effect.checkerColorB = ui.checkerColorB?.value || l.color || '#21b8ff';
     l.effect.checkerGrid = clamp(Math.round(+ui.checkerGrid?.value || 8), 2, 16);
     if (ui.checkerGridValue) ui.checkerGridValue.textContent = `${l.effect.checkerGrid}x${l.effect.checkerGrid}`;
+    l.effect.copyBackgroundMode = ui.copyBackgroundMode?.value || 'gaussianBlur';
+    l.effect.copyBackgroundStrength = clamp(+ui.copyBackgroundStrength?.value || 1, 0, 2);
     p.updatedAt = Date.now();
     saveProjects();
     draw();
   };
-  ['effectReveal', 'effectWipeAngle', 'effectHue', 'effectSaturation', 'effectBrightness', 'effect3DAngle', 'effect3DDepth', 'checkerColorA', 'checkerColorB', 'checkerGrid'].forEach((k) => {
+  ['effectReveal', 'effectWipeAngle', 'effectHue', 'effectSaturation', 'effectBrightness', 'effect3DAngle', 'effect3DDepth', 'checkerColorA', 'checkerColorB', 'checkerGrid', 'copyBackgroundMode', 'copyBackgroundStrength'].forEach((k) => {
     if (ui[k]) ui[k].oninput = applyAdvancedEffectControl;
   });
   document.querySelectorAll('.effect-tab-btn').forEach((btn) => {
@@ -2047,7 +2148,7 @@ function bind() {
       const p = currentProject(); const l = currentLayer();
       if (!p || !l) return;
       const effectType = tabToEffect(tab);
-      l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8 };
+      l.effect = l.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8, copyBackgroundMode: 'gaussianBlur', copyBackgroundStrength: 1 };
       l.effect.type = effectType;
       ui.layerEffectType.value = effectType;
       p.updatedAt = Date.now();
@@ -2237,7 +2338,7 @@ function bind() {
   };
   if (ui.movePad) {
     let moving = false;
-    ui.movePad.addEventListener('pointerdown', (e) => { moving = true; ui.movePad.setPointerCapture(e.pointerId); applyMovementFromEvent(e); });
+    ui.movePad.addEventListener('pointerdown', (e) => { activateTransformCard('position'); moving = true; ui.movePad.setPointerCapture(e.pointerId); applyMovementFromEvent(e); });
     ui.movePad.addEventListener('pointermove', (e) => { if (moving) applyMovementFromEvent(e); });
     ui.movePad.addEventListener('pointerup', () => { moving = false; });
     ui.movePad.addEventListener('pointercancel', () => { moving = false; });
@@ -2269,6 +2370,7 @@ function bind() {
     let rotating = false;
     const endRotation = () => { rotating = false; state.rotationDrag = null; };
     ui.rotateDial.addEventListener('pointerdown', (e) => {
+      activateTransformCard('rotation');
       const p = currentProject(); const l = currentLayer();
       if (!p || !l || ui.rotateDial.classList.contains('is-disabled')) return;
       rotating = true;
@@ -2313,17 +2415,37 @@ function bind() {
     body.addEventListener('transitionend', onDone);
   };
 
+
+  const cardControls = new Map();
+  const activateTransformCard = (scope) => {
+    state.activeKeyScope = scope === 'rotation' ? 'rotation' : 'position';
+    if (ui.easeTarget) ui.easeTarget.value = state.activeKeyScope;
+    cardControls.forEach(({ card, body, btn }, id) => {
+      const shouldOpen = (state.activeKeyScope === 'position' && id === 'movementCard') || (state.activeKeyScope === 'rotation' && id === 'rotateCard');
+      if (shouldOpen && card.classList.contains('is-collapsed')) animateExpand(card, body, btn);
+      if (!shouldOpen && !card.classList.contains('is-collapsed') && (id === 'movementCard' || id === 'rotateCard')) animateCollapse(card, body, btn);
+    });
+    drawTimelineTracks();
+    syncControlsFromNearest();
+  };
+
   document.querySelectorAll('.card-collapse-btn').forEach((btn) => {
     const targetId = btn.getAttribute('data-collapse-target');
     const body = targetId ? document.getElementById(targetId) : null;
     const card = btn.closest('.control-card');
     if (!body || !card) return;
+    cardControls.set(card.id, { card, body, btn });
     body.style.maxHeight = `${body.scrollHeight}px`;
     btn.addEventListener('click', () => {
+      if (card.id === 'movementCard') { activateTransformCard('position'); return; }
+      if (card.id === 'rotateCard') { activateTransformCard('rotation'); return; }
       if (card.classList.contains('is-collapsed')) animateExpand(card, body, btn);
       else animateCollapse(card, body, btn);
     });
   });
+
+  document.getElementById('movementCard')?.addEventListener('pointerdown', (e) => { if (!e.target.closest?.('.card-collapse-btn')) activateTransformCard('position'); });
+  document.getElementById('rotateCard')?.addEventListener('pointerdown', (e) => { if (!e.target.closest?.('.card-collapse-btn')) activateTransformCard('rotation'); });
 
   bindDrag();
   bindEaseGraphDrag();

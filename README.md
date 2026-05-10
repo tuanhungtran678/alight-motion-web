@@ -17,6 +17,8 @@ Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần + Node s
 - Chèn nhiều audio track cùng lúc và đồng bộ playback theo timeline.
 - Hiệu ứng hào quang có thêm chỉnh màu, độ cứng và alpha.
 - Thêm hiệu ứng **Checker / Ca-rô** với màu ô A/B và slider offset/grid (ví dụ 8 = 8x8).
+- Thêm **Copy Background** trong nhóm Background, bắt buộc chọn hiệu ứng đi kèm như Gaussian blur / Invert color / Grayscale để nổi hiệu ứng theo hình layer.
+- Movement/Rotate card tự chuyển phạm vi keyframe; keyframe không thuộc card hiện tại bị làm mờ và không kéo/xoá được.
 - Thêm nút **◄ / ►** để nhảy giữa keyframe và mark trên timeline.
 - Thêm **Mark a part / Delete this mark** để đánh dấu hoặc xoá mốc đỏ trên timeline.
 - Camera frame ẩn ở dự án mới cho tới khi dùng **Add Camera**; nếu đã có sẽ báo `Camera frame has been exist on this project.`

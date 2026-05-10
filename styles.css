@@ -689,7 +689,7 @@ input, select, button {
 }
 .diamond-tool.danger { background: #8d3140; border-color: #d66479; }
 
-.effect-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.effect-tabs { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .span-2 { grid-column: 1 / -1; }
 .timeline-nav-actions {
   display: grid;
@@ -759,3 +759,10 @@ input, select, button {
   .header-tools { flex-wrap: wrap; }
   .header-nav { display: grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); width: 100%; }
 }
+
+.parallel-key-dot { opacity: .32; background: transparent; filter: grayscale(1); cursor: not-allowed; }
+.parallel-key-dot::before { background: rgba(255,255,255,.55); inset: 5px; }
+.parallel-key-dot.active::after { display: none; }
+.position-key-dot { top: 35%; }
+.rotation-key-dot { top: 65%; }
+.timeline-row.scope-rotation .position-key-dot, .timeline-row.scope-position .rotation-key-dot { pointer-events: none; }

@@ -130,6 +130,7 @@
                 <option value="colorAdjust">Điều chỉnh màu</option>
                 <option value="rasterExtrude">Đùn Raster</option>
                 <option value="checker">Checker / Ca-rô</option>
+                <option value="copyBackground">Copy Background</option>
               </select>
             </label>
             <label>Độ mạnh hiệu ứng <input id="layerEffectStrength" type="number" min="0" max="2" step="0.1" value="0.6" /></label>
@@ -139,6 +140,7 @@
               <button class="effect-tab-btn" type="button" data-effect-tab="color">Color</button>
               <button class="effect-tab-btn" type="button" data-effect-tab="raster">Raster</button>
               <button class="effect-tab-btn" type="button" data-effect-tab="checker">Checker</button>
+              <button class="effect-tab-btn" type="button" data-effect-tab="background">Background</button>
             </div>
             <div id="glowControls">
               <label>Màu hào quang <input id="glowColor" type="color" value="#21b8ff" /></label>
@@ -167,6 +169,17 @@
                 <label class="span-2">Checker offset / grid: <span id="checkerGridValue">8x8</span>
                   <input id="checkerGrid" type="range" min="2" max="16" step="1" value="8" />
                 </label>
+              </div>
+              <div class="field-grid effect-panel hidden" data-effect-panel="background">
+                <label>Background effect
+                  <select id="copyBackgroundMode">
+                    <option value="gaussianBlur">Gaussian blur</option>
+                    <option value="invertColor">Invert color</option>
+                    <option value="grayscale">Grayscale</option>
+                  </select>
+                </label>
+                <label>Background strength <input id="copyBackgroundStrength" type="number" min="0" max="2" step="0.05" value="1" /></label>
+                <small class="span-2">Copy Background requires this paired effect so the selected layer shape lifts the effect over the video.</small>
               </div>
             </div>
             <div id="textLayerControls">
