@@ -121,26 +121,83 @@
             <label>Layer hiện tại <select id="layerSelect"></select></label>
             <label>Tên layer <input id="layerName" type="text" value="Layer" /></label>
             <label>Màu layer <input id="layerColor" type="color" value="#21b8ff" /></label>
-            <label>Hiệu ứng
+            <label>Effect / Hiệu ứng
               <select id="layerEffectType">
-                <option value="none" selected>Không</option>
-                <option value="glow">Hào quang</option>
-                <option value="stars">Chùm sao</option>
-                <option value="wipe">Quệt (Wipe)</option>
-                <option value="colorAdjust">Điều chỉnh màu</option>
+                <option value="none" selected>None / Không</option>
+                <optgroup label="Color and Lights">
+                  <option value="invertColor">Invert Color</option>
+                  <option value="exposureGamma">Exposure/Gamma</option>
+                  <option value="colorReplace">Color Replace</option>
+                  <option value="gradientMap">Gradient Map</option>
+                  <option value="lightRays">Light Rays</option>
+                  <option value="colorTune">Color Tune</option>
+                  <option value="saturationVibrance">Saturation/Vibrance</option>
+                  <option value="rgbSplit">RGB Split</option>
+                  <option value="glowScan">Glow Scan</option>
+                  <option value="hotColor">Hot Color</option>
+                  <option value="channelRemap">Channel Remap</option>
+                </optgroup>
+                <optgroup label="Blur">
+                  <option value="motionBlur">Motion Blur</option>
+                  <option value="gaussianBlur">Gaussian Blur</option>
+                  <option value="boxBlur">Box Blur / Fast Blur</option>
+                  <option value="directionalBlur">Directional Blur</option>
+                  <option value="zoomBlur">Zoom Blur</option>
+                  <option value="radialBlur">Radial Blur</option>
+                  <option value="lensBlur">Lens Blur</option>
+                </optgroup>
+                <optgroup label="Distortion / Warp">
+                  <option value="tiles">Tiles</option>
+                  <option value="waveWarp">Wave Warp</option>
+                  <option value="pinchPunch">Pinch/Punch</option>
+                  <option value="polarCoordinates">Polar Coordinates</option>
+                  <option value="tileRotate">Tile Rotate</option>
+                  <option value="turbulentDisplace">Turbulent Displace</option>
+                  <option value="bend">Bend</option>
+                  <option value="fractalWarp">Fractal Warp</option>
+                </optgroup>
+                <optgroup label="Move / Transform">
+                  <option value="oscillate">Oscillate</option>
+                  <option value="randomJitter">Random Jitter</option>
+                  <option value="swing">Swing</option>
+                  <option value="autoShake">Auto-Shake</option>
+                  <option value="axisScale">Axis Scale</option>
+                </optgroup>
+                <optgroup label="Drawing & Edge">
+                  <option value="findEdges">Find Edges</option>
+                  <option value="drawingGlowScan">Glow Scan</option>
+                  <option value="drawingProgress">Drawing Progress</option>
+                  <option value="contourLines">Contour Lines</option>
+                  <option value="electricEdges">Electric Edges</option>
+                </optgroup>
+                <optgroup label="Procedural">
+                  <option value="simpleChoker">Simple Choker / Fractal Ridges</option>
+                  <option value="stripes">Stripes</option>
+                  <option value="checker">Checkerboard / Ca-rô</option>
+                  <option value="grid">Grid</option>
+                  <option value="stars">Starfield</option>
+                </optgroup>
+                <optgroup label="Matte / Mask / Key">
+                  <option value="chromaKey">Chroma Key</option>
+                  <option value="lumaKey">Luma Key</option>
+                  <option value="mask">Mask</option>
+                  <option value="wipe">Wipe</option>
+                  <option value="copyBackground">Copy Background</option>
+                </optgroup>
+                <option value="glow">Legacy Glow</option>
+                <option value="colorAdjust">Legacy Color Adjust</option>
                 <option value="rasterExtrude">Đùn Raster</option>
-                <option value="checker">Checker / Ca-rô</option>
-                <option value="copyBackground">Copy Background</option>
               </select>
             </label>
             <label>Độ mạnh hiệu ứng <input id="layerEffectStrength" type="number" min="0" max="2" step="0.1" value="0.6" /></label>
-            <div class="effect-tabs" id="effectTabs">
-              <button class="effect-tab-btn active" type="button" data-effect-tab="glow">Glow</button>
-              <button class="effect-tab-btn" type="button" data-effect-tab="wipe">Wipe</button>
-              <button class="effect-tab-btn" type="button" data-effect-tab="color">Color</button>
-              <button class="effect-tab-btn" type="button" data-effect-tab="raster">Raster</button>
-              <button class="effect-tab-btn" type="button" data-effect-tab="checker">Checker</button>
-              <button class="effect-tab-btn" type="button" data-effect-tab="background">Background</button>
+            <div class="effect-tabs" id="effectTabs" aria-label="Effect groups">
+              <button class="effect-tab-btn active" type="button" data-effect-tab="colorLights">Color & Lights</button>
+              <button class="effect-tab-btn" type="button" data-effect-tab="blur">Blur</button>
+              <button class="effect-tab-btn" type="button" data-effect-tab="distortion">Distortion / Warp</button>
+              <button class="effect-tab-btn" type="button" data-effect-tab="moveTransform">Move / Transform</button>
+              <button class="effect-tab-btn" type="button" data-effect-tab="drawingEdge">Drawing & Edge</button>
+              <button class="effect-tab-btn" type="button" data-effect-tab="procedural">Procedural</button>
+              <button class="effect-tab-btn" type="button" data-effect-tab="matteMaskKey">Matte / Mask / Key</button>
             </div>
             <div id="glowControls">
               <label>Màu hào quang <input id="glowColor" type="color" value="#21b8ff" /></label>
@@ -150,36 +207,46 @@
               </div>
             </div>
             <div id="effectExtraControls">
-              <div class="field-grid effect-panel" data-effect-panel="wipe">
-                <label>Độ xuất hiện (Wipe) <input id="effectReveal" type="number" min="0" max="1" step="0.05" value="1" /></label>
-                <label>Góc Wipe° <input id="effectWipeAngle" type="number" min="0" max="360" step="1" value="0" /></label>
+              <div class="field-grid effect-panel" data-effect-panel="colorLights">
+                <label>Hue° / Color Tune <input id="effectHue" type="number" min="-180" max="180" step="1" value="0" /></label>
+                <label>Saturation / Vibrance <input id="effectSaturation" type="number" min="0" max="2" step="0.05" value="1" /></label>
+                <label>Brightness / Exposure <input id="effectBrightness" type="number" min="0" max="2" step="0.05" value="1" /></label>
+                <small class="span-2">Includes: Invert Color, Exposure/Gamma, Color Replace, Gradient Map, Light Rays, Color Tune, Saturation/Vibrance, RGB Split, Glow Scan, Hot Color, Channel Remap.</small>
               </div>
-              <div class="field-grid effect-panel hidden" data-effect-panel="color">
-                <label>Hue° <input id="effectHue" type="number" min="-180" max="180" step="1" value="0" /></label>
-                <label>Saturation <input id="effectSaturation" type="number" min="0" max="2" step="0.05" value="1" /></label>
-                <label>Brightness <input id="effectBrightness" type="number" min="0" max="2" step="0.05" value="1" /></label>
+              <div class="field-grid effect-panel hidden" data-effect-panel="blur">
+                <label>Blur amount <input id="copyBackgroundStrength" type="number" min="0" max="2" step="0.05" value="1" /></label>
+                <small class="span-2">Includes: Motion Blur, Gaussian Blur, Box/Fast Blur, Directional Blur, Zoom Blur, Radial Blur, Lens Blur.</small>
               </div>
-              <div class="field-grid effect-panel hidden" data-effect-panel="raster">
-                <label>Góc đùn° <input id="effect3DAngle" type="number" min="0" max="360" step="1" value="35" /></label>
-                <label>Độ dày đùn <input id="effect3DDepth" type="number" min="0" max="24" step="1" value="8" /></label>
+              <div class="field-grid effect-panel hidden" data-effect-panel="distortion">
+                <label>Warp / Raster angle° <input id="effect3DAngle" type="number" min="0" max="360" step="1" value="35" /></label>
+                <label>Warp / Raster depth <input id="effect3DDepth" type="number" min="0" max="24" step="1" value="8" /></label>
+                <small class="span-2">Includes: Tiles, Wave Warp, Pinch/Punch, Polar Coordinates, Tile Rotate, Turbulent Displace, Bend, Fractal Warp.</small>
               </div>
-              <div class="field-grid effect-panel hidden" data-effect-panel="checker">
+              <div class="field-grid effect-panel hidden" data-effect-panel="moveTransform">
+                <small class="span-2">Includes: Oscillate, Random Jitter, Swing, Auto-Shake, Axis Scale. These effects use strength plus the current layer transform.</small>
+              </div>
+              <div class="field-grid effect-panel hidden" data-effect-panel="drawingEdge">
+                <small class="span-2">Includes: Find Edges, Glow Scan, Drawing Progress, Contour Lines, Electric Edges.</small>
+              </div>
+              <div class="field-grid effect-panel hidden" data-effect-panel="procedural">
                 <label>Checker color A <input id="checkerColorA" type="color" value="#ffffff" /></label>
                 <label>Checker color B <input id="checkerColorB" type="color" value="#21b8ff" /></label>
-                <label class="span-2">Checker offset / grid: <span id="checkerGridValue">8x8</span>
+                <label class="span-2">Checkerboard offset / grid: <span id="checkerGridValue">8x8</span>
                   <input id="checkerGrid" type="range" min="2" max="16" step="1" value="8" />
                 </label>
+                <small class="span-2">Includes: Simple Choker / Fractal Ridges, Stripes, Checkerboard, Grid, Starfield.</small>
               </div>
-              <div class="field-grid effect-panel hidden" data-effect-panel="background">
-                <label>Background effect
+              <div class="field-grid effect-panel hidden" data-effect-panel="matteMaskKey">
+                <label>Wipe reveal <input id="effectReveal" type="number" min="0" max="1" step="0.05" value="1" /></label>
+                <label>Wipe angle° <input id="effectWipeAngle" type="number" min="0" max="360" step="1" value="0" /></label>
+                <label>Copy Background pair
                   <select id="copyBackgroundMode">
                     <option value="gaussianBlur">Gaussian blur</option>
                     <option value="invertColor">Invert color</option>
                     <option value="grayscale">Grayscale</option>
                   </select>
                 </label>
-                <label>Background strength <input id="copyBackgroundStrength" type="number" min="0" max="2" step="0.05" value="1" /></label>
-                <small class="span-2">Copy Background requires this paired effect so the selected layer shape lifts the effect over the video.</small>
+                <small class="span-2">Includes: Chroma Key, Luma Key, Mask, Wipe. Copy Background must be paired with another effect to lift that effect through the layer shape.</small>
               </div>
             </div>
             <div id="textLayerControls">

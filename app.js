@@ -480,7 +480,7 @@ function normalizeProject(p) {
     layer.frameShape = layer.frameShape || 'rect';
     layer.groupId = layer.groupId || null;
     layer.effect = layer.effect || { type: 'none', strength: 0.6, glowColor: '#21b8ff', glowHardness: 0.5, glowAlpha: 0.7, reveal: 1, wipeAngle: 0, hue: 0, saturation: 1, brightness: 1, depthAngle: 35, depthSize: 8, checkerColorA: '#ffffff', checkerColorB: '#21b8ff', checkerGrid: 8, copyBackgroundMode: 'gaussianBlur', copyBackgroundStrength: 1 };
-    layer.effect.type = layer.effect.type === 'extrude3d' ? 'rasterExtrude' : (layer.effect.type || 'none');
+    layer.effect.type = layer.effect.type === 'extrude3d' ? 'rasterExtrude' : (layer.effect.type === 'checkerboard' ? 'checker' : (layer.effect.type || 'none'));
     layer.effect.strength = Number.isFinite(+layer.effect.strength) ? clamp(+layer.effect.strength, 0, 2) : 0.6;
     layer.effect.glowColor = layer.effect.glowColor || layer.color || '#21b8ff';
     layer.effect.glowHardness = Number.isFinite(+layer.effect.glowHardness) ? clamp(+layer.effect.glowHardness, 0, 1) : 0.5;
@@ -523,25 +523,41 @@ function sortTimeKeys(list) { list.sort((a, b) => a.time - b.time); }
 
 
 function tText(en, vi) { return state.language === 'en' ? en : vi; }
+const EFFECT_GROUPS = {
+  colorLights: ['invertColor', 'exposureGamma', 'colorReplace', 'gradientMap', 'lightRays', 'colorTune', 'saturationVibrance', 'rgbSplit', 'glowScan', 'hotColor', 'channelRemap', 'colorAdjust', 'glow'],
+  blur: ['motionBlur', 'gaussianBlur', 'boxBlur', 'directionalBlur', 'zoomBlur', 'radialBlur', 'lensBlur'],
+  distortion: ['tiles', 'waveWarp', 'pinchPunch', 'polarCoordinates', 'tileRotate', 'turbulentDisplace', 'bend', 'fractalWarp', 'rasterExtrude', 'extrude3d'],
+  moveTransform: ['oscillate', 'randomJitter', 'swing', 'autoShake', 'axisScale'],
+  drawingEdge: ['findEdges', 'drawingGlowScan', 'drawingProgress', 'contourLines', 'electricEdges'],
+  procedural: ['simpleChoker', 'fractalRidges', 'stripes', 'checker', 'checkerboard', 'grid', 'stars'],
+  matteMaskKey: ['chromaKey', 'lumaKey', 'mask', 'wipe', 'copyBackground']
+};
+const DEFAULT_EFFECT_BY_GROUP = {
+  colorLights: 'invertColor',
+  blur: 'gaussianBlur',
+  distortion: 'tiles',
+  moveTransform: 'oscillate',
+  drawingEdge: 'findEdges',
+  procedural: 'checker',
+  matteMaskKey: 'wipe'
+};
 function effectToTab(type) {
-  if (type === 'wipe') return 'wipe';
-  if (type === 'colorAdjust') return 'color';
-  if (type === 'rasterExtrude' || type === 'extrude3d') return 'raster';
-  if (type === 'checker') return 'checker';
-  if (type === 'copyBackground') return 'background';
-  return 'glow';
+  const normalized = type === 'checkerboard' ? 'checker' : type;
+  return Object.entries(EFFECT_GROUPS).find(([, effects]) => effects.includes(normalized))?.[0] || 'colorLights';
 }
-function tabToEffect(tab) {
-  if (tab === 'wipe') return 'wipe';
-  if (tab === 'color') return 'colorAdjust';
-  if (tab === 'raster') return 'rasterExtrude';
-  if (tab === 'checker') return 'checker';
-  if (tab === 'background') return 'copyBackground';
-  return 'glow';
-}
+function tabToEffect(tab) { return DEFAULT_EFFECT_BY_GROUP[tab] || 'invertColor'; }
+function isColorLightEffect(type) { return EFFECT_GROUPS.colorLights.includes(type); }
+function isBlurEffect(type) { return EFFECT_GROUPS.blur.includes(type); }
+function isDistortionEffect(type) { return EFFECT_GROUPS.distortion.includes(type); }
+function isMoveTransformEffect(type) { return EFFECT_GROUPS.moveTransform.includes(type); }
+function isDrawingEdgeEffect(type) { return EFFECT_GROUPS.drawingEdge.includes(type); }
+function isProceduralEffect(type) { return EFFECT_GROUPS.procedural.includes(type); }
 function getTimelinePoints(p) {
   const points = [];
-  (p.layers || []).forEach((layer) => (layer.keyframes || []).forEach((k) => points.push(k.time)));
+  (p.layers || []).forEach((layer) => (layer.keyframes || []).forEach((k) => {
+    ensureKeyTimes(k);
+    ['position', 'rotation', 'scale', 'opacity'].forEach((scope) => points.push(keyTime(k, scope)));
+  }));
   (p.settings.cameraKeyframes || []).forEach((k) => points.push(k.time));
   (p.settings.audioKeyframes || []).forEach((k) => points.push(k.time));
   (p.settings.marks || []).forEach((m) => points.push(m.time));
@@ -770,7 +786,20 @@ function sampleLayerProp(layer, t, scope, props) {
   const e = easeValue(u, getLayerEasing(layer, scope));
   return Object.fromEntries(props.map((prop) => [prop, lerp(a[prop], b[prop], e)]));
 }
-function activeLayerScope() { return state.activeKeyScope || 'position'; }
+function activeLayerScope() { return ['position', 'rotation', 'scale', 'opacity'].includes(state.activeKeyScope) ? state.activeKeyScope : 'position'; }
+function setActiveLayerScope(scope, { refresh = true } = {}) {
+  state.activeKeyScope = ['position', 'rotation', 'scale', 'opacity'].includes(scope) ? scope : 'position';
+  if (ui.easeTarget) ui.easeTarget.value = state.activeKeyScope;
+  if (refresh) {
+    drawTimelineTracks();
+    syncControlsFromNearest();
+    drawEaseGraph();
+  }
+}
+
+function scopeLabel(scope) {
+  return { position: 'Movement', rotation: 'Rotation', scale: 'Scale', opacity: 'Opacity' }[scope] || 'Movement';
+}
 
 function easeValue(t, mode) {
   const p = currentProject(); const c = p?.settings.customEase || { p1x: 0.25, p1y: 0.1, p2x: 0.25, p2y: 1 };
@@ -955,7 +984,7 @@ function syncControlsFromNearest() {
   ui.glowColor.value = l.effect?.glowColor || l.color || '#21b8ff';
   ui.glowHardness.value = String(l.effect?.glowHardness ?? 0.5);
   ui.glowAlpha.value = String(l.effect?.glowAlpha ?? 0.7);
-  ui.keyframeInfo.textContent = `${scope === 'rotation' ? 'Rotation' : 'Movement'} frames: ${l.keyframes.map((x) => keyTime(x, scope).toFixed(2)).join(', ')}`;
+  ui.keyframeInfo.textContent = `${scopeLabel(scope)} frames: ${l.keyframes.map((x) => keyTime(x, scope).toFixed(2)).join(', ')}`;
   if (k) ui.frameTime.value = keyTime(k, scope).toFixed(2);
   setUnavailableCards(!l.keyframes?.length);
   syncTransformWidgets();
@@ -1214,7 +1243,7 @@ function drawLayer(layer) {
     ctx.clip();
   }
 
-  if (effectType === 'glow') {
+  if (['glow', 'lightRays', 'glowScan', 'drawingGlowScan', 'hotColor', 'electricEdges'].includes(effectType)) {
     const gc = layer.effect?.glowColor || layer.color || '#21b8ff';
     const ga = clamp(layer.effect?.glowAlpha ?? 0.7, 0, 1);
     const gh = clamp(layer.effect?.glowHardness ?? 0.5, 0, 1);
@@ -1224,14 +1253,29 @@ function drawLayer(layer) {
     ctx.shadowBlur = (8 + effectStrength * 34) * (1.15 - gh * 0.85);
   }
 
-  if (effectType === 'colorAdjust') {
+  if (effectType === 'colorAdjust' || effectType === 'colorTune' || effectType === 'saturationVibrance' || effectType === 'exposureGamma') {
     const hue = clamp(layer.effect?.hue ?? 0, -180, 180);
     const sat = clamp(layer.effect?.saturation ?? 1, 0, 2);
     const bri = clamp(layer.effect?.brightness ?? 1, 0, 2);
     ctx.filter = `hue-rotate(${hue}deg) saturate(${sat}) brightness(${bri})`;
+  } else if (effectType === 'invertColor') {
+    ctx.filter = 'invert(1)';
+  } else if (effectType === 'gradientMap' || effectType === 'colorReplace' || effectType === 'channelRemap') {
+    ctx.filter = `hue-rotate(${clamp(layer.effect?.hue ?? 0, -180, 180)}deg) contrast(${1 + effectStrength * 0.35})`;
   }
 
-  if (effectType === 'rasterExtrude' || effectType === 'extrude3d') {
+  if (isBlurEffect(effectType)) {
+    ctx.filter = `${ctx.filter && ctx.filter !== 'none' ? `${ctx.filter} ` : ''}blur(${Math.max(0.5, effectStrength * 4)}px)`;
+  }
+
+  if (isMoveTransformEffect(effectType)) {
+    const wobble = Math.sin(state.time * Math.PI * 4) * effectStrength * 8;
+    if (effectType === 'axisScale') ctx.scale(1 + effectStrength * 0.08, 1);
+    else if (effectType === 'swing') ctx.rotate((wobble * Math.PI) / 180);
+    else ctx.translate(wobble, effectType === 'randomJitter' || effectType === 'autoShake' ? Math.cos(state.time * Math.PI * 5) * effectStrength * 6 : 0);
+  }
+
+  if (effectType === 'rasterExtrude' || effectType === 'extrude3d' || isDistortionEffect(effectType)) {
     const depth = clamp(layer.effect?.depthSize ?? 8, 0, 24);
     const ang = ((layer.effect?.depthAngle ?? 35) * Math.PI) / 180;
     const dx = Math.cos(ang);
@@ -1245,7 +1289,7 @@ function drawLayer(layer) {
     }
   }
 
-  if (effectType === 'stars') {
+  if (effectType === 'stars' || effectType === 'starfield') {
     const r = 70;
     ctx.save();
     ctx.fillStyle = '#fff9b6';
@@ -1270,7 +1314,7 @@ function drawLayer(layer) {
   }
 
   if (effectType === 'copyBackground') drawCopyBackgroundLayer(layer, tf);
-  else if (effectType === 'checker') drawCheckerPrimitive(layer);
+  else if (effectType === 'checker' || effectType === 'checkerboard' || effectType === 'grid' || effectType === 'stripes') drawCheckerPrimitive(layer);
   else drawLayerPrimitive(layer);
   ctx.restore();
 }
@@ -1390,7 +1434,7 @@ function drawTimelineTracks() {
         ensureKeyTimes(key);
         key.times[scope] = t;
         if (scope === 'position') key.time = t;
-        sortKf(layer);
+        // Keep array order stable while dragging so the marker does not jump under the cursor.
       }
     } else if (payload.type === 'camera') {
       const key = p.settings.cameraKeyframes.find((k) => k.id === payload.keyId);
@@ -1408,6 +1452,10 @@ function drawTimelineTracks() {
     if (state.keyDrag) {
       p.updatedAt = Date.now();
       saveProjects();
+      if (state.keyDrag.payload?.type === 'layer') {
+        const layer = p.layers.find((l) => l.id === state.keyDrag.payload.layerId);
+        if (layer) sortKf(layer);
+      }
       state.keyDrag = null;
       drawTimelineTracks();
       syncControlsFromNearest();
@@ -1447,7 +1495,7 @@ function drawTimelineTracks() {
     sortKf(l);
     l.keyframes.forEach((k) => {
       ensureKeyTimes(k);
-      ['position', 'rotation'].forEach((scope) => {
+      ['position', 'rotation', 'scale', 'opacity'].forEach((scope) => {
         const d = document.createElement('div');
         const inactive = scope !== activeLayerScope();
         d.className = `key-dot ${scope}-key-dot${inactive ? ' parallel-key-dot' : ''}`;
@@ -1455,7 +1503,7 @@ function drawTimelineTracks() {
         d.style.left = `${(t / Math.max(p.settings.duration, 0.001)) * 100}%`;
         if (Math.abs(t - state.time) <= 0.04 && !inactive) d.classList.add('active');
         if (!inactive) bindKeyDotInteractions(d, strip, { type: 'layer', layerId: l.id, keyId: k.id, scope });
-        else d.title = scope === 'position' ? 'Movement keyframe inactive while another card is active' : 'Rotation keyframe inactive while another card is active';
+        else d.title = `${scopeLabel(scope)} keyframe is parallel/inactive while ${scopeLabel(activeLayerScope())} is active`;
         strip.append(d);
       });
     });
@@ -2052,7 +2100,6 @@ function bind() {
     syncControlsFromNearest();
     draw();
   };
-  ui.easeTarget.onchange = () => { const l = currentLayer(); if (!l) return; if (['position','rotation'].includes(ui.easeTarget.value)) state.activeKeyScope = ui.easeTarget.value; ui.easing.value = getLayerEasing(l, ui.easeTarget.value); drawEaseGraph(); drawTimelineTracks(); syncControlsFromNearest(); };
   ui.layerColor.oninput = applyCurrentValues;
   ui.layerEffectType.onchange = () => {
     const p = currentProject(); const l = currentLayer();
@@ -2078,6 +2125,7 @@ function bind() {
   if (ui.opacitySlider) {
     ui.opacitySlider.oninput = () => {
       const v = clamp(+ui.opacitySlider.value || 0, 0, 1);
+      activateTransformScope('opacity');
       ui.startOpacity.value = String(v);
       if (ui.opacityPercent) ui.opacityPercent.value = `${Math.round(v * 100)}%`;
       applyCurrentValues();
@@ -2085,17 +2133,20 @@ function bind() {
   }
   if (ui.scaleQuickInput) {
     ui.scaleQuickInput.oninput = () => {
+      activateTransformScope('scale');
       ui.startScale.value = ui.scaleQuickInput.value;
       applyCurrentValues();
     };
   }
   if (ui.scaleUpBtn) ui.scaleUpBtn.onclick = () => {
+    activateTransformScope('scale');
     const v = (+ui.startScale.value || 1) + 0.1;
     ui.startScale.value = String(v.toFixed(2));
     if (ui.scaleQuickInput) ui.scaleQuickInput.value = ui.startScale.value;
     applyCurrentValues();
   };
   if (ui.scaleDownBtn) ui.scaleDownBtn.onclick = () => {
+    activateTransformScope('scale');
     const v = Math.max(0.1, (+ui.startScale.value || 1) - 0.1);
     ui.startScale.value = String(v.toFixed(2));
     if (ui.scaleQuickInput) ui.scaleQuickInput.value = ui.startScale.value;
@@ -2184,8 +2235,19 @@ function bind() {
     drawTimelineTracks();
     syncMarkButton();
   };
+  if (ui.easeTarget) ui.easeTarget.onchange = () => { const l = currentLayer(); activateTransformScope(ui.easeTarget.value || 'position'); if (l) ui.easing.value = getLayerEasing(l, ui.easeTarget.value); drawEaseGraph(); };
   ui.applyBtn.onclick = applyCurrentValues;
-  ['timelineDuration', 'easing', 'startX', 'startY', 'startScale', 'startRotation', 'startOpacity'].forEach((k) => ui[k].addEventListener('input', applyCurrentValues));
+  ['startX', 'startY'].forEach((k) => ui[k].addEventListener('focus', () => activateTransformScope('position')));
+  if (ui.startRotation) ui.startRotation.addEventListener('focus', () => activateTransformScope('rotation'));
+  if (ui.startScale) ui.startScale.addEventListener('focus', () => activateTransformScope('scale'));
+  if (ui.startOpacity) ui.startOpacity.addEventListener('focus', () => activateTransformScope('opacity'));
+  ['timelineDuration', 'easing', 'startX', 'startY', 'startScale', 'startRotation', 'startOpacity'].forEach((k) => ui[k].addEventListener('input', () => {
+    if (k === 'startScale') activateTransformScope('scale');
+    else if (k === 'startOpacity') activateTransformScope('opacity');
+    else if (k === 'startRotation') activateTransformScope('rotation');
+    else if (k === 'startX' || k === 'startY') activateTransformScope('position');
+    applyCurrentValues();
+  }));
   ui.applyCameraBtn.onclick = () => {
     const p = currentProject();
     if (!p) return;
@@ -2338,7 +2400,7 @@ function bind() {
   };
   if (ui.movePad) {
     let moving = false;
-    ui.movePad.addEventListener('pointerdown', (e) => { activateTransformCard('position'); moving = true; ui.movePad.setPointerCapture(e.pointerId); applyMovementFromEvent(e); });
+    ui.movePad.addEventListener('pointerdown', (e) => { activateTransformScope('position'); moving = true; ui.movePad.setPointerCapture(e.pointerId); applyMovementFromEvent(e); });
     ui.movePad.addEventListener('pointermove', (e) => { if (moving) applyMovementFromEvent(e); });
     ui.movePad.addEventListener('pointerup', () => { moving = false; });
     ui.movePad.addEventListener('pointercancel', () => { moving = false; });
@@ -2370,7 +2432,7 @@ function bind() {
     let rotating = false;
     const endRotation = () => { rotating = false; state.rotationDrag = null; };
     ui.rotateDial.addEventListener('pointerdown', (e) => {
-      activateTransformCard('rotation');
+      activateTransformScope('rotation');
       const p = currentProject(); const l = currentLayer();
       if (!p || !l || ui.rotateDial.classList.contains('is-disabled')) return;
       rotating = true;
@@ -2417,9 +2479,8 @@ function bind() {
 
 
   const cardControls = new Map();
-  const activateTransformCard = (scope) => {
-    state.activeKeyScope = scope === 'rotation' ? 'rotation' : 'position';
-    if (ui.easeTarget) ui.easeTarget.value = state.activeKeyScope;
+  const activateTransformScope = (scope) => {
+    setActiveLayerScope(scope, { refresh: false });
     cardControls.forEach(({ card, body, btn }, id) => {
       const shouldOpen = (state.activeKeyScope === 'position' && id === 'movementCard') || (state.activeKeyScope === 'rotation' && id === 'rotateCard');
       if (shouldOpen && card.classList.contains('is-collapsed')) animateExpand(card, body, btn);
@@ -2427,6 +2488,7 @@ function bind() {
     });
     drawTimelineTracks();
     syncControlsFromNearest();
+    drawEaseGraph();
   };
 
   document.querySelectorAll('.card-collapse-btn').forEach((btn) => {
@@ -2437,15 +2499,15 @@ function bind() {
     cardControls.set(card.id, { card, body, btn });
     body.style.maxHeight = `${body.scrollHeight}px`;
     btn.addEventListener('click', () => {
-      if (card.id === 'movementCard') { activateTransformCard('position'); return; }
-      if (card.id === 'rotateCard') { activateTransformCard('rotation'); return; }
+      if (card.id === 'movementCard') { activateTransformScope('position'); return; }
+      if (card.id === 'rotateCard') { activateTransformScope('rotation'); return; }
       if (card.classList.contains('is-collapsed')) animateExpand(card, body, btn);
       else animateCollapse(card, body, btn);
     });
   });
 
-  document.getElementById('movementCard')?.addEventListener('pointerdown', (e) => { if (!e.target.closest?.('.card-collapse-btn')) activateTransformCard('position'); });
-  document.getElementById('rotateCard')?.addEventListener('pointerdown', (e) => { if (!e.target.closest?.('.card-collapse-btn')) activateTransformCard('rotation'); });
+  document.getElementById('movementCard')?.addEventListener('pointerdown', (e) => { if (!e.target.closest?.('.card-collapse-btn')) activateTransformScope('position'); });
+  document.getElementById('rotateCard')?.addEventListener('pointerdown', (e) => { if (!e.target.closest?.('.card-collapse-btn')) activateTransformScope('rotation'); });
 
   bindDrag();
   bindEaseGraphDrag();

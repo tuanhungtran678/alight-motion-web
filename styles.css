@@ -571,7 +571,7 @@ input, select, button {
 #effectExtraControls { margin: 8px 0 10px; }
 .effect-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
   margin: 8px 0;
 }
@@ -689,7 +689,7 @@ input, select, button {
 }
 .diamond-tool.danger { background: #8d3140; border-color: #d66479; }
 
-.effect-tabs { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.effect-tabs { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .span-2 { grid-column: 1 / -1; }
 .timeline-nav-actions {
   display: grid;
@@ -766,3 +766,17 @@ input, select, button {
 .position-key-dot { top: 35%; }
 .rotation-key-dot { top: 65%; }
 .timeline-row.scope-rotation .position-key-dot, .timeline-row.scope-position .rotation-key-dot { pointer-events: none; }
+.scale-key-dot { top: 48%; }
+.opacity-key-dot { top: 78%; }
+.timeline-row.scope-position .rotation-key-dot,
+.timeline-row.scope-position .scale-key-dot,
+.timeline-row.scope-position .opacity-key-dot,
+.timeline-row.scope-rotation .position-key-dot,
+.timeline-row.scope-rotation .scale-key-dot,
+.timeline-row.scope-rotation .opacity-key-dot,
+.timeline-row.scope-scale .position-key-dot,
+.timeline-row.scope-scale .rotation-key-dot,
+.timeline-row.scope-scale .opacity-key-dot,
+.timeline-row.scope-opacity .position-key-dot,
+.timeline-row.scope-opacity .rotation-key-dot,
+.timeline-row.scope-opacity .scale-key-dot { pointer-events: none; }
