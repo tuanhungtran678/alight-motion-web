@@ -780,3 +780,21 @@ input, select, button {
 .timeline-row.scope-opacity .position-key-dot,
 .timeline-row.scope-opacity .rotation-key-dot,
 .timeline-row.scope-opacity .scale-key-dot { pointer-events: none; }
+.scope-input-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.scope-input-row > label { margin: 0; }
+.scope-key-btn {
+  width: 36px;
+  height: 56px;
+  border: 1px solid #d8e3ff;
+  background: #f5f8ff;
+  color: #101319;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+.scope-key-btn.danger { background: #8d3140; color: #fff; border-color: #d66479; }

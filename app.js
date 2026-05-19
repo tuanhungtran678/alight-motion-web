@@ -34,7 +34,7 @@ const ui = {
   preview: getEl('preview'), playBtn: getEl('playBtn'), pauseBtn: getEl('pauseBtn'), resetBtn: getEl('resetBtn'), undoBtn: getEl('undoBtn'), redoBtn: getEl('redoBtn'), exportVideoBtn: getEl('exportVideoBtn'), publishProjectBtn: getEl('publishProjectBtn'), scrubber: getEl('scrubber'), timeLabel: getEl('timeLabel'),
   zoomToggleBtn: getEl('zoomToggleBtn'), addRect: getEl('addRect'), addCircle: getEl('addCircle'), addText: getEl('addText'), imageInput: getEl('imageInput'), addImageBtn: getEl('addImageBtn'), deleteLayer: getEl('deleteLayer'), layerSelect: getEl('layerSelect'), layerName: getEl('layerName'), layerColor: getEl('layerColor'), layerEffectType: getEl('layerEffectType'), layerEffectStrength: getEl('layerEffectStrength'), checkerColorA: getEl('checkerColorA'), checkerColorB: getEl('checkerColorB'), checkerGrid: getEl('checkerGrid'), checkerGridValue: getEl('checkerGridValue'), copyBackgroundMode: getEl('copyBackgroundMode'), copyBackgroundStrength: getEl('copyBackgroundStrength'), effectReveal: getEl('effectReveal'), effectWipeAngle: getEl('effectWipeAngle'), effectHue: getEl('effectHue'), effectSaturation: getEl('effectSaturation'), effectBrightness: getEl('effectBrightness'), effect3DAngle: getEl('effect3DAngle'), effect3DDepth: getEl('effect3DDepth'), textContent: getEl('textContent'), textSize: getEl('textSize'), textFontFamily: getEl('textFontFamily'), textWeight: getEl('textWeight'), textStyle: getEl('textStyle'), textAlign: getEl('textAlign'), textLayerControls: getEl('textLayerControls'), glowColor: getEl('glowColor'), glowHardness: getEl('glowHardness'), glowAlpha: getEl('glowAlpha'), movementUnavailable: getEl('movementUnavailable'), rotateUnavailable: getEl('rotateUnavailable'), groupLayerBtn: getEl('groupLayerBtn'), ungroupLayerBtn: getEl('ungroupLayerBtn'),
   timelineDuration: getEl('timelineDuration'), frameTarget: getEl('frameTarget'), frameTime: getEl('frameTime'), timelineTracks: getEl('timelineTracks'), frameActionBtn: getEl('frameActionBtn'), prevFrameBtn: getEl('prevFrameBtn'), nextFrameBtn: getEl('nextFrameBtn'), markPartBtn: getEl('markPartBtn'), keyframeInfo: getEl('keyframeInfo'), markInfo: getEl('markInfo'),
-  startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'), movePad: getEl('movePad'), moveHandle: getEl('moveHandle'), moveXDisplay: getEl('moveXDisplay'), moveYDisplay: getEl('moveYDisplay'), rotateDial: getEl('rotateDial'), rotateKnob: getEl('rotateKnob'), rotateValue: getEl('rotateValue'), rotateTurns: getEl('rotateTurns'),
+  startX: getEl('startX'), startY: getEl('startY'), startScale: getEl('startScale'), startRotation: getEl('startRotation'), startOpacity: getEl('startOpacity'), scaleKeyBtn: getEl('scaleKeyBtn'), opacityKeyBtn: getEl('opacityKeyBtn'), movePad: getEl('movePad'), moveHandle: getEl('moveHandle'), moveXDisplay: getEl('moveXDisplay'), moveYDisplay: getEl('moveYDisplay'), rotateDial: getEl('rotateDial'), rotateKnob: getEl('rotateKnob'), rotateValue: getEl('rotateValue'), rotateTurns: getEl('rotateTurns'),
   easeTarget: getEl('easeTarget'), easing: getEl('easing'), applyBtn: getEl('applyBtn'), easeGraph: getEl('easeGraph'), scaleQuickInput: getEl('scaleQuickInput'), scaleUpBtn: getEl('scaleUpBtn'), scaleDownBtn: getEl('scaleDownBtn'), frameActionMiniBtn: getEl('frameActionMiniBtn'), easeGraphModeBtn: getEl('easeGraphModeBtn'), opacitySlider: getEl('opacitySlider'), opacityPercent: getEl('opacityPercent'),
   camX: getEl('camX'), camY: getEl('camY'), camZoom: getEl('camZoom'), camRotation: getEl('camRotation'), applyCameraBtn: getEl('applyCameraBtn'), addCameraBtn: getEl('addCameraBtn'), cameraMissingNote: getEl('cameraMissingNote'),
   audioInput: getEl('audioInput'), addAudioBtn: getEl('addAudioBtn'), removeAudioBtn: getEl('removeAudioBtn'), audioVolume: getEl('audioVolume'), audioOffset: getEl('audioOffset'), audioInfo: getEl('audioInfo'),
@@ -303,6 +303,7 @@ function applyLanguage(lang) {
   if (ui.frameActionBtn) ui.frameActionBtn.textContent = state.language === 'en' ? '◇ + Add frame at current time' : '◇ + Frame tại thời điểm hiện tại';
   updateAuthStatusText();
   syncFrameActionButton();
+  syncScopeKeyButtons();
   syncMarkButton();
 }
 
@@ -600,6 +601,26 @@ function hasExactFrameAtCurrent(target, p, l) {
   const scope = activeLayerScope();
   const k = nearestKey(l, state.time, scope);
   return !!k && Math.abs(keyTime(k, scope) - state.time) < EPS;
+}
+
+
+function syncScopeKeyButtons() {
+  const p = currentProject();
+  const l = currentLayer();
+  const updateBtn = (btn, scope) => {
+    if (!btn) return;
+    if (!p || !l) {
+      btn.textContent = '◇ +';
+      btn.classList.remove('danger');
+      return;
+    }
+    const k = nearestKey(l, state.time, scope);
+    const exact = !!k && Math.abs(keyTime(k, scope) - state.time) < 0.03;
+    btn.textContent = exact ? '◇ -' : '◇ +';
+    btn.classList.toggle('danger', exact);
+  };
+  updateBtn(ui.scaleKeyBtn, 'scale');
+  updateBtn(ui.opacityKeyBtn, 'opacity');
 }
 
 function syncFrameActionButton() {
@@ -989,6 +1010,7 @@ function syncControlsFromNearest() {
   setUnavailableCards(!l.keyframes?.length);
   syncTransformWidgets();
   syncFrameActionButton();
+  syncScopeKeyButtons();
   syncMarkButton();
 }
 
@@ -2215,6 +2237,7 @@ function bind() {
     if (hasExactFrameAtCurrent(target, p, l)) removeNearestKeyframe();
     else addKeyframeAtCurrent();
     syncFrameActionButton();
+  syncScopeKeyButtons();
   syncMarkButton();
   };
   if (ui.prevFrameBtn) ui.prevFrameBtn.onclick = () => goToTimelinePoint(-1);
@@ -2236,6 +2259,26 @@ function bind() {
     syncMarkButton();
   };
   if (ui.easeTarget) ui.easeTarget.onchange = () => { const l = currentLayer(); activateTransformScope(ui.easeTarget.value || 'position'); if (l) ui.easing.value = getLayerEasing(l, ui.easeTarget.value); drawEaseGraph(); };
+
+  if (ui.scaleKeyBtn) ui.scaleKeyBtn.onclick = () => {
+    activateTransformScope('scale');
+    const p = currentProject();
+    const l = currentLayer();
+    if (!p || !l) return;
+    if (hasExactFrameAtCurrent('layer', p, l)) removeNearestKeyframe();
+    else addKeyframeAtCurrent();
+    syncScopeKeyButtons();
+  };
+  if (ui.opacityKeyBtn) ui.opacityKeyBtn.onclick = () => {
+    activateTransformScope('opacity');
+    const p = currentProject();
+    const l = currentLayer();
+    if (!p || !l) return;
+    if (hasExactFrameAtCurrent('layer', p, l)) removeNearestKeyframe();
+    else addKeyframeAtCurrent();
+    syncScopeKeyButtons();
+  };
+
   ui.applyBtn.onclick = applyCurrentValues;
   ['startX', 'startY'].forEach((k) => ui[k].addEventListener('focus', () => activateTransformScope('position')));
   if (ui.startRotation) ui.startRotation.addEventListener('focus', () => activateTransformScope('rotation'));
