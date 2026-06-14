@@ -1,93 +1,417 @@
-# alight-motion-web
+# 🎬 Alight Motion Web Lite Demo
 
-Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần + Node server.
+> ✨ A lightweight web-based motion graphics editor inspired by Alight Motion, built with **HTML**, **CSS**, **JavaScript**, and a **Node.js backend**.
 
-## Tính năng mới
-- Đăng nhập chính dùng **Firebase Auth** với cấu hình project `alight-motion-web` (Email/Password, Google, GitHub).
-- Đã bỏ nút đăng nhập Apple và Microsoft theo yêu cầu.
-- API server / local auth vẫn còn làm fallback khi Firebase SDK hoặc backend chưa sẵn sàng.
-- Cloud publish: đăng dự án lên server, xem public qua `public.html?id=...`.
-- Cloud được thiết kế để dùng với **Render Web Service**: nhập URL dạng `https://your-render-service.onrender.com` vào ô **Render Cloud URL** để nhiều máy cùng đồng bộ về một server.
-- Nếu dự án Cloud là của bạn sẽ có nút **Unshare** để bỏ chia sẻ.
-- Hỗ trợ khách (guest) với modal cảnh báo:
-  - `You're not signed in. Log in to use this feature.`
-  - Nút `Sign in`, `Sign up`, và nút `X` để đóng.
-- Thêm đổi ngôn ngữ (VI/EN), tìm kiếm dự án local + cloud.
-- Chèn nhiều audio track cùng lúc và đồng bộ playback theo timeline.
-- Hiệu ứng hào quang có thêm chỉnh màu, độ cứng và alpha.
-- Thêm hiệu ứng **Checker / Ca-rô** với màu ô A/B và slider offset/grid (ví dụ 8 = 8x8).
-- Chia hiệu ứng thành các nhóm mới: **Color and Lights**, **Blur**, **Distortion / Warp**, **Move / Transform**, **Drawing & Edge**, **Procedural**, **Matte / Mask / Key**.
-- **Copy Background** nằm trong nhóm Matte / Mask / Key và bắt buộc chọn hiệu ứng đi kèm như Gaussian blur / Invert color / Grayscale để nổi hiệu ứng theo hình layer.
-- Movement/Rotate/Scale/Opacity dùng keyframe song hành theo từng phạm vi; **Scale và Opacity có store keyframe riêng**, không dùng chung keyframe layer.
-- Đùn Raster có thêm slider góc X/Y/Z (tối đa 1000) để chỉnh hướng đùn trái/phải, trên/dưới và xoay 2D.
-- Khi kéo keyframe, timeline giữ thứ tự ổn định trong lúc kéo để giảm hiện tượng marker bị giật lệch khỏi vị trí mong muốn.
-- Thêm nút **◄ / ►** để nhảy giữa keyframe và mark trên timeline.
-- Thêm **Mark a part / Delete this mark** để đánh dấu hoặc xoá mốc đỏ trên timeline.
-- Camera frame ẩn ở dự án mới cho tới khi dùng **Add Camera**; nếu đã có sẽ báo `Camera frame has been exist on this project.`
-- Đổi tên layer có thể xoá trắng hoàn toàn mà không tự phục hồi chữ cũ.
-- Text Layer chỉ hiện khi đang chọn layer chữ.
-- Ô nhập OTP dạng 6 khối lớn riêng biệt để nhập dễ hơn.
-- Giao diện editor được làm mới (header/panel/khối điều khiển đỡ thô).
-- Thêm Header và Footer cho giao diện.
+---
 
-## Chạy local
+# 🚀 Features
+
+## 🔐 Authentication System
+
+* Sign in using **Firebase Authentication**
+
+  * 📧 Email & Password
+  * 🔍 Google
+  * 🐙 GitHub
+
+* 🛡️ Built-in local authentication server acts as a fallback when Firebase services are unavailable.
+
+---
+
+## ☁️ Cloud Publishing
+
+Publish your projects online and share them instantly!
+
+### 🌍 Public Project Viewer
+
+View shared projects using:
+
+```text
+public.html?id=PROJECT_ID
+```
+
+### 🔄 Multi-Device Sync
+
+Use a **Render Web Service** as your cloud server.
+
+Example:
+
+```text
+https://your-render-service.onrender.com
+```
+
+Paste the URL into the **Render Cloud URL** field to synchronize projects across multiple devices.
+
+### 🔓 Unshare Projects
+
+Shared projects now include an **Unshare** button for privacy control.
+
+---
+
+## 💬 Guest Support System
+
+Guests attempting to access protected features will see:
+
+```text
+You are not logged in. Log in to use this feature.
+```
+
+Options available:
+
+* 🔑 Login
+* 📝 Register
+* ❌ Close
+
+---
+
+## 🌐 Localization
+
+* 🇻🇳 Vietnamese
+* 🇺🇸 English
+
+Additional tools:
+
+* 🔎 Local project search
+* ☁️ Cloud project search
+
+---
+
+# 🎵 Audio Editing
+
+* ➕ Import multiple audio tracks simultaneously
+* ▶️ Playback directly inside the timeline
+* 🎚️ Layered audio workflow support
+
+---
+
+# ✨ Effects System
+
+## 🌟 Halo Effect
+
+Now includes:
+
+* 🎨 Color adjustment
+* 🔥 Hardness control
+* 👻 Alpha/Transparency control
+
+---
+
+## 🟦 Checkerboard Effect
+
+New **Checker / Checkerboard** effect featuring:
+
+* 🎨 Color A / Color B
+* 📐 Grid offset controls
+* 🎛️ Adjustable grid size
+
+Example:
+
+```text
+8 = 8×8 checkerboard grid
+```
+
+---
+
+## 📂 Effect Categories
+
+Effects are now organized into:
+
+* 🎨 Color & Lights
+* 🌫️ Blur
+* 🌪️ Distortion / Warp
+* 🏃 Move / Transform
+* ✏️ Draw & Edge
+* 🔮 Procedural
+* 🎭 Matte / Mask / Key
+
+---
+
+## 🎭 Background Copy
+
+Located under:
+
+```text
+Matte / Mask / Key
+```
+
+Works best when combined with:
+
+* Gaussian Blur
+* Invert Color
+* Grayscale
+
+to create advanced image-layer effects.
+
+---
+
+# 🎞️ Animation Improvements
+
+## 🔑 Keyframes
+
+* Move
+* Rotate
+* Scale
+* Opacity
+
+Each property now stores its own keyframe data independently.
+
+### Benefits
+
+✅ Better precision
+✅ Easier editing
+✅ No shared keyframe conflicts
+
+---
+
+## 📐 Raster Controls
+
+Using Raster now unlocks:
+
+* X Angle
+* Y Angle
+* Z Angle
+
+Range:
+
+```text
+0 → 1000
+```
+
+Useful for:
+
+* ↔️ Left / Right perspective
+* ↕️ Up / Down perspective
+* 🔄 2D rotation effects
+
+---
+
+## 🎯 Timeline Improvements
+
+### Smoother Dragging
+
+Timeline remains stable while dragging keyframes, reducing marker jitter.
+
+### Navigation Buttons
+
+Quickly jump between keyframes and markers:
+
+```text
+◄ Previous
+► Next
+```
+
+### Marker Management
+
+* 🔴 Partial Marking
+* 🗑️ Delete Marking
+
+---
+
+# 📷 Camera System
+
+The camera frame is hidden in new projects until:
+
+```text
+Add Camera
+```
+
+is used.
+
+If a camera already exists:
+
+```text
+The camera frame already exists in this project.
+```
+
+will be displayed.
+
+---
+
+# 📝 Text Editing
+
+### Improved Text Layer Selection
+
+Text layers are now clearly identified when selected.
+
+### Better Renaming
+
+Layer names can now be completely cleared without automatically restoring old text.
+
+---
+
+# 🔢 OTP Experience
+
+Verification codes now use:
+
+```text
+[ ] [ ] [ ] [ ] [ ] [ ]
+```
+
+Six separate input boxes for easier entry.
+
+---
+
+# 🎨 UI Builder
+
+A new interface editor has been added.
+
+### Components
+
+* 🏠 Header
+* 📊 Dashboard
+* 🎛️ Control Blocks
+* 📄 Footer
+
+Perfect for creating custom application layouts.
+
+---
+
+# ▶️ Run Locally
+
 ```bash
 node server.js
 ```
-Mở: `http://localhost:4173/index.html`
 
-## Firebase Auth
-Frontend đã nạp Firebase compat SDK và dùng cấu hình:
+Open:
 
-```js
-apiKey: "AIzaSyC4O0GWiUaQM7Bu-FQGaYU64ix6Zv0EZGk"
-authDomain: "alight-motion-web.firebaseapp.com"
-projectId: "alight-motion-web"
-storageBucket: "alight-motion-web.firebasestorage.app"
-messagingSenderId: "379916623638"
-appId: "1:379916623638:web:c357ebe47320e81f4c7a37"
-measurementId: "G-6D7H3EVV3M"
+```text
+http://localhost:4173/index.html
 ```
 
-Bật Email/Password, Google và GitHub providers trong Firebase Console để đăng nhập thật.
+> ⚠️ To enable real authentication, activate Email/Password, Google, and GitHub providers in your Firebase Console.
 
-## Docker / Render
-Repo có `Dockerfile` để deploy lên Render bằng Docker. Render sẽ set biến `PORT`; server đã đọc `process.env.PORT`.
+---
+
+# 🐳 Docker & Render Deployment
+
+A Dockerfile is included for easy deployment.
+
+### Build
 
 ```bash
 docker build -t alight-motion-web .
+```
+
+### Run
+
+```bash
 docker run -p 4173:4173 alight-motion-web
 ```
 
-### Dùng Render làm Cloud
-1. Tạo **Render Web Service** từ repo này và dùng Dockerfile có sẵn.
-2. Sau khi deploy, copy URL Render, ví dụ `https://alight-motion-web.onrender.com`.
-3. Trong Home của app, dán URL đó vào ô **Render Cloud URL** rồi bấm tải lại Cloud.
-4. Nếu frontend và API cùng chạy trên Render thì có thể để trống ô này; app sẽ dùng cùng origin. Nếu frontend ở domain khác, public viewer sẽ tự truyền `apiBase` trong link để mở project từ Render Cloud.
-5. Server đã bật CORS cho API cloud/auth để nhiều thiết bị hoặc domain khác có thể gọi về Render.
+The server automatically uses:
 
-## API chính
-- `POST /api/auth/signup`
-- `POST /api/auth/signin`
-- `GET /api/auth/me`
-- `GET /api/projects`
-- `POST /api/projects`
-- `DELETE /api/projects/:id/share`
-- `GET /api/projects/:id`
+```js
+process.env.PORT
+```
 
-## Cấu hình gửi OTP vào Gmail/Outlook
-Thiết lập biến môi trường trước khi chạy `node server.js`:
+when deployed on Render.
+
+---
+
+# ☁️ Using Render as Cloud Storage
+
+### 1️⃣ Create a Render Web Service
+
+Deploy this repository using the included Dockerfile.
+
+### 2️⃣ Copy Your Render URL
+
+Example:
+
+```text
+https://alight-motion-web.onrender.com
+```
+
+### 3️⃣ Connect It
+
+Paste the URL into:
+
+```text
+Render Cloud URL
+```
+
+and click:
+
+```text
+Reload Cloud
+```
+
+### 4️⃣ Same-Origin Support
+
+If both frontend and API are hosted on Render:
+
+✅ No Cloud URL required.
+
+### 5️⃣ Cross-Domain Support
+
+CORS is already enabled for:
+
+* Authentication API
+* Cloud API
+
+allowing multiple domains and devices to connect.
+
+---
+
+# 🔌 Main API Endpoints
+
+### Authentication
+
+```http
+POST /api/auth/signup
+POST /api/auth/signin
+GET  /api/auth/me
+```
+
+### Projects
+
+```http
+GET    /api/projects
+POST   /api/projects
+GET    /api/projects/:id
+DELETE /api/projects/:id/share
+```
+
+---
+
+# 📧 Gmail / Outlook OTP Configuration
+
+Set environment variables before starting the server.
 
 ```bash
-export SMTP_PROVIDER=gmail   # hoặc outlook
+export SMTP_PROVIDER=gmail
+# or outlook
+
 export SMTP_USER="your_account@gmail.com"
+
 export SMTP_PASS="your_app_password"
+
 export SMTP_FROM="your_account@gmail.com"
-# tùy chọn override
+
+# Optional overrides
+
 # export SMTP_HOST="smtp.gmail.com"
 # export SMTP_PORT="465"
 # export SMTP_SECURE="true"
+
 node server.js
 ```
 
-> Với Gmail/Outlook cần dùng App Password hoặc thông tin SMTP hợp lệ của chính tài khoản bạn.
+> 🔐 Gmail and Outlook require an **App Password** or valid SMTP credentials.
+
+---
+
+# ❤️ Thanks For Using Alight Motion Web Lite
+
+Built with:
+
+* 🌐 HTML
+* 🎨 CSS
+* ⚡ JavaScript
+* 🚂 Node.js
+* 🔥 Firebase
+* ☁️ Render
+
+Happy editing! 🎬✨
+
+© 2026 tuanhungtran678. All Rights Reserved.
