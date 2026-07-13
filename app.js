@@ -1022,6 +1022,7 @@ function closeMenu() { ui.settingsMenu.classList.add('hidden'); }
 
 function showHome() { state.playing = false; stopAudioPlayback(); ui.home.classList.add('active'); ui.editor.classList.remove('active'); renderProjectList(); }
 function showEditor(pid) { state.currentProjectId = pid; state.time = 0; ui.home.classList.remove('active'); ui.editor.classList.add('active'); hydrateEditor(); }
+function openProject(pid) { showEditor(pid); }
 
 function renderProjectList() {
   ui.projectList.innerHTML = '';
