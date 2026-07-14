@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alight Motion Web Lite</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="/socket.io/socket.io.js" defer></script>
   </head>
   <body>
     <header class="site-header">
@@ -25,6 +26,14 @@
               </select>
             </label>
             <button id="themeToggleBtn" class="btn">☀/🌙</button>
+            <div class="profile-shell">
+              <button id="profileIconBtn" class="profile-icon-btn" type="button" aria-label="Profile">👤</button>
+              <div id="profileDropdown" class="profile-dropdown hidden">
+                <button id="yourProfileBtn" type="button">Your Profile</button>
+                <button id="studioBtn" type="button">Studio</button>
+                <button id="profileSettingsBtn" type="button">Settings</button>
+              </div>
+            </div>
             <button id="openAuthBtn" class="btn">Sign in</button>
             <span id="authMiniStatus" class="muted">Guest</span>
           </div>
@@ -549,6 +558,76 @@
         <h3>🔥 Hot alert 🔥</h3>
         <p>Your PC is too hot. Please let it cold.</p>
         <small id="hotAlertTempText">Current temperature: --℃</small>
+      </div>
+    </div>
+
+    <div id="publishModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card publish-card">
+        <button id="closePublishModalBtn" class="icon-close" type="button" aria-label="Close publish modal">✕</button>
+        <h3>Publish to Cloud</h3>
+        <label>Title <input id="publishTitle" type="text" placeholder="Project title" /></label>
+        <label>Description <textarea id="publishDescription" rows="4" placeholder="Tell viewers about this edit..."></textarea></label>
+        <fieldset class="filter-fieldset">
+          <legend>Filters</legend>
+          <label><input type="checkbox" name="publishFilter" value="anime" /> anime</label>
+          <label><input type="checkbox" name="publishFilter" value="8bit" /> 8bit</label>
+          <label><input type="checkbox" name="publishFilter" value="edit" /> edit</label>
+          <label><input type="checkbox" name="publishFilter" value="drop" /> drop</label>
+          <label><input type="checkbox" name="publishFilter" value="game" /> game</label>
+          <label><input type="checkbox" name="publishFilter" value="chess" /> chess</label>
+        </fieldset>
+        <button id="confirmPublishBtn" class="btn primary" type="button">Publish</button>
+      </div>
+    </div>
+
+    <div id="cloudViewerModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card cloud-viewer-card">
+        <button id="closeCloudViewerBtn" class="icon-close" type="button" aria-label="Close cloud viewer">✕</button>
+        <h3 id="cloudViewerTitle">Cloud Project</h3>
+        <p id="cloudViewerAuthor" class="muted">Uploader: -</p>
+        <p id="cloudViewerDesc">-</p>
+        <div id="cloudViewerFilters" class="filter-pills"></div>
+        <div class="cloud-player">
+          <button id="cloudPlayPauseBtn" class="btn primary" type="button">▶ Play</button>
+          <input id="cloudDuration" type="range" min="0" max="100" value="0" />
+          <select id="cloudSpeed">
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+        </div>
+        <div class="cloud-metrics-row">
+          <button id="cloudLikeBtn" class="btn" type="button">👍 Like</button>
+          <button id="cloudDislikeBtn" class="btn" type="button">👎 Dislike</button>
+          <span id="cloudViewerViews">0 views</span>
+          <button id="cloudDetailsBtn" class="btn" type="button">Details</button>
+        </div>
+        <pre id="cloudDetailsBox" class="details-box hidden"></pre>
+      </div>
+    </div>
+
+    <div id="profileModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card profile-card">
+        <button id="closeProfileModalBtn" class="icon-close" type="button" aria-label="Close profile">✕</button>
+        <h3>Your Profile</h3>
+        <p id="profileName">Guest</p>
+        <p id="profileFollowers">Followers: 0 • Following: 0</p>
+        <button id="followDemoBtn" class="btn" type="button">Follow demo account</button>
+      </div>
+    </div>
+
+    <div id="studioModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="menu-card studio-card">
+        <button id="closeStudioModalBtn" class="icon-close" type="button" aria-label="Close studio">✕</button>
+        <h3>Alight Motion Web Studio</h3>
+        <div class="studio-grid">
+          <div><strong id="studioFollowerCount">0</strong><span>Follower</span></div>
+          <div><strong id="studioFollowingCount">0</strong><span>Followers</span></div>
+          <div><strong id="studioViewCount">0</strong><span>Views</span></div>
+          <div><strong id="studioCloudCount">0</strong><span>Cloud projects</span></div>
+        </div>
+        <p id="socketStatus" class="muted">Socket.IO: connecting...</p>
       </div>
     </div>
 

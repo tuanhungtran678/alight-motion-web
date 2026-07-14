@@ -327,6 +327,19 @@ input, select, button {
 .export-detail { display: none; border: 1px solid color-mix(in srgb, var(--border), white 16%); border-radius: 16px; padding: 12px; background: color-mix(in srgb, var(--input), black 5%); }
 .export-detail.active { display: block; }
 .export-detail textarea { width: 100%; resize: vertical; border-radius: 12px; border: 1px solid var(--border); background: var(--input); color: var(--text); padding: 10px; }
+.publish-card, .cloud-viewer-card, .profile-card, .studio-card { position: relative; }
+.publish-card textarea { width: 100%; border-radius: 12px; border: 1px solid var(--border); background: var(--input); color: var(--text); padding: 10px; }
+.filter-fieldset { border: 1px solid var(--border); border-radius: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+.filter-fieldset label { display: flex; gap: 6px; align-items: center; margin: 0; }
+.filter-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.filter-pills span { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; background: var(--input); }
+.cloud-player { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; margin: 12px 0; }
+.cloud-metrics-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.details-box { white-space: pre-wrap; max-height: 220px; overflow: auto; border: 1px solid var(--border); border-radius: 12px; padding: 10px; background: color-mix(in srgb, var(--input), black 12%); }
+.studio-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.studio-grid div { border: 1px solid var(--border); border-radius: 16px; padding: 14px; background: var(--input); }
+.studio-grid strong { display: block; font-size: 1.8rem; }
+.studio-grid span { opacity: .75; }
 .social-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .social { font-weight: 600; }
 .social.google { background: linear-gradient(120deg, #ffffff, #f3f3f3); color: #111; }
@@ -353,6 +366,11 @@ input, select, button {
 }
 .header-right { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
 .header-tools { display: inline-flex; align-items: center; gap: 8px; justify-content: center; flex-wrap: nowrap; }
+.profile-shell { position: relative; }
+.profile-icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 999px; font-size: 1.1rem; }
+.profile-dropdown { position: absolute; right: 0; top: calc(100% + 8px); width: 190px; padding: 8px; border: 1px solid var(--border); border-radius: 16px; background: color-mix(in srgb, var(--card), black 8%); box-shadow: 0 18px 40px #0008; z-index: 80; }
+.profile-dropdown button { text-align: left; margin: 0 0 6px; }
+.profile-dropdown button:last-child { margin-bottom: 0; }
 .lang-inline {
   display: inline-flex;
   align-items: center;

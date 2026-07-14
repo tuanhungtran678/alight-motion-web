@@ -33,6 +33,11 @@ Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần + Node s
 - XML export ghi tổng quan project (resolution/FPS/duration), layer, transform, keyframe, effect và source file để có thể nhập lại bằng Hero Banner **Nhập file .xml**.
 - Hero Banner trên Home hỗ trợ nhập file `.xml` bằng nút **Nhập file**.
 - Project Menu được làm mới với nền blur, gradient và card bo lớn hơn.
+- Thêm nút **Profile** trên Header với dropdown: Your Profile, Studio, Settings.
+- Thêm **Alight Motion Web Studio** để xem số Follower, Followers/Following, lượt xem và số project Cloud.
+- Thêm Socket.IO demo/fallback để chuẩn bị realtime stats khi triển khai server.
+- Khi bấm Publish Cloud sẽ mở cửa sổ nhập **Title**, **Description** và **Filters** (anime, 8bit, edit, drop, game, chess).
+- Cloud project viewer trong app có Play/Pause, thanh thời lượng, chọn tốc độ, uploader, Like/Dislike, views và Details.
 
 ## Chạy local
 ```bash

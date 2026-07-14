@@ -115,6 +115,9 @@ ${body}
 
 http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204, {});
+  if (req.url === '/socket.io/socket.io.js' && req.method === 'GET') {
+    return send(res, 200, `window.io=function(){return{on:function(evt,cb){if(evt==='connect')setTimeout(cb,0);return this;},emit:function(){return this;},disconnect:function(){return this;}}};`, 'application/javascript');
+  }
   if (req.url === '/api/auth/precheck' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
@@ -225,7 +228,12 @@ http.createServer(async (req, res) => {
       const db = readJson(DB_FILE, []);
       const item = {
         id: `pub_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
-        title: payload.project?.name || 'Untitled',
+        title: payload.title || payload.project?.name || 'Untitled',
+        description: payload.description || '',
+        filters: Array.isArray(payload.filters) ? payload.filters.slice(0, 12) : [],
+        views: 0,
+        likes: 0,
+        dislikes: 0,
         author: user.name,
         provider: user.provider,
         ownerId: user.id,

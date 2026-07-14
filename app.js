@@ -25,6 +25,7 @@ const LOCAL_AUTH_USERS_KEY = 'alightLocalAuthUsersV1';
 const LOCAL_AUTH_OTP_KEY = 'alightLocalAuthOtpV1';
 const CLOUD_API_BASE_KEY = 'alightCloudApiBaseV1';
 const AUTH_PROVIDER_KEY = 'alightAuthProviderV1';
+const PROFILE_STATS_KEY = 'alightProfileStatsV1';
 function detectRenderCloudBase() {
   return window.location.hostname.endsWith('.onrender.com') ? window.location.origin : '';
 }
@@ -40,7 +41,7 @@ const FIREBASE_CONFIG = {
 };
 const ui = {
   home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'), cloudApiBase: getEl('cloudApiBase'), cloudApiHint: getEl('cloudApiHint'), xmlImportInput: getEl('xmlImportInput'), xmlImportBtn: getEl('xmlImportBtn'),
-  navHomeBtn: getEl('navHomeBtn'), navProjectsBtn: getEl('navProjectsBtn'), navCloudBtn: getEl('navCloudBtn'), navPurchaseHistoryBtn: getEl('navPurchaseHistoryBtn'),
+  navHomeBtn: getEl('navHomeBtn'), navProjectsBtn: getEl('navProjectsBtn'), navCloudBtn: getEl('navCloudBtn'), navPurchaseHistoryBtn: getEl('navPurchaseHistoryBtn'), profileIconBtn: getEl('profileIconBtn'), profileDropdown: getEl('profileDropdown'), yourProfileBtn: getEl('yourProfileBtn'), studioBtn: getEl('studioBtn'), profileSettingsBtn: getEl('profileSettingsBtn'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
   menuProjectName: getEl('menuProjectName'), menuRatio: getEl('menuRatio'), menuFps: getEl('menuFps'), menuResolution: getEl('menuResolution'), menuBgColor: getEl('menuBgColor'), menuShowGrid: getEl('menuShowGrid'), menuExportQuality: getEl('menuExportQuality'), saveMenuBtn: getEl('saveMenuBtn'),
@@ -56,12 +57,15 @@ const ui = {
   hotAlertModal: getEl('hotAlertModal'), hotAlertCloseBtn: getEl('hotAlertCloseBtn'), hotAlertTempText: getEl('hotAlertTempText'),
   cameraPaywallModal: getEl('cameraPaywallModal'), closeCameraPaywallBtn: getEl('closeCameraPaywallBtn'), buyProBtn: getEl('buyProBtn'), watchAdBtn: getEl('watchAdBtn'),
   headerProBadge: getEl('headerProBadge'), proSuccessModal: getEl('proSuccessModal'), closeProSuccessBtn: getEl('closeProSuccessBtn'),
-  purchaseHistoryModal: getEl('purchaseHistoryModal'), closePurchaseHistoryBtn: getEl('closePurchaseHistoryBtn'), unsubscribeBtn: getEl('unsubscribeBtn')
+  purchaseHistoryModal: getEl('purchaseHistoryModal'), closePurchaseHistoryBtn: getEl('closePurchaseHistoryBtn'), unsubscribeBtn: getEl('unsubscribeBtn'),
+  publishModal: getEl('publishModal'), closePublishModalBtn: getEl('closePublishModalBtn'), publishTitle: getEl('publishTitle'), publishDescription: getEl('publishDescription'), confirmPublishBtn: getEl('confirmPublishBtn'),
+  cloudViewerModal: getEl('cloudViewerModal'), closeCloudViewerBtn: getEl('closeCloudViewerBtn'), cloudViewerTitle: getEl('cloudViewerTitle'), cloudViewerAuthor: getEl('cloudViewerAuthor'), cloudViewerDesc: getEl('cloudViewerDesc'), cloudViewerFilters: getEl('cloudViewerFilters'), cloudPlayPauseBtn: getEl('cloudPlayPauseBtn'), cloudDuration: getEl('cloudDuration'), cloudSpeed: getEl('cloudSpeed'), cloudLikeBtn: getEl('cloudLikeBtn'), cloudDislikeBtn: getEl('cloudDislikeBtn'), cloudViewerViews: getEl('cloudViewerViews'), cloudDetailsBtn: getEl('cloudDetailsBtn'), cloudDetailsBox: getEl('cloudDetailsBox'),
+  profileModal: getEl('profileModal'), closeProfileModalBtn: getEl('closeProfileModalBtn'), profileName: getEl('profileName'), profileFollowers: getEl('profileFollowers'), followDemoBtn: getEl('followDemoBtn'), studioModal: getEl('studioModal'), closeStudioModalBtn: getEl('closeStudioModalBtn'), studioFollowerCount: getEl('studioFollowerCount'), studioFollowingCount: getEl('studioFollowingCount'), studioViewCount: getEl('studioViewCount'), studioCloudCount: getEl('studioCloudCount'), socketStatus: getEl('socketStatus')
 };
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: DEFAULT_CLOUD_API_BASE, modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false, selectedTimelineKey: null, rotationDrag: null, activeKeyScope: 'position', isPro: localStorage.getItem('alightProDemoV1') === '1' };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: DEFAULT_CLOUD_API_BASE, modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false, selectedTimelineKey: null, rotationDrag: null, activeKeyScope: 'position', isPro: localStorage.getItem('alightProDemoV1') === '1', profileStats: JSON.parse(localStorage.getItem(PROFILE_STATS_KEY) || '{"followers":0,"following":0,"views":0}'), activeCloudItem: null, cloudPlayerTimer: null, cloudPlayerTime: 0 };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 const audioPlayers = [];
@@ -425,6 +429,24 @@ async function fetchCloudProjects() {
   }
 }
 
+function selectedPublishFilters() {
+  return Array.from(document.querySelectorAll('input[name="publishFilter"]:checked')).map((el) => el.value);
+}
+
+function openPublishModal() {
+  const p = currentProject();
+  if (!p) return;
+  if (!state.session || !state.authToken) {
+    openGuestModal();
+    return;
+  }
+  ui.publishTitle.value = p.name || '';
+  ui.publishDescription.value = '';
+  document.querySelectorAll('input[name="publishFilter"]').forEach((el) => { el.checked = false; });
+  ui.publishModal?.classList.remove('hidden');
+}
+function closePublishModal() { ui.publishModal?.classList.add('hidden'); }
+
 async function publishCurrentProject() {
   const p = currentProject();
   if (!p) return;
@@ -432,17 +454,69 @@ async function publishCurrentProject() {
     openGuestModal();
     return;
   }
-  const payload = { project: p, author: state.session.name, provider: state.session.provider };
+  const title = (ui.publishTitle?.value || p.name || 'Untitled').trim();
+  const description = (ui.publishDescription?.value || '').trim();
+  const filters = selectedPublishFilters();
+  const payload = { project: p, title, description, filters, author: state.session.name, provider: state.session.provider };
   try {
     const r = await fetch(apiUrl('/api/projects'), { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(payload) });
     if (!r.ok) throw new Error('publish-failed');
   } catch {
     const list = localCloudGet();
-    list.unshift({ id: uid(), title: p.name, author: state.session.name, provider: state.session.provider, publishedAt: Date.now(), project: p });
+    list.unshift({ id: uid(), title, description, filters, author: state.session.name, provider: state.session.provider, publishedAt: Date.now(), views: 0, likes: 0, dislikes: 0, project: p });
     localCloudSet(list.slice(0, 40));
   }
+  closePublishModal();
   await renderCloudList();
   alert('Đã đăng dự án lên Cloud thành công.');
+}
+
+function saveProfileStats() { localStorage.setItem(PROFILE_STATS_KEY, JSON.stringify(state.profileStats)); }
+function updateStudioStats() {
+  if (ui.profileName) ui.profileName.textContent = state.session?.name || 'Guest';
+  if (ui.profileFollowers) ui.profileFollowers.textContent = `Followers: ${state.profileStats.followers || 0} • Following: ${state.profileStats.following || 0}`;
+  if (ui.studioFollowerCount) ui.studioFollowerCount.textContent = String(state.profileStats.followers || 0);
+  if (ui.studioFollowingCount) ui.studioFollowingCount.textContent = String(state.profileStats.following || 0);
+  if (ui.studioViewCount) ui.studioViewCount.textContent = String(state.profileStats.views || 0);
+  if (ui.studioCloudCount) ui.studioCloudCount.textContent = String(localCloudGet().length);
+}
+function openProfileModal() { updateStudioStats(); ui.profileModal?.classList.remove('hidden'); ui.profileDropdown?.classList.add('hidden'); }
+function openStudioModal() { updateStudioStats(); ui.studioModal?.classList.remove('hidden'); ui.profileDropdown?.classList.add('hidden'); }
+function closeProfileModal() { ui.profileModal?.classList.add('hidden'); }
+function closeStudioModal() { ui.studioModal?.classList.add('hidden'); }
+
+function openCloudViewer(item) {
+  state.activeCloudItem = item;
+  state.cloudPlayerTime = 0;
+  state.profileStats.views = (state.profileStats.views || 0) + 1;
+  saveProfileStats();
+  if (ui.cloudViewerTitle) ui.cloudViewerTitle.textContent = item.title || item.project?.name || 'Untitled';
+  if (ui.cloudViewerAuthor) ui.cloudViewerAuthor.textContent = `Uploader: ${item.author || 'unknown'}`;
+  if (ui.cloudViewerDesc) ui.cloudViewerDesc.textContent = item.description || 'No description.';
+  if (ui.cloudViewerViews) ui.cloudViewerViews.textContent = `${(item.views || 0) + 1} views`;
+  if (ui.cloudViewerFilters) ui.cloudViewerFilters.innerHTML = (item.filters || []).map((f) => `<span>${f}</span>`).join('');
+  if (ui.cloudDuration) ui.cloudDuration.value = '0';
+  if (ui.cloudPlayPauseBtn) ui.cloudPlayPauseBtn.textContent = '▶ Play';
+  if (ui.cloudDetailsBox) { ui.cloudDetailsBox.classList.add('hidden'); ui.cloudDetailsBox.textContent = JSON.stringify(item.project?.settings || {}, null, 2); }
+  ui.cloudViewerModal?.classList.remove('hidden');
+  updateStudioStats();
+}
+function closeCloudViewer() { clearInterval(state.cloudPlayerTimer); state.cloudPlayerTimer = null; ui.cloudViewerModal?.classList.add('hidden'); }
+
+function setupSocketIo() {
+  if (!ui.socketStatus) return;
+  if (typeof window.io !== 'function') {
+    ui.socketStatus.textContent = 'Socket.IO: offline fallback';
+    return;
+  }
+  try {
+    const socket = window.io();
+    ui.socketStatus.textContent = 'Socket.IO: connected';
+    socket.on?.('connect', () => { ui.socketStatus.textContent = 'Socket.IO: connected'; });
+    socket.on?.('disconnect', () => { ui.socketStatus.textContent = 'Socket.IO: disconnected'; });
+  } catch {
+    ui.socketStatus.textContent = 'Socket.IO: offline fallback';
+  }
 }
 
 async function renderCloudList() {
@@ -460,16 +534,15 @@ async function renderCloudList() {
   }).forEach((item) => {
     const card = document.createElement('div');
     card.className = 'project-item';
-    card.innerHTML = `<div><strong>${item.title || item.project?.name || 'Untitled'}</strong><br><small>${item.author || 'unknown'} • ${new Date(item.publishedAt || Date.now()).toLocaleString()}</small></div>`;
+    card.innerHTML = `<div><strong>${item.title || item.project?.name || 'Untitled'}</strong><br><small>${item.author || 'unknown'} • ${new Date(item.publishedAt || Date.now()).toLocaleString()} • ${(item.views || 0)} views</small><br><small>${(item.filters || []).join(', ')}</small></div>`;
     const actions = document.createElement('div');
     actions.className = 'project-actions';
-    const view = document.createElement('a');
+    const view = document.createElement('button');
     view.className = 'btn primary';
     const apiBaseParam = state.cloudApiBase ? `&apiBase=${encodeURIComponent(state.cloudApiBase)}` : '';
-    view.href = `public.html?id=${encodeURIComponent(item.id)}${apiBaseParam}`;
-    view.target = '_blank';
-    view.rel = 'noopener';
+    view.dataset.publicUrl = `public.html?id=${encodeURIComponent(item.id)}${apiBaseParam}`;
     view.textContent = 'Xem';
+    view.onclick = () => openCloudViewer(item);
     actions.append(view);
     if (item.isOwner || (state.session && item.ownerId === state.session.id)) {
       const unshare = document.createElement('button');
@@ -2225,6 +2298,15 @@ function bind() {
     document.getElementById('cloudTitle')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   if (ui.navPurchaseHistoryBtn) ui.navPurchaseHistoryBtn.onclick = openPurchaseHistoryModal;
+  if (ui.profileIconBtn) ui.profileIconBtn.onclick = () => ui.profileDropdown?.classList.toggle('hidden');
+  if (ui.yourProfileBtn) ui.yourProfileBtn.onclick = openProfileModal;
+  if (ui.studioBtn) ui.studioBtn.onclick = openStudioModal;
+  if (ui.profileSettingsBtn) ui.profileSettingsBtn.onclick = () => { ui.profileDropdown?.classList.add('hidden'); openMenu(); };
+  if (ui.closeProfileModalBtn) ui.closeProfileModalBtn.onclick = closeProfileModal;
+  if (ui.profileModal) ui.profileModal.onclick = (e) => { if (e.target === ui.profileModal) closeProfileModal(); };
+  if (ui.closeStudioModalBtn) ui.closeStudioModalBtn.onclick = closeStudioModal;
+  if (ui.studioModal) ui.studioModal.onclick = (e) => { if (e.target === ui.studioModal) closeStudioModal(); };
+  if (ui.followDemoBtn) ui.followDemoBtn.onclick = () => { state.profileStats.following = (state.profileStats.following || 0) + 1; saveProfileStats(); updateStudioStats(); };
   if (ui.cloudApiBase) {
     ui.cloudApiBase.value = state.cloudApiBase;
     updateCloudApiHint();
@@ -2684,7 +2766,40 @@ function bind() {
   if (ui.exportCancelBtn) ui.exportCancelBtn.onclick = () => {
     if (state.exportSession) state.exportSession.cancelled = true;
   };
-  ui.publishProjectBtn.onclick = publishCurrentProject;
+  ui.publishProjectBtn.onclick = openPublishModal;
+  if (ui.closePublishModalBtn) ui.closePublishModalBtn.onclick = closePublishModal;
+  if (ui.publishModal) ui.publishModal.onclick = (e) => { if (e.target === ui.publishModal) closePublishModal(); };
+  if (ui.confirmPublishBtn) ui.confirmPublishBtn.onclick = publishCurrentProject;
+  if (ui.closeCloudViewerBtn) ui.closeCloudViewerBtn.onclick = closeCloudViewer;
+  if (ui.cloudViewerModal) ui.cloudViewerModal.onclick = (e) => { if (e.target === ui.cloudViewerModal) closeCloudViewer(); };
+  if (ui.cloudPlayPauseBtn) ui.cloudPlayPauseBtn.onclick = () => {
+    if (state.cloudPlayerTimer) {
+      clearInterval(state.cloudPlayerTimer);
+      state.cloudPlayerTimer = null;
+      ui.cloudPlayPauseBtn.textContent = '▶ Play';
+      return;
+    }
+    ui.cloudPlayPauseBtn.textContent = '⏸ Pause';
+    state.cloudPlayerTimer = setInterval(() => {
+      const p = state.activeCloudItem?.project;
+      const duration = Math.max(0.1, p?.settings?.duration || 2);
+      const speed = Number(ui.cloudSpeed?.value) || 1;
+      state.cloudPlayerTime = Math.min(duration, state.cloudPlayerTime + 0.1 * speed);
+      if (ui.cloudDuration) ui.cloudDuration.value = String((state.cloudPlayerTime / duration) * 100);
+      if (state.cloudPlayerTime >= duration) {
+        clearInterval(state.cloudPlayerTimer);
+        state.cloudPlayerTimer = null;
+        ui.cloudPlayPauseBtn.textContent = '▶ Play';
+      }
+    }, 100);
+  };
+  if (ui.cloudDuration) ui.cloudDuration.oninput = () => {
+    const duration = Math.max(0.1, state.activeCloudItem?.project?.settings?.duration || 2);
+    state.cloudPlayerTime = (Number(ui.cloudDuration.value) / 100) * duration;
+  };
+  if (ui.cloudLikeBtn) ui.cloudLikeBtn.onclick = () => { if (state.activeCloudItem) { state.activeCloudItem.likes = (state.activeCloudItem.likes || 0) + 1; ui.cloudLikeBtn.textContent = `👍 Like ${state.activeCloudItem.likes}`; } };
+  if (ui.cloudDislikeBtn) ui.cloudDislikeBtn.onclick = () => { if (state.activeCloudItem) { state.activeCloudItem.dislikes = (state.activeCloudItem.dislikes || 0) + 1; ui.cloudDislikeBtn.textContent = `👎 Dislike ${state.activeCloudItem.dislikes}`; } };
+  if (ui.cloudDetailsBtn) ui.cloudDetailsBtn.onclick = () => ui.cloudDetailsBox?.classList.toggle('hidden');
   ui.scrubber.oninput = () => { const p = currentProject(); if (!p) return; state.playing = false; state.time = (+ui.scrubber.value / 100) * p.settings.duration; syncAudioPlayback(); draw(); drawTimelineTracks(); syncControlsFromNearest(); syncFrameActionButton(); };
   ui.zoomToggleBtn.onclick = () => {
     state.previewZoomEnabled = !state.previewZoomEnabled;
@@ -2929,6 +3044,7 @@ async function init() {
   syncProBadge();
   renderSession();
   renderCloudList();
+  setupSocketIo();
   syncFrameActionButton();
   setupThermalMonitor().catch(() => {});
   showHome();
