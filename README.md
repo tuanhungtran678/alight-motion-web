@@ -38,6 +38,10 @@ Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần + Node s
 - Thêm Socket.IO demo/fallback để chuẩn bị realtime stats khi triển khai server.
 - Khi bấm Publish Cloud sẽ mở cửa sổ nhập **Title**, **Description** và **Filters** (anime, 8bit, edit, drop, game, chess).
 - Cloud project viewer trong app có Play/Pause, thanh thời lượng, chọn tốc độ, uploader, Like/Dislike, views và Details.
+- Sửa Cloud khi dùng Firebase Auth: client gửi thêm header demo user và server nhận `X-Demo-User-*`, nên publish/list Cloud hoạt động trên Render/local thay vì chỉ hiểu local session token.
+- Profile đã chuyển sang dạng **full page kiểu YouTube** với cover banner, avatar, tabs và danh sách project.
+- Thêm Notification dropdown ở Header để báo publish/import/fallback Cloud.
+- Icon Header dùng bộ **Lucide icon set** (tương thích app vanilla qua CDN; không chuyển toàn app sang React).
 
 ## Chạy local
 ```bash

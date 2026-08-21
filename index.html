@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alight Motion Web Lite</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="/socket.io/socket.io.js" defer></script>
   </head>
   <body>
@@ -25,9 +26,16 @@
                 <option value="en">English</option>
               </select>
             </label>
-            <button id="themeToggleBtn" class="btn">☀/🌙</button>
+            <button id="themeToggleBtn" class="btn icon-btn" aria-label="Toggle theme"><i data-lucide="sun-moon"></i></button>
+            <div class="notification-shell">
+              <button id="notificationBtn" class="profile-icon-btn" type="button" aria-label="Notifications"><i data-lucide="bell"></i><span id="notificationBadge" class="notification-badge hidden">0</span></button>
+              <div id="notificationDropdown" class="notification-dropdown hidden">
+                <strong>Notifications</strong>
+                <div id="notificationList" class="notification-list"><small>No notifications yet.</small></div>
+              </div>
+            </div>
             <div class="profile-shell">
-              <button id="profileIconBtn" class="profile-icon-btn" type="button" aria-label="Profile">👤</button>
+              <button id="profileIconBtn" class="profile-icon-btn" type="button" aria-label="Profile"><i data-lucide="circle-user-round"></i></button>
               <div id="profileDropdown" class="profile-dropdown hidden">
                 <button id="yourProfileBtn" type="button">Your Profile</button>
                 <button id="studioBtn" type="button">Studio</button>
@@ -480,6 +488,30 @@
             </section>
           </article>
         </section>
+      </section>
+
+      <section id="profilePage" class="screen">
+        <article class="profile-fullpage">
+          <div class="profile-cover"></div>
+          <div class="profile-main-row">
+            <div class="profile-avatar"><i data-lucide="circle-user-round"></i></div>
+            <div>
+              <h1 id="profilePageName">Guest</h1>
+              <p id="profilePageMeta">@guest • 0 followers • 0 following</p>
+              <p id="profilePageBio">Alight Motion Web creator profile.</p>
+              <div class="profile-page-actions">
+                <button id="profileBackHomeBtn" class="btn"><i data-lucide="arrow-left"></i> Home</button>
+                <button id="profileOpenStudioBtn" class="btn primary"><i data-lucide="bar-chart-3"></i> Studio</button>
+              </div>
+            </div>
+          </div>
+          <div class="profile-tabs">
+            <button class="active">Projects</button>
+            <button>Cloud</button>
+            <button>About</button>
+          </div>
+          <div id="profileProjectShelf" class="project-list"></div>
+        </article>
       </section>
     </main>
 

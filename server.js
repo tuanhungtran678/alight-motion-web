@@ -35,7 +35,7 @@ function send(res, status, data, type = 'application/json') {
     'Content-Type': type,
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Demo-User-Email,X-Demo-User-Name,X-Demo-User-Provider'
   });
   res.end(type === 'application/json' ? JSON.stringify(data) : data);
 }
@@ -68,8 +68,24 @@ function verifyPassword(password, salt, expectedHash) {
 
 function getUserFromReq(req) {
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-  if (!token) return null;
-  const uid = sessions.get(token);
+  const emailHeader = String(req.headers['x-demo-user-email'] || '').trim().toLowerCase();
+  if (!token && !emailHeader) return null;
+  let uid = token ? sessions.get(token) : null;
+  if (!uid && emailHeader) {
+    const users = readJson(USERS_FILE, []);
+    let user = users.find((u) => u.email === emailHeader);
+    if (!user) {
+      user = {
+        id: `firebase_${crypto.createHash('sha1').update(emailHeader).digest('hex').slice(0, 12)}`,
+        email: emailHeader,
+        name: String(req.headers['x-demo-user-name'] || emailHeader.split('@')[0]).trim(),
+        provider: String(req.headers['x-demo-user-provider'] || 'Firebase').trim()
+      };
+      users.push(user);
+      writeJson(USERS_FILE, users);
+    }
+    return user;
+  }
   if (!uid) return null;
   const users = readJson(USERS_FILE, []);
   return users.find((u) => u.id === uid) || null;
