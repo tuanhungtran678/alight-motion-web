@@ -42,6 +42,8 @@ Bản demo **Alight Motion Web Lite** chạy bằng HTML/CSS/JS thuần + Node s
 - Profile đã chuyển sang dạng **full page kiểu YouTube** với cover banner, avatar, tabs và danh sách project.
 - Thêm Notification dropdown ở Header để báo publish/import/fallback Cloud.
 - Icon Header dùng bộ **Lucide icon set** (tương thích app vanilla qua CDN; không chuyển toàn app sang React).
+- Home hiển thị **users today** bằng Socket.IO demo shim (`/socket.io/socket.io.js`) + API `/api/stats/today-users`.
+- Thêm `.gitignore` để bỏ qua `node_modules`, `.env` và dữ liệu runtime của server (`cloud-projects.json`, `users.json`, `mailbox.json`).
 
 ## Chạy local
 ```bash
@@ -87,6 +89,7 @@ docker run -p 4173:4173 alight-motion-web
 - `POST /api/projects`
 - `DELETE /api/projects/:id/share`
 - `GET /api/projects/:id`
+- `GET /api/stats/today-users`
 
 ## Cấu hình gửi OTP vào Gmail/Outlook
 Thiết lập biến môi trường trước khi chạy `node server.js`:

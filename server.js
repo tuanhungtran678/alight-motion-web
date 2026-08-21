@@ -9,6 +9,16 @@ const DB_FILE = path.join(__dirname, 'cloud-projects.json');
 const USERS_FILE = path.join(__dirname, 'users.json');
 const sessions = new Map();
 const otps = new Map();
+const todayUsers = new Map();
+
+function todayKey() { return new Date().toISOString().slice(0, 10); }
+function trackTodayUser(req) {
+  const key = todayKey();
+  if (!todayUsers.has(key)) todayUsers.set(key, new Set());
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'local').toString().split(',')[0].trim();
+  todayUsers.get(key).add(ip);
+  return todayUsers.get(key).size;
+}
 
 function readJson(file, fallback = []) {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return fallback; }
@@ -132,7 +142,11 @@ ${body}
 http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return send(res, 204, {});
   if (req.url === '/socket.io/socket.io.js' && req.method === 'GET') {
-    return send(res, 200, `window.io=function(){return{on:function(evt,cb){if(evt==='connect')setTimeout(cb,0);return this;},emit:function(){return this;},disconnect:function(){return this;}}};`, 'application/javascript');
+    trackTodayUser(req);
+    return send(res, 200, `window.io=function(){var handlers={};var poll=function(){fetch('/api/stats/today-users').then(function(r){return r.json();}).then(function(d){(handlers['today-users']||[]).forEach(function(cb){cb(d);});}).catch(function(){(handlers['today-users']||[]).forEach(function(cb){cb({count:1,source:'fallback'});});});};setTimeout(function(){(handlers.connect||[]).forEach(function(cb){cb();});poll();setInterval(poll,15000);},0);return{on:function(evt,cb){(handlers[evt]=handlers[evt]||[]).push(cb);return this;},emit:function(){return this;},disconnect:function(){(handlers.disconnect||[]).forEach(function(cb){cb();});return this;}}};`, 'application/javascript');
+  }
+  if (req.url === '/api/stats/today-users' && req.method === 'GET') {
+    return send(res, 200, { date: todayKey(), count: trackTodayUser(req), source: 'socket.io' });
   }
   if (req.url === '/api/auth/precheck' && req.method === 'POST') {
     try {

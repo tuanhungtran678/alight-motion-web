@@ -60,7 +60,7 @@ const ui = {
   purchaseHistoryModal: getEl('purchaseHistoryModal'), closePurchaseHistoryBtn: getEl('closePurchaseHistoryBtn'), unsubscribeBtn: getEl('unsubscribeBtn'),
   publishModal: getEl('publishModal'), closePublishModalBtn: getEl('closePublishModalBtn'), publishTitle: getEl('publishTitle'), publishDescription: getEl('publishDescription'), confirmPublishBtn: getEl('confirmPublishBtn'),
   cloudViewerModal: getEl('cloudViewerModal'), closeCloudViewerBtn: getEl('closeCloudViewerBtn'), cloudViewerTitle: getEl('cloudViewerTitle'), cloudViewerAuthor: getEl('cloudViewerAuthor'), cloudViewerDesc: getEl('cloudViewerDesc'), cloudViewerFilters: getEl('cloudViewerFilters'), cloudPlayPauseBtn: getEl('cloudPlayPauseBtn'), cloudDuration: getEl('cloudDuration'), cloudSpeed: getEl('cloudSpeed'), cloudLikeBtn: getEl('cloudLikeBtn'), cloudDislikeBtn: getEl('cloudDislikeBtn'), cloudViewerViews: getEl('cloudViewerViews'), cloudDetailsBtn: getEl('cloudDetailsBtn'), cloudDetailsBox: getEl('cloudDetailsBox'),
-  profileModal: getEl('profileModal'), closeProfileModalBtn: getEl('closeProfileModalBtn'), profileName: getEl('profileName'), profileFollowers: getEl('profileFollowers'), followDemoBtn: getEl('followDemoBtn'), studioModal: getEl('studioModal'), closeStudioModalBtn: getEl('closeStudioModalBtn'), studioFollowerCount: getEl('studioFollowerCount'), studioFollowingCount: getEl('studioFollowingCount'), studioViewCount: getEl('studioViewCount'), studioCloudCount: getEl('studioCloudCount'), socketStatus: getEl('socketStatus'),
+  profileModal: getEl('profileModal'), closeProfileModalBtn: getEl('closeProfileModalBtn'), profileName: getEl('profileName'), profileFollowers: getEl('profileFollowers'), followDemoBtn: getEl('followDemoBtn'), studioModal: getEl('studioModal'), closeStudioModalBtn: getEl('closeStudioModalBtn'), studioFollowerCount: getEl('studioFollowerCount'), studioFollowingCount: getEl('studioFollowingCount'), studioViewCount: getEl('studioViewCount'), studioCloudCount: getEl('studioCloudCount'), socketStatus: getEl('socketStatus'), todayUsersCount: getEl('todayUsersCount'), todayUsersStatus: getEl('todayUsersStatus'),
   profilePage: getEl('profilePage'), profilePageName: getEl('profilePageName'), profilePageMeta: getEl('profilePageMeta'), profilePageBio: getEl('profilePageBio'), profileBackHomeBtn: getEl('profileBackHomeBtn'), profileOpenStudioBtn: getEl('profileOpenStudioBtn'), profileProjectShelf: getEl('profileProjectShelf')
 };
 const ctx = ui.preview.getContext('2d');
@@ -552,6 +552,7 @@ function setupSocketIo() {
   if (!ui.socketStatus) return;
   if (typeof window.io !== 'function') {
     ui.socketStatus.textContent = 'Socket.IO: offline fallback';
+    if (ui.todayUsersStatus) ui.todayUsersStatus.textContent = 'Socket.IO offline';
     return;
   }
   try {
@@ -559,8 +560,14 @@ function setupSocketIo() {
     ui.socketStatus.textContent = 'Socket.IO: connected';
     socket.on?.('connect', () => { ui.socketStatus.textContent = 'Socket.IO: connected'; });
     socket.on?.('disconnect', () => { ui.socketStatus.textContent = 'Socket.IO: disconnected'; });
+    socket.on?.('today-users', (payload) => {
+      const count = Number(payload?.count || 0);
+      if (ui.todayUsersCount) ui.todayUsersCount.textContent = String(count);
+      if (ui.todayUsersStatus) ui.todayUsersStatus.textContent = payload?.source === 'fallback' ? 'Local fallback' : 'Live via Socket.IO';
+    });
   } catch {
     ui.socketStatus.textContent = 'Socket.IO: offline fallback';
+    if (ui.todayUsersStatus) ui.todayUsersStatus.textContent = 'Socket.IO offline';
   }
 }
 
