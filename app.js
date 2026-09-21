@@ -381,13 +381,18 @@ async function signUpReal() {
 }
 
 function authHeaders() {
-  const headers = state.authToken ? { Authorization: `Bearer ${state.authToken}` } : {};
-  // Fetch request headers accept ISO-8859-1 only. Firebase display names can
-  // contain Vietnamese or other Unicode characters, so transport them as an
-  // ASCII-safe URI component and decode them on the server.
-  if (state.session?.email) headers['X-Demo-User-Email'] = encodeURIComponent(state.session.email);
-  if (state.session?.name) headers['X-Demo-User-Name'] = encodeURIComponent(state.session.name);
-  if (state.session?.provider) headers['X-Demo-User-Provider'] = encodeURIComponent(state.session.provider);
+  const encodeHeaderValue = (value) => {
+    // Headers are byte strings in Fetch. Replace malformed UTF-16 surrogates
+    // first, then encode every non-ASCII value into an ASCII-only transport.
+    const text = String(value ?? '').replace(/[\uD800-\uDFFF]/g, '\uFFFD');
+    return encodeURIComponent(text);
+  };
+  const headers = state.authToken ? { Authorization: `Bearer ${encodeHeaderValue(state.authToken)}` } : {};
+  // Firebase display names and occasionally email aliases contain Unicode.
+  // Do not pass them directly to RequestInit headers.
+  if (state.session?.email) headers['X-Demo-User-Email'] = encodeHeaderValue(state.session.email);
+  if (state.session?.name) headers['X-Demo-User-Name'] = encodeHeaderValue(state.session.name);
+  if (state.session?.provider) headers['X-Demo-User-Provider'] = encodeHeaderValue(state.session.provider);
   return headers;
 }
 

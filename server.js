@@ -114,7 +114,7 @@ function readEncodedHeader(value, fallback = '') {
 }
 
 function getUserFromReq(req) {
-  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  const token = readEncodedHeader((req.headers.authorization || '').replace(/^Bearer\s+/i, ''));
   const emailHeader = readEncodedHeader(req.headers['x-demo-user-email']).toLowerCase();
   if (!token && !emailHeader) return null;
   let uid = token ? sessions.get(token) : null;

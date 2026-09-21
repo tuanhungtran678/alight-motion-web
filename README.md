@@ -125,4 +125,4 @@ Additional APIs:
 
 ## Unicode Firebase display names
 
-Firebase profile names can contain Vietnamese and other Unicode characters. The browser now URI-encodes the demo-user headers and the Node server decodes them before looking up or creating the profile. This prevents the browser error `Failed to read the 'headers' property from 'RequestInit': String contains non ISO-8859-1 code point` while keeping the original display name intact.
+Firebase profile names can contain Vietnamese and other Unicode characters. The browser now converts **all** client identity header values (including the bearer token) to an ASCII-only URI component, replacing malformed UTF-16 surrogate values first; the Node server decodes them before authentication, lookup, or profile creation. This prevents the browser error `Failed to read the 'headers' property from 'RequestInit': String contains non ISO-8859-1 code point` while keeping the original display name intact.
