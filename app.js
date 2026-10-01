@@ -41,7 +41,7 @@ const FIREBASE_CONFIG = {
   measurementId: 'G-6D7H3EVV3M'
 };
 const ui = {
-  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'), cloudApiBase: getEl('cloudApiBase'), cloudApiHint: getEl('cloudApiHint'), xmlImportInput: getEl('xmlImportInput'), xmlImportBtn: getEl('xmlImportBtn'),
+  home: getEl('homeScreen'), editor: getEl('editorScreen'), createProjectBtn: getEl('createProjectBtn'), projectList: getEl('projectList'), cloudList: getEl('cloudList'), refreshCloudBtn: getEl('refreshCloudBtn'), authStatus: getEl('authStatus'), authMiniStatus: getEl('authMiniStatus'), loginGoogleBtn: getEl('loginGoogleBtn'), loginGithubBtn: getEl('loginGithubBtn'), logoutBtn: getEl('logoutBtn'), openAuthBtn: getEl('openAuthBtn'), authModal: getEl('authModal'), closeAuthModalBtn: getEl('closeAuthModalBtn'), authEmail: getEl('authEmail'), authPassword: getEl('authPassword'), authName: getEl('authName'), authNameRow: getEl('authNameRow'), authModalTitle: getEl('authModalTitle'), authSignInBtn: getEl('authSignInBtn'), authToggleModeBtn: getEl('authToggleModeBtn'), authToggleHint: getEl('authToggleHint'), guestModal: getEl('guestModal'), closeGuestModalBtn: getEl('closeGuestModalBtn'), guestSignInBtn: getEl('guestSignInBtn'), guestSignUpBtn: getEl('guestSignUpBtn'), guestNeedSignInText: getEl('guestNeedSignInText'), otpModal: getEl('otpModal'), closeOtpModalBtn: getEl('closeOtpModalBtn'), otpInfoText: getEl('otpInfoText'), otpCode: getEl('otpCode'), verifyOtpBtn: getEl('verifyOtpBtn'), languageSelect: getEl('languageSelect'), projectSearch: getEl('projectSearch'), cloudSearch: getEl('cloudSearch'), cloudApiBase: getEl('cloudApiBase'), cloudApiHint: getEl('cloudApiHint'), xmlImportInput: getEl('xmlImportInput'), xmlImportBtn: getEl('xmlImportBtn'), smartImportUrl: getEl('smartImportUrl'), smartImportPreviewBtn: getEl('smartImportPreviewBtn'), smartImportPreview: getEl('smartImportPreview'), smartImportConfirmBtn: getEl('smartImportConfirmBtn'),
   navHomeBtn: getEl('navHomeBtn'), navProjectsBtn: getEl('navProjectsBtn'), navCloudBtn: getEl('navCloudBtn'), navPurchaseHistoryBtn: getEl('navPurchaseHistoryBtn'), profileIconBtn: getEl('profileIconBtn'), profileDropdown: getEl('profileDropdown'), yourProfileBtn: getEl('yourProfileBtn'), studioBtn: getEl('studioBtn'), profileSettingsBtn: getEl('profileSettingsBtn'), notificationBtn: getEl('notificationBtn'), notificationDropdown: getEl('notificationDropdown'), notificationList: getEl('notificationList'), notificationBadge: getEl('notificationBadge'),
   projectTitle: getEl('projectTitle'), projectMeta: getEl('projectMeta'), backHomeBtn: getEl('backHomeBtn'), themeToggleBtn: getEl('themeToggleBtn'),
   settingsMenu: getEl('settingsMenu'), openMenuBtn: getEl('openMenuBtn'), closeMenuBtn: getEl('closeMenuBtn'),
@@ -68,7 +68,7 @@ const ui = {
 const ctx = ui.preview.getContext('2d');
 const gctx = ui.easeGraph.getContext('2d');
 
-const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: DEFAULT_CLOUD_API_BASE, modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false, selectedTimelineKey: null, rotationDrag: null, activeKeyScope: 'position', isPro: localStorage.getItem('alightProDemoV1') === '1', profileStats: JSON.parse(localStorage.getItem(PROFILE_STATS_KEY) || '{"followers":0,"following":0,"views":0}'), activeCloudItem: null, cloudPlayerTimer: null, cloudPlayerTime: 0, notifications: [] };
+const state = { projects: [], currentProjectId: null, time: 0, playing: false, startRef: 0, drag: null, easeDrag: null, keyDrag: null, theme: localStorage.getItem('uiTheme') || 'dark', previewZoomEnabled: false, previewScale: 1, selectedLayerIds: [], history: [], future: [], rightDeleteLog: {}, session: null, authToken: localStorage.getItem(AUTH_TOKEN_KEY) || '', language: localStorage.getItem('uiLang') || 'vi', authMode: 'signin', otpEmail: '', cloudApiBase: DEFAULT_CLOUD_API_BASE, modalRatio: '9:16', isExporting: false, exportSession: null, hotAlertDismissed: false, selectedTimelineKey: null, rotationDrag: null, activeKeyScope: 'position', isPro: localStorage.getItem('alightProDemoV1') === '1', profileStats: JSON.parse(localStorage.getItem(PROFILE_STATS_KEY) || '{"followers":0,"following":0,"views":0}'), activeCloudItem: null, cloudPlayerTimer: null, cloudPlayerTime: 0, notifications: [], smartImport: null };
 const audioPlayer = new Audio();
 audioPlayer.preload = 'auto';
 const audioPlayers = [];
@@ -2179,6 +2179,58 @@ function importProjectFromXml(text) {
   return normalizeProject(p);
 }
 
+function renderSmartImportPreview(data) {
+  if (!ui.smartImportPreview) return;
+  const metadata = data.metadata || {};
+  const status = data.importable ? 'Ready to import' : 'Preview only';
+  ui.smartImportPreview.innerHTML = `<strong>${escapeHtml(status)}</strong><dl>
+    <div><dt>Source</dt><dd>${escapeHtml(data.source || 'Unknown')}</dd></div>
+    <div><dt>Project</dt><dd>${escapeHtml(metadata.name || 'Unknown project')}</dd></div>
+    <div><dt>Layers</dt><dd>${Number.isFinite(metadata.layers) ? metadata.layers : 'Unknown'}</dd></div>
+    <div><dt>Size</dt><dd>${metadata.sizeLabel || 'Unknown'}</dd></div>
+    <div><dt>Author</dt><dd>${escapeHtml(metadata.author || 'Unknown')}</dd></div>
+  </dl><small>${escapeHtml(data.message || '')}</small>`;
+  ui.smartImportPreview.classList.remove('hidden');
+  if (ui.smartImportConfirmBtn) ui.smartImportConfirmBtn.disabled = !data.importable;
+}
+
+async function previewSmartImport() {
+  const url = ui.smartImportUrl?.value.trim();
+  if (!url) return;
+  if (ui.smartImportPreview) { ui.smartImportPreview.textContent = 'Checking source…'; ui.smartImportPreview.classList.remove('hidden'); }
+  if (ui.smartImportConfirmBtn) ui.smartImportConfirmBtn.disabled = true;
+  state.smartImport = null;
+  try {
+    const response = await fetch(apiUrl('/api/import/preview'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Cannot preview this link');
+    state.smartImport = data;
+    renderSmartImportPreview(data);
+  } catch (error) {
+    if (ui.smartImportPreview) ui.smartImportPreview.innerHTML = `<strong>Link unavailable</strong><small>${escapeHtml(error.message || 'Cannot preview this link')}</small>`;
+  }
+}
+
+async function confirmSmartImport() {
+  const url = state.smartImport?.url;
+  if (!url || !state.smartImport?.importable) return;
+  if (ui.smartImportConfirmBtn) ui.smartImportConfirmBtn.disabled = true;
+  try {
+    const response = await fetch(apiUrl('/api/import/download'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Cannot download this XML file');
+    const imported = importProjectFromXml(data.xml);
+    state.projects.unshift(imported);
+    saveProjects();
+    renderProjectList();
+    showEditor(imported.id);
+    pushNotification('Project imported', imported.name);
+  } catch (error) {
+    alert(error.message || 'Import failed');
+    if (ui.smartImportConfirmBtn) ui.smartImportConfirmBtn.disabled = false;
+  }
+}
+
 function openExportMenu() {
   const p = currentProject(); if (!p) return;
   if (ui.exportEstimatedSize) ui.exportEstimatedSize.textContent = `${estimateExportSize(p).toFixed(1)} MB`;
@@ -2885,6 +2937,13 @@ function bind() {
     downloadText(`${p.name || 'project'}-image-sequence-manifest.json`, JSON.stringify({ type: 'image-sequence', size: ui.exportSequenceSize.value, fps, frameCount }, null, 2), 'application/json');
   };
   if (ui.xmlImportBtn) ui.xmlImportBtn.onclick = () => ui.xmlImportInput?.click();
+  if (ui.smartImportPreviewBtn) ui.smartImportPreviewBtn.onclick = previewSmartImport;
+  if (ui.smartImportConfirmBtn) ui.smartImportConfirmBtn.onclick = confirmSmartImport;
+  if (ui.smartImportUrl) ui.smartImportUrl.oninput = () => {
+    state.smartImport = null;
+    if (ui.smartImportConfirmBtn) ui.smartImportConfirmBtn.disabled = true;
+    ui.smartImportPreview?.classList.add('hidden');
+  };
   if (ui.xmlImportInput) ui.xmlImportInput.onchange = () => {
     const file = ui.xmlImportInput.files?.[0];
     if (!file) return;

@@ -73,6 +73,25 @@
           </div>
         </article>
 
+        <article class="panel smart-importer" aria-labelledby="smartImportTitle">
+          <div>
+            <span class="hero-kicker">Smart Link Importer</span>
+            <h2 id="smartImportTitle">Nhập project từ link</h2>
+            <p>Dán link XML trực tiếp từ nguồn được hỗ trợ để xem trước trước khi nhập vào Canvas.</p>
+          </div>
+          <div class="smart-import-form">
+            <label>Project URL
+              <input id="smartImportUrl" type="url" inputmode="url" placeholder="https://drive.google.com/.../project.xml" autocomplete="url" />
+            </label>
+            <button id="smartImportPreviewBtn" class="btn" type="button">Xem trước link</button>
+          </div>
+          <div id="smartImportPreview" class="smart-import-preview hidden" aria-live="polite"></div>
+          <div class="smart-import-actions">
+            <button id="smartImportConfirmBtn" class="btn primary" type="button" disabled>Nhập vào Canvas</button>
+            <small>Hỗ trợ link XML trực tiếp từ Alight, Drive, MediaFire, Dropbox, MEGA, YouTube/TikTok bio và GitHub. Gói proprietary cần được xuất XML trước.</small>
+          </div>
+        </article>
+
         <article class="panel">
           <h2 id="accountTitle">Tài khoản</h2>
           <p id="authStatus">Chưa đăng nhập</p>

@@ -126,3 +126,12 @@ Additional APIs:
 ## Unicode Firebase display names
 
 Firebase profile names can contain Vietnamese and other Unicode characters. The browser now converts **all** client identity header values (including the bearer token) to an ASCII-only URI component, replacing malformed UTF-16 surrogate values first; the Node server decodes them before authentication, lookup, or profile creation. This prevents the browser error `Failed to read the 'headers' property from 'RequestInit': String contains non ISO-8859-1 code point` while keeping the original display name intact.
+
+## Smart Link Importer
+
+The Home page includes a Smart Link Importer with a preview card (project name, detected layer count, file size, source, and author when supplied by the XML) before the user imports a project into the Canvas. It accepts HTTPS links from `alight.link`, Alight Creative, Google Drive, MediaFire, Dropbox, MEGA, YouTube, TikTok, GitHub, and GitHub Raw.
+
+For safety, the server only downloads a **direct `.xml` URL** from this allowlist, limits the response to 2 MB, times out after 10 seconds, and does not follow redirects. Share pages and proprietary Alight/package links are identified for preview but are deliberately not executed or decoded; download/export the project as XML from the source first, then paste the direct XML URL. This prevents the importer from becoming an unrestricted server-side web proxy.
+
+- `POST /api/import/preview` — validates a supported URL and returns preview metadata.
+- `POST /api/import/download` — downloads and validates a direct Alight Motion Web XML package.
