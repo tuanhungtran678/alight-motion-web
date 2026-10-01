@@ -12,7 +12,7 @@ const PROFILES_FILE = path.join(__dirname, 'profiles.json');
 const sessions = new Map();
 const otps = new Map();
 const todayUsers = new Map();
-const IMPORT_HOSTS = ['alight.link', 'alightcreative.com', 'drive.google.com', 'mediafire.com', 'dropbox.com', 'mega.nz', 'youtube.com', 'youtu.be', 'tiktok.com', 'github.com', 'raw.githubusercontent.com'];
+const IMPORT_HOSTS = ['alight.link', 'alightcreative.com', 'drive.google.com', 'drive.usercontent.google.com', 'mediafire.com', 'dropbox.com', 'dropboxusercontent.com', 'mega.nz', 'youtube.com', 'youtu.be', 'tiktok.com', 'github.com', 'githubusercontent.com'];
 
 function todayKey() { return new Date().toISOString().slice(0, 10); }
 function trackTodayUser(req) {
@@ -95,23 +95,38 @@ function looksLikeXmlUrl(parsed) {
   return /\.xml$/i.test(parsed.pathname) || /[?&](?:filename|file|format)=[^&]*\.xml/i.test(parsed.search);
 }
 
-function fetchXml(parsed) {
+function fetchImportResource(parsed, redirectsLeft = 5) {
   return new Promise((resolve, reject) => {
-    const request = https.get(parsed, { headers: { 'User-Agent': 'AlightMotionWebLite-SmartImporter/1.0', Accept: 'application/xml,text/xml;q=0.9,*/*;q=0.1' } }, (response) => {
+    const request = https.get(parsed, { headers: { 'User-Agent': 'AlightMotionWebLite-SmartImporter/1.0', Accept: 'application/xml,text/xml,text/html;q=0.9,*/*;q=0.1' } }, (response) => {
+      if ([301, 302, 303, 307, 308].includes(response.statusCode)) {
+        const next = response.headers.location ? allowedImportUrl(new URL(response.headers.location, parsed).href) : null;
+        response.resume();
+        if (!next) { reject(new Error('Redirect destination is not an approved HTTPS import source')); return; }
+        if (redirectsLeft <= 0) { reject(new Error('Too many source redirects')); return; }
+        fetchImportResource(next, redirectsLeft - 1).then(resolve, reject);
+        return;
+      }
       if (response.statusCode !== 200) { response.resume(); reject(new Error(`Source returned HTTP ${response.statusCode}`)); return; }
       const type = String(response.headers['content-type'] || '').toLowerCase();
-      if (type && !/(xml|text\/plain|octet-stream)/.test(type)) { response.resume(); reject(new Error('The source did not provide an XML file')); return; }
       const chunks = []; let size = 0;
       response.on('data', (chunk) => {
         size += chunk.length;
-        if (size > 2 * 1024 * 1024) { request.destroy(new Error('XML file is larger than 2 MB')); return; }
+        if (size > 2 * 1024 * 1024) { request.destroy(new Error('Import resource is larger than 2 MB')); return; }
         chunks.push(chunk);
       });
-      response.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      response.on('end', () => resolve({ text: Buffer.concat(chunks).toString('utf8'), type, url: parsed }));
     });
     request.setTimeout(10000, () => request.destroy(new Error('Source request timed out')));
     request.on('error', reject);
   });
+}
+
+function htmlMetadata(html, parsed) {
+  const meta = (key) => (html.match(new RegExp(`<meta[^>]+(?:name|property)=["']${key}["'][^>]+content=["']([^"']*)`, 'i')) || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:name|property)=["']${key}["']`, 'i')) || [])[1];
+  const title = meta('og:title') || meta('title') || (html.match(/<title[^>]*>([^<]*)<\/title>/i) || [])[1] || path.basename(parsed.pathname) || 'Shared resource';
+  const author = meta('author') || meta('article:author') || 'Unknown';
+  const layersText = meta('layers_count') || meta('layers') || (html.match(/(?:layers?_?count|layers?)\s*[:=]\s*["']?(\d+)/i) || [])[1];
+  return { name: title.trim(), layers: Number.isFinite(+layersText) ? +layersText : null, sizeLabel: 'Not provided', author: author.trim() };
 }
 
 function xmlMetadata(xml, parsed) {
@@ -244,25 +259,26 @@ http.createServer(async (req, res) => {
       const parsed = allowedImportUrl(body.url);
       if (!parsed) return send(res, 400, { error: 'Use an HTTPS URL from a supported import source.' });
       const source = importSource(parsed.hostname.toLowerCase());
-      if (!looksLikeXmlUrl(parsed)) {
-        return send(res, 200, {
-          url: parsed.href, source, importable: false,
-          metadata: { name: path.basename(parsed.pathname) || 'Shared resource', layers: null, sizeLabel: 'Not downloaded', author: 'Unknown' },
-          message: 'This is a share or landing link. Open it at the source and paste its direct .xml download URL.'
-        });
+      const resource = await fetchImportResource(parsed);
+      const isXml = looksLikeXmlUrl(resource.url) || /xml|text\/plain|octet-stream/.test(resource.type) || /<alightMotionWebProject\b/i.test(resource.text);
+      if (isXml && /<alightMotionWebProject\b/i.test(resource.text)) {
+        return send(res, 200, { url: resource.url.href, source, importable: true, metadata: xmlMetadata(resource.text, resource.url), message: 'Project package resolved and verified. Review the details, then import.' });
       }
-      const xml = await fetchXml(parsed);
-      return send(res, 200, { url: parsed.href, source, importable: true, metadata: xmlMetadata(xml, parsed), message: 'Direct XML link verified. Review the details, then import.' });
+      return send(res, 200, {
+        url: resource.url.href, source, importable: false,
+        metadata: /html/.test(resource.type) ? htmlMetadata(resource.text, resource.url) : { name: path.basename(resource.url.pathname) || 'Shared resource', layers: null, sizeLabel: `${(Buffer.byteLength(resource.text) / 1024).toFixed(1)} KB`, author: 'Unknown' },
+        message: 'The link was resolved, but it did not expose an importable Alight Motion Web XML project. Download the XML locally and use Upload .xml from PC.'
+      });
     } catch (error) { return send(res, 422, { error: error.message || 'Unable to inspect this link.' }); }
   }
   if (req.url === '/api/import/download' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
       const parsed = allowedImportUrl(body.url);
-      if (!parsed || !looksLikeXmlUrl(parsed)) return send(res, 400, { error: 'Only a verified direct HTTPS XML URL can be imported.' });
-      const xml = await fetchXml(parsed);
-      if (!/<alightMotionWebProject\b/i.test(xml)) return send(res, 422, { error: 'This XML is not an Alight Motion Web project package.' });
-      return send(res, 200, { xml });
+      if (!parsed) return send(res, 400, { error: 'Use an HTTPS URL from a supported import source.' });
+      const resource = await fetchImportResource(parsed);
+      if (!/<alightMotionWebProject\b/i.test(resource.text)) return send(res, 422, { error: 'The resolved resource is not an Alight Motion Web XML project package.' });
+      return send(res, 200, { xml: resource.text });
     } catch (error) { return send(res, 422, { error: error.message || 'Unable to download XML.' }); }
   }
   if (req.url === '/api/auth/precheck' && req.method === 'POST') {

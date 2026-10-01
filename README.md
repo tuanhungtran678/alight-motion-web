@@ -129,9 +129,9 @@ Firebase profile names can contain Vietnamese and other Unicode characters. The 
 
 ## Smart Link Importer
 
-The Home page includes a Smart Link Importer with a preview card (project name, detected layer count, file size, source, and author when supplied by the XML) before the user imports a project into the Canvas. It accepts HTTPS links from `alight.link`, Alight Creative, Google Drive, MediaFire, Dropbox, MEGA, YouTube, TikTok, GitHub, and GitHub Raw.
+The Home page includes a Smart Link Importer with a preview card (project name, detected layer count, file size, source, and author when supplied by the XML/landing page) before the user imports a project into the Canvas. It accepts HTTPS links from `alight.link`, Alight Creative, Google Drive, MediaFire, Dropbox, MEGA, YouTube, TikTok, GitHub, and GitHub Raw.
 
-For safety, the server only downloads a **direct `.xml` URL** from this allowlist, limits the response to 2 MB, times out after 10 seconds, and does not follow redirects. Share pages and proprietary Alight/package links are identified for preview but are deliberately not executed or decoded; download/export the project as XML from the source first, then paste the direct XML URL. This prevents the importer from becoming an unrestricted server-side web proxy.
+For `alight.link` and other supported short/share URLs, the backend resolves up to five HTTPS redirects and validates **every redirect destination** against the same allowlist. If it reaches a valid project XML, it automatically enables import; if it reaches a landing page, it extracts Open Graph/title/author/layer-count metadata for the preview. Responses are capped at 2 MB and time out after 10 seconds. Proprietary Alight packages are not reverse-engineered or executed: use the adjacent **Upload .xml from PC** fallback after exporting/downloading XML from the original source. These boundaries prevent the importer from becoming an unrestricted server-side web proxy.
 
 - `POST /api/import/preview` — validates a supported URL and returns preview metadata.
 - `POST /api/import/download` — downloads and validates a direct Alight Motion Web XML package.
